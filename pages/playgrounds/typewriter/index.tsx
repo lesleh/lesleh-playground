@@ -1,10 +1,15 @@
 import { useState } from "react";
+import { Link } from "../../../components/Link";
+import { Paragraph } from "../../../components/Paragraph";
 import { TypewriterEffect } from "../../../components/TypewriterEffect";
 
 export default function Typewriter() {
   const [showText, setShowText] = useState(false);
   return (
     <div className="p-10">
+      <Paragraph>
+        <Link href="/">Back</Link>
+      </Paragraph>
       {showText ? (
         <TypewriterEffect className="text-9xl" text="Hello, World!" />
       ) : (
