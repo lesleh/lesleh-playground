@@ -7,6 +7,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
+        "source-sans-pro": ["Source Sans Pro", "sans-serif"],
+        quattrocento: ["Quattrocento", "serif"],
         "special-elite": ["Special Elite", "serif"],
       },
       keyframes: {
@@ -20,5 +22,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("@tailwindcss/typography")],
 };
