@@ -13,6 +13,7 @@ export function TypewriterEffect({
   const [textToShow, setTextToShow] = useState("");
 
   const preloadedSound = new Audio(typewriterKeySound);
+  preloadedSound.load();
 
   useEffect(() => {
     let i = 0;
