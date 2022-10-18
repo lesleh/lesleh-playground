@@ -12,6 +12,8 @@ export function TypewriterEffect({
 }) {
   const [textToShow, setTextToShow] = useState("");
 
+  const preloadedSound = new Audio(typewriterKeySound);
+
   useEffect(() => {
     let i = 0;
     let timeout: NodeJS.Timeout;
