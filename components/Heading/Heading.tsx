@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { HeadingProps } from "./types";
 
 const classNameMap = [
   null,
@@ -14,11 +15,7 @@ export function Heading({
   level,
   children,
   className,
-}: {
-  level: 1 | 2 | 3 | 4 | 5 | 6;
-  children?: React.ReactNode;
-  className?: string;
-}) {
+}: HeadingProps): JSX.Element {
   const Component = `h${level}` as const;
 
   return (

@@ -2,14 +2,12 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 import typewriterKeySound from "../../assets/typewriter-key2.mp3";
 import { Blink } from "../Blink";
+import { TypewriterEffectProps } from "./types";
 
 export function TypewriterEffect({
   text,
   className,
-}: {
-  text: string;
-  className?: string;
-}) {
+}: TypewriterEffectProps): JSX.Element {
   const [textToShow, setTextToShow] = useState("");
 
   const preloadedSound = new Audio(typewriterKeySound);

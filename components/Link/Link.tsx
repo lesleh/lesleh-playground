@@ -1,9 +1,6 @@
 import clsx from "clsx";
 import NextLink from "next/link";
-
-export type LinkProps = {
-  href: string;
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>;
+import { LinkProps } from "./types";
 
 export function Link({ href, className, ...props }: LinkProps) {
   const isInternalLink = href && (href.startsWith("/") || href.startsWith("#"));

@@ -1,12 +1,6 @@
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import { BlinkProps } from "./types";
 
-export function Blink({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+export function Blink({ children, className }: BlinkProps) {
   return <span className={clsx("animate-blink", className)}>{children}</span>;
 }
