@@ -12,7 +12,7 @@ export default function Typewriter() {
       <Paragraph>
         <Link href="/">Back</Link>
       </Paragraph>
-      {showText ? (
+      {/* {showText ? (
         <TypewriterEffect className="text-9xl" text="Hello, World!" />
       ) : (
         <button
@@ -21,7 +21,7 @@ export default function Typewriter() {
         >
           Show Text
         </button>
-      )}
+      )} */}
     </div>
   );
 }
