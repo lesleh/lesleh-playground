@@ -1,3 +1,1 @@
-export type LinkProps = {
-  href: string;
-} & React.AnchorHTMLAttributes<HTMLAnchorElement>;
+export type LinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement>;
