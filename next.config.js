@@ -7,8 +7,8 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   experimental: {
-    browsersListForSwc: true,
     legacyBrowsers: false,
+    appDir: true,
   },
   webpack(config, options) {
     config.module.rules.push({

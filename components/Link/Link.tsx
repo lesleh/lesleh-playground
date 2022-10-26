@@ -6,14 +6,10 @@ export function Link({ href, className, ...props }: LinkProps) {
   const isInternalLink = href && (href.startsWith("/") || href.startsWith("#"));
   const classNames = clsx("text-blue-500 underline", className);
 
-  console.log("isInternalLink", isInternalLink);
+  const Component = isInternalLink ? NextLink : "a";
 
-  return isInternalLink ? (
-    <NextLink href={href}>
-      <a className={classNames} {...props} />
-    </NextLink>
-  ) : (
-    <a
+  return (
+    <Component
       className={classNames}
       href={href}
       target="_blank"

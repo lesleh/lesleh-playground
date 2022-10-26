@@ -1,9 +1,15 @@
-import { Html, Head, Main, NextScript } from "next/document";
+/* eslint-disable @next/next/no-page-custom-font */
+import "../styles/globals.css";
 
-export default function Document() {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <Html>
-      <Head>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -14,11 +20,8 @@ export default function Document() {
           href="https://fonts.googleapis.com/css2?family=Quattrocento:wght@700&family=Source+Sans+Pro:ital@0;1&family=Special+Elite&display=swap"
           rel="stylesheet"
         />
-      </Head>
-      <body>
-        <Main />
-        <NextScript />
-      </body>
-    </Html>
+      </head>
+      <body>{children}</body>
+    </html>
   );
 }
