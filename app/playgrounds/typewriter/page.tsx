@@ -4,7 +4,9 @@ import { Paragraph } from "../../../components/Paragraph";
 import { TypewriterEffect } from "../../../components/TypewriterEffect";
 
 export default function Typewriter() {
-  const [showText, setShowText] = useState(false);
+  // const [showText, setShowText] = useState(false);
+  const showText = false;
+  const setShowText = (...args: any) => {};
   return (
     <div className="p-10">
       <Paragraph>
