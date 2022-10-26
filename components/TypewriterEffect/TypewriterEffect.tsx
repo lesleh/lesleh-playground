@@ -1,3 +1,5 @@
+"use client";
+
 import clsx from "clsx";
 import { useEffect, useState } from "react";
 import typewriterKeySound from "../../assets/typewriter-key2.mp3";
