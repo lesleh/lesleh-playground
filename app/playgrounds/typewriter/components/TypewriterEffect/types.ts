@@ -1,4 +1,5 @@
 export interface TypewriterEffectProps {
-  text: string;
+  texts: string[];
   className?: string;
+  silent?: boolean;
 }
