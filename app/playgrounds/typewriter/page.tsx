@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Link } from "../../../components/Link";
 import { Paragraph } from "../../../components/Paragraph";
-import { TypewriterEffect } from "../../../components/TypewriterEffect";
+import { TypewriterEffect } from "./components/TypewriterEffect";
 
 export default function Typewriter() {
   const [showText, setShowText] = useState(false);
