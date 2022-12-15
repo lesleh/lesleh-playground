@@ -18,6 +18,12 @@ const Home: NextPage = (props) => {
         <li>
           <Link href="/playgrounds/number-guesser">Number Guesser</Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/rock-paper-scissors">
+            Rock Paper Scissors
+          </Link>
+        </li>
       </ul>
     </div>
   );
