@@ -47,7 +47,7 @@ const NumberGuesser = () => {
   return (
     <div className="p-5">
       <h1 className="text-2xl font-bold mb-4">
-        Number Guesser {userGuess} {correctNumber}
+        Number Guesser (between 1 and 100)
       </h1>
       <p className="mb-4">{status}</p>
       {userGuess !== correctNumber ? (
