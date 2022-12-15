@@ -16,7 +16,7 @@ const Home: NextPage = (props) => {
         </li>
 
         <li>
-          <Link href="/playgrounds/typewriter">Number Guesser</Link>
+          <Link href="/playgrounds/number-guesser">Number Guesser</Link>
         </li>
       </ul>
     </div>
