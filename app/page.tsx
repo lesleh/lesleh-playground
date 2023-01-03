@@ -24,6 +24,10 @@ const Home: NextPage = (props) => {
             Rock Paper Scissors
           </Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/homer">Homer Simpson</Link>
+        </li>
       </ul>
     </div>
   );

@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 
-const options = ["rock", "paper", "scissors"];
+const options = ["rock", "paper", "scissors"] as const;
+type Option = typeof options[number];
 const colors = {
   rock: "text-rose-500",
   paper: "text-blue-500",
@@ -12,6 +13,9 @@ const colors = {
 const Option = ({ option }: { option: keyof typeof colors }) => (
   <span className={`text-9xl ${colors[option]}`}>{option}</span>
 );
+
+const isValidOption = (option: string): option is Option =>
+  options.includes(option as Option);
 
 const RockPaperScissors = () => {
   // State to store the user's selection and the computer's selection
@@ -31,7 +35,7 @@ const RockPaperScissors = () => {
   };
 
   // Function to determine the winner based on the user's and computer's selections
-  const determineWinner = (user, computer) => {
+  const determineWinner = (user: Option, computer: Option) => {
     if (user === computer) {
       return "It's a tie!";
     } else if (
@@ -44,6 +48,9 @@ const RockPaperScissors = () => {
       return "The computer wins!";
     }
   };
+
+  if (!isValidOption(userSelection)) return null;
+  if (!isValidOption(computerSelection)) return null;
 
   return (
     <div>
