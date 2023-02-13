@@ -28,6 +28,10 @@ const Home: NextPage = (props) => {
         <li>
           <Link href="/playgrounds/homer">Homer Simpson</Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/lights-out">Lights Out</Link>
+        </li>
       </ul>
     </div>
   );

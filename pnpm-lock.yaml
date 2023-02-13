@@ -6,6 +6,7 @@ specifiers:
   '@types/node': 18.13.0
   '@types/react': 18.0.28
   '@types/react-dom': 18.0.10
+  '@xstate/react': ^3.2.0
   autoprefixer: ^10.4.13
   clsx: ^1.2.1
   eslint: 8.34.0
@@ -16,6 +17,7 @@ specifiers:
   react-dom: 18.2.0
   tailwindcss: ^3.2.6
   typescript: 4.9.5
+  xstate: ^4.36.0
 
 dependencies:
   '@next/bundle-analyzer': 13.1.6
@@ -23,6 +25,7 @@ dependencies:
   '@types/node': 18.13.0
   '@types/react': 18.0.28
   '@types/react-dom': 18.0.10
+  '@xstate/react': 3.2.0_5qd7b23w5dgywqr3h5a5vxtscq
   autoprefixer: 10.4.13_postcss@8.4.21
   clsx: 1.2.1
   eslint: 8.34.0
@@ -33,6 +36,7 @@ dependencies:
   react-dom: 18.2.0_react@18.2.0
   tailwindcss: 3.2.6_postcss@8.4.21
   typescript: 4.9.5
+  xstate: 4.36.0
 
 packages:
 
@@ -365,6 +369,26 @@ packages:
     dependencies:
       '@typescript-eslint/types': 5.51.0
       eslint-visitor-keys: 3.3.0
+    dev: false
+
+  /@xstate/react/3.2.0_5qd7b23w5dgywqr3h5a5vxtscq:
+    resolution: {integrity: sha512-Oxz1WB3/Z9IHjrd2uCIQGjGA8P7UsTTPc3YuIbIsgDgfSntQuvvjR0rZlL9NKQltrCRTXvzGf/wI95wAc2u7Uw==}
+    peerDependencies:
+      '@xstate/fsm': ^2.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      xstate: ^4.36.0
+    peerDependenciesMeta:
+      '@xstate/fsm':
+        optional: true
+      xstate:
+        optional: true
+    dependencies:
+      react: 18.2.0
+      use-isomorphic-layout-effect: 1.1.2_pmekkgnqduwlme35zpnqhenc34
+      use-sync-external-store: 1.2.0_react@18.2.0
+      xstate: 4.36.0
+    transitivePeerDependencies:
+      - '@types/react'
     dev: false
 
   /acorn-jsx/5.3.2_acorn@8.8.2:
@@ -2506,6 +2530,27 @@ packages:
       punycode: 2.3.0
     dev: false
 
+  /use-isomorphic-layout-effect/1.1.2_pmekkgnqduwlme35zpnqhenc34:
+    resolution: {integrity: sha512-49L8yCO3iGT/ZF9QttjwLF/ZD9Iwto5LnH5LmEdk/6cFmXddqi2ulF0edxTwjj+7mqvpVVGQWvbXZdn32wRSHA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+    dependencies:
+      '@types/react': 18.0.28
+      react: 18.2.0
+    dev: false
+
+  /use-sync-external-store/1.2.0_react@18.2.0:
+    resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.2.0
+    dev: false
+
   /util-deprecate/1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
     dev: false
@@ -2588,6 +2633,10 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
+    dev: false
+
+  /xstate/4.36.0:
+    resolution: {integrity: sha512-AUI+KPgyy3g4PDpZWzUy/5ubd8VymbqikNmrJx5AQfqh+AQnemkBiabGROno+am1wUl2yeuT3UDrzUTSidfa6g==}
     dev: false
 
   /xtend/4.0.2:
