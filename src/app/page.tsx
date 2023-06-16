@@ -32,6 +32,10 @@ const Home: NextPage = (props) => {
         <li>
           <Link href="/playgrounds/lights-out">Lights Out</Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/unit-price">Unit Price Calculator</Link>
+        </li>
       </ul>
     </div>
   );
