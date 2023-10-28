@@ -9,8 +9,8 @@ export function LightsOut() {
   const [current, send] = useMachine(lightsOutMachine);
 
   return (
-    <div>
-      <div className="inline-grid m-4 justify-center grid-cols-5 grid-rows-5 gap-4">
+    <div className="h-full grid">
+      <div className="grid justify-center grid-cols-5 grid-rows-5 gap-4 w-max h-max m-auto">
         {current.context.grid.map((row, rowIndex) => (
           <Fragment key={rowIndex}>
             {row.map((light, columnIndex) => (
