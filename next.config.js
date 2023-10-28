@@ -4,6 +4,9 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    webpackBuildWorker: true,
+  },
   reactStrictMode: true,
   swcMinify: true,
   webpack(config, options) {
