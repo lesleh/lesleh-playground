@@ -53,7 +53,7 @@ function useTypedText(texts: string[], silent = false) {
     return () => {
       controller.abort();
     };
-  }, [texts]);
+  }, [texts, silent]);
   return typedText;
 }
 
