@@ -1,17 +1,22 @@
 import { createMachine } from "xstate";
 
+function createRandomBoard(rows: number, cols: number) {
+  const grid = [] as number[][];
+  for (let i = 0; i < rows; i++) {
+    grid.push([]);
+    for (let j = 0; j < cols; j++) {
+      grid[i].push(Math.round(Math.random()));
+    }
+  }
+  return grid;
+}
+
 export const lightsOutMachine = createMachine({
   predictableActionArguments: true,
   id: "lightsOut",
   initial: "playing",
   context: {
-    grid: [
-      [0, 0, 0, 0, 0],
-      [0, 0, 1, 0, 0],
-      [0, 1, 1, 1, 0],
-      [0, 0, 1, 0, 0],
-      [0, 0, 0, 0, 0],
-    ],
+    grid: createRandomBoard(5, 5),
   },
   states: {
     playing: {
