@@ -9,7 +9,7 @@ for (const key of Object.keys(defaultsESM.transform)) {
  * @type {import('@jest/types').Config.InitialOptions}
  */
 const config = {
-  testEnvironment: "node",
+  testEnvironment: "@happy-dom/jest-environment",
   extensionsToTreatAsEsm: defaultsESM.extensionsToTreatAsEsm,
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   transform: {

@@ -1,3 +1,5 @@
+import "@testing-library/jest-dom/extend-expect";
+
 expect.extend({
   toContainSpaceSeparatedValue(received: string, expected: string) {
     const values = received.split(/\s+/);
