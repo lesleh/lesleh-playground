@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom/extend-expect";
+import "@testing-library/jest-dom";
 
 expect.extend({
   toContainSpaceSeparatedValue(received: string, expected: string) {
