@@ -6,9 +6,9 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 const nextConfig = {
   experimental: {
     webpackBuildWorker: true,
+    reactCompiler: true,
   },
   reactStrictMode: true,
-  swcMinify: true,
   webpack(config, options) {
     config.module.rules.push({
       test: /\.(mp3)$/,
