@@ -7,7 +7,11 @@ const Home: NextPage = (props) => {
   return (
     <div className="mx-auto max-w-6xl">
       <Heading level={1}>Playground</Heading>
-      <p><a href="https://ridomovies.tv/movies/spirited-away-watch-online-2001-rd11-rd13">Cassie click here for Spirited Away</a></p>
+      <p>
+        <a href="https://ridomovies.tv/movies/spirited-away-watch-online-2001-rd11-rd13">
+          Cassie click here for Spirited Away
+        </a>
+      </p>
       <Paragraph>
         Here&apos;s a bunch of stuff I&apos;ve written using web technologies.
       </Paragraph>
@@ -36,6 +40,10 @@ const Home: NextPage = (props) => {
 
         <li>
           <Link href="/playgrounds/unit-price">Unit Price Calculator</Link>
+        </li>
+
+        <li>
+          <Link href="/playgrounds/subgrid-cards">Subgrid Cards</Link>
         </li>
       </ul>
     </div>

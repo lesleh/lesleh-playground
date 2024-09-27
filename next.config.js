@@ -8,6 +8,22 @@ const nextConfig = {
     webpackBuildWorker: true,
     reactCompiler: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "loremflickr.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
   reactStrictMode: true,
   webpack(config, options) {
     config.module.rules.push({

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@faker-js/faker':
+        specifier: ^9.0.3
+        version: 9.0.3
       '@next/bundle-analyzer':
         specifier: ^14.2.13
         version: 14.2.13
@@ -304,6 +307,10 @@ packages:
   '@eslint/js@8.56.0':
     resolution: {integrity: sha512-gMsVel9D7f2HLkBma9VbtzZRehRogVRfbr++f06nL2vnCGCNlzOD+/MUov/F4p8myyAHspEhVobgjpX64q5m6A==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+
+  '@faker-js/faker@9.0.3':
+    resolution: {integrity: sha512-lWrrK4QNlFSU+13PL9jMbMKLJYXDFu3tQfayBsMXX7KL/GiQeqfB1CzHkqD5UHBUtPAuPo6XwGbMFNdVMZObRA==}
+    engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
   '@happy-dom/jest-environment@12.10.3':
     resolution: {integrity: sha512-6cLNSLhSAE4Pj7QEEHU1fEeJFczSA4TT9WmoMQNZ0Lpb6RTBYPDfil56nD/UqyPy5vq3N2n6BN442KsjhHn7uw==}
@@ -3144,6 +3151,8 @@ snapshots:
       - supports-color
 
   '@eslint/js@8.56.0': {}
+
+  '@faker-js/faker@9.0.3': {}
 
   '@happy-dom/jest-environment@12.10.3':
     dependencies:
