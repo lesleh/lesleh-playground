@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
-    "@next/bundle-analyzer": "^14.2.13",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "20.10.6",
     "@types/react": "18.2.46",
@@ -34,6 +33,7 @@
   "devDependencies": {
     "@happy-dom/jest-environment": "^12.10.3",
     "@jest/types": "^29.6.3",
+    "@next/bundle-analyzer": "^14.2.13",
     "@testing-library/dom": "^9.3.4",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^14.3.1",

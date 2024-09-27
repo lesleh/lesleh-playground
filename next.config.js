@@ -8,6 +8,7 @@ const nextConfig = {
     webpackBuildWorker: true,
     reactCompiler: true,
   },
+  output: "standalone",
   images: {
     remotePatterns: [
       {
