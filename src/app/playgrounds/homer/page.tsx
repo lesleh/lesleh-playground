@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { useClientBoundingRect } from "./useClientBoundingRect";
-import homer from "./homer.png";
-import eyedot from "./eyedot.png";
-import { useMousePosition } from "./useMousePosition";
+import { useClientBoundingRect } from "./_hooks/useClientBoundingRect";
+import homer from "./_assets/homer.png";
+import eyedot from "./_assets/eyedot.png";
+import { useMousePosition } from "./_hooks/useMousePosition";
 
 const LEFT_EYE = {
   x: 288,
