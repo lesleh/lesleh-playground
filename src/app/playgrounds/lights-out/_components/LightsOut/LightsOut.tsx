@@ -2,7 +2,7 @@
 
 import { useMachine } from "@xstate/react";
 import { Fragment } from "react";
-import { lightsOutMachine } from "../../machines/lightsOutMachine";
+import { lightsOutMachine } from "../../_machines/lightsOutMachine";
 import { Light } from "../Light/Light";
 
 export function LightsOut() {

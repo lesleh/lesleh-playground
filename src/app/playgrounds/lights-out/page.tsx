@@ -1,4 +1,4 @@
-import { LightsOut } from "./components/LightsOut/LightsOut";
+import { LightsOut } from "./_components/LightsOut/LightsOut";
 
 export default function LightsOutPage() {
   return <LightsOut />;
