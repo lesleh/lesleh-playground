@@ -11,7 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@faker-js/faker": "^9.0.3",
+    "@faker-js/faker": "^9.3.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "20.10.6",
     "@types/react": "18.2.46",
@@ -22,22 +22,22 @@
     "eslint": "8.56.0",
     "eslint-config-next": "14.0.4",
     "next": "15.0.0-rc.0",
-    "postcss": "^8.4.47",
+    "postcss": "^8.4.49",
     "react": "19.0.0-rc-935180c7e0-20240524",
     "react-dom": "19.0.0-rc-935180c7e0-20240524",
     "sharp": "^0.33.5",
-    "tailwindcss": "^3.4.13",
+    "tailwindcss": "^3.4.16",
     "typescript": "5.3.3",
     "xstate": "^4.38.3"
   },
   "devDependencies": {
     "@happy-dom/jest-environment": "^12.10.3",
     "@jest/types": "^29.6.3",
-    "@next/bundle-analyzer": "^14.2.13",
+    "@next/bundle-analyzer": "^14.2.20",
     "@testing-library/dom": "^9.3.4",
-    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
-    "@types/jest": "^29.5.13",
+    "@types/jest": "^29.5.14",
     "babel-plugin-react-compiler": "0.0.0-experimental-592953e-20240517",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5"
