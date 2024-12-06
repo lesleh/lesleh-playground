@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import typewriterKeySound from "../../assets/typewriter-key2.mp3";
 import { Blink } from "../Blink";
 import { TypewriterEffectProps } from "./types";
@@ -61,7 +61,7 @@ export function TypewriterEffect({
   texts,
   silent = false,
   className,
-}: TypewriterEffectProps): JSX.Element {
+}: TypewriterEffectProps): React.JSX.Element {
   const [textToShow, setTextToShow] = useState("");
 
   if (!silent) {

@@ -6,18 +6,18 @@ interface EventHandler<T = {}> {
 
 export function useWindowEvent<
   K extends keyof HTMLElementEventMap,
-  H extends HTMLElementEventMap[K]
+  H extends HTMLElementEventMap[K],
 >(key: K, handler: EventHandler<H>, elem: HTMLElement): void;
 export function useWindowEvent<
   K extends keyof WindowEventMap,
-  H extends WindowEventMap[K]
+  H extends WindowEventMap[K],
 >(key: K, handler: EventHandler<H>, elem?: Window): void;
 export function useWindowEvent(
   eventName: string,
   handler: EventHandler,
-  element: Window | HTMLElement = window
+  element: Window | HTMLElement = window,
 ) {
-  const handlerRef = useRef<EventHandler>();
+  const handlerRef = useRef<EventHandler>(undefined);
 
   useEffect(() => {
     handlerRef.current = handler;

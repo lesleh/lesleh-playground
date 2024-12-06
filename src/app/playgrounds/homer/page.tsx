@@ -24,6 +24,7 @@ function HomerPage() {
   const leftEyeRef = useRef<HTMLImageElement | null>(null);
   const rightEyeRef = useRef<HTMLImageElement | null>(null);
   const { x, y } = useMousePosition();
+  // @ts-expect-error
   const pRect = useClientBoundingRect(pRef);
 
   const leftEyePosition = {
@@ -47,7 +48,7 @@ function HomerPage() {
 
     const rightAngle = Math.atan2(
       y - rightEyePosition.y,
-      x - rightEyePosition.x
+      x - rightEyePosition.x,
     );
     const rightOffset = {
       x: Math.cos(rightAngle) * RIGHT_EYE.radius,

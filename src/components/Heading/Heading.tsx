@@ -1,3 +1,4 @@
+import React from "react";
 import clsx from "clsx";
 import { HeadingProps } from "./types";
 
@@ -15,7 +16,7 @@ export function Heading({
   level,
   children,
   className,
-}: HeadingProps): JSX.Element {
+}: HeadingProps): React.JSX.Element {
   const Component = `h${level}` as const;
 
   return (
@@ -24,7 +25,7 @@ export function Heading({
         "font-quattrocento",
         "font-bold",
         classNameMap[level],
-        className
+        className,
       )}
     >
       {children}
