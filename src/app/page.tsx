@@ -47,7 +47,7 @@ const Home: NextPage = (props) => {
         </li>
 
         <li>
-          <Link href="/playgrounds/gradient">Gradients</Link>
+          <Link href="/playgrounds/gradients">Gradients</Link>
         </li>
       </ul>
     </div>
