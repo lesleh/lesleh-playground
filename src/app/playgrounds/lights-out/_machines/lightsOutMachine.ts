@@ -1,14 +1,74 @@
 import { createMachine } from "xstate";
 
-function createRandomBoard(rows: number, cols: number) {
-  const grid = [] as number[][];
-  for (let i = 0; i < rows; i++) {
-    grid.push([]);
-    for (let j = 0; j < cols; j++) {
-      grid[i].push(Math.round(Math.random()));
+class LightsOutBoard {
+  grid: number[][];
+
+  constructor() {
+    this.grid = this.#createBoard();
+    this.toggleLight(2, 2);
+  }
+
+  #createBoard() {
+    const grid = [] as number[][];
+    for (let i = 0; i < 5; i++) {
+      grid.push([]);
+      for (let j = 0; j < 5; j++) {
+        grid[i][j] = 0;
+      }
+    }
+    return grid;
+  }
+
+  #isInBounds(row: number, col: number) {
+    return (
+      row >= 0 &&
+      row < this.grid.length &&
+      col >= 0 &&
+      col < this.grid[0].length
+    );
+  }
+
+  #createToggleList(row: number, col: number) {
+    const toggleList = [] as [number, number][];
+    const directions = [
+      [0, 0],
+      [0, 1],
+      [0, -1],
+      [1, 0],
+      [-1, 0],
+    ];
+
+    for (const [rowOffset, colOffset] of directions) {
+      const newRow = row + rowOffset;
+      const newCol = col + colOffset;
+
+      if (this.#isInBounds(newRow, newCol)) {
+        toggleList.push([newRow, newCol]);
+      }
+    }
+
+    return toggleList;
+  }
+
+  randomize() {
+    this.grid = this.#createBoard();
+    for (let i = 0; i < 10; i++) {
+      const row = Math.floor(Math.random() * 5);
+      const col = Math.floor(Math.random() * 5);
+      this.toggleLight(row, col);
     }
   }
-  return grid;
+
+  toggleLight(row: number, col: number) {
+    const toggleList = this.#createToggleList(row, col);
+    for (const [row, col] of toggleList) {
+      this.grid[row][col] = this.grid[row][col] === 0 ? 1 : 0;
+    }
+  }
+
+  get isWon() {
+    return this.grid.every((row) => row.every((light) => light === 0));
+  }
 }
 
 export const lightsOutMachine = createMachine({
@@ -16,41 +76,21 @@ export const lightsOutMachine = createMachine({
   id: "lightsOut",
   initial: "playing",
   context: {
-    grid: createRandomBoard(5, 5),
+    grid: new LightsOutBoard(),
   },
   states: {
     playing: {
       on: {
+        RANDOMIZE: {
+          actions: (ctx) => {
+            ctx.grid = new LightsOutBoard();
+            ctx.grid.randomize();
+          },
+        },
         TOGGLE: {
           actions: (ctx, event) => {
             const { row, col } = event.coordinates;
-            const newGrid = [...ctx.grid];
-            newGrid[row][col] = newGrid[row][col] === 0 ? 1 : 0;
-
-            // toggle the lights above
-            if (row - 1 >= 0) {
-              newGrid[row - 1][col] = newGrid[row - 1][col] === 0 ? 1 : 0;
-            }
-
-            // toggle the lights below
-            if (row + 1 < ctx.grid.length) {
-              newGrid[row + 1][col] = newGrid[row + 1][col] === 0 ? 1 : 0;
-            }
-
-            // toggle the lights to the left
-            if (col - 1 >= 0) {
-              newGrid[row][col - 1] = newGrid[row][col - 1] === 0 ? 1 : 0;
-            }
-
-            // toggle the lights to the right
-            if (col + 1 < ctx.grid[0].length) {
-              newGrid[row][col + 1] = newGrid[row][col + 1] === 0 ? 1 : 0;
-            }
-
-            return {
-              ...ctx,
-              grid: newGrid,
-            };
+            ctx.grid.toggleLight(row, col);
           },
         },
       },
@@ -63,7 +103,7 @@ export const lightsOutMachine = createMachine({
     {
       target: "won",
       cond: (ctx) => {
-        return ctx.grid.every((row) => row.every((light) => light === 0));
+        return ctx.grid.isWon;
       },
     },
   ],

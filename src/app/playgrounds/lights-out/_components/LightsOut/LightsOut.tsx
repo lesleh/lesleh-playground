@@ -11,7 +11,7 @@ export function LightsOut() {
   return (
     <div className="h-full grid">
       <div className="grid justify-center grid-cols-5 grid-rows-5 gap-4 w-max h-max m-auto">
-        {current.context.grid.map((row, rowIndex) => (
+        {current.context.grid.grid.map((row, rowIndex) => (
           <Fragment key={rowIndex}>
             {row.map((light, columnIndex) => (
               <Light
@@ -32,6 +32,15 @@ export function LightsOut() {
             ))}
           </Fragment>
         ))}
+      </div>
+      <div className="text-center">
+        <button
+          type="button"
+          className="inline-block p-3 bg-rose-500 text-white rounded"
+          onClick={() => send("RANDOMIZE")}
+        >
+          Randomize
+        </button>
       </div>
       {current.matches("won") && <div className="text-4xl">You won!</div>}
     </div>
