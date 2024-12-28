@@ -17,10 +17,6 @@ const Home: NextPage = (props) => {
       </Paragraph>
       <ul className="list-disc list-inside">
         <li>
-          <Link href="/playgrounds/typewriter">Typewriter Effect</Link>
-        </li>
-
-        <li>
           <Link href="/playgrounds/number-guesser">Number Guesser</Link>
         </li>
 
