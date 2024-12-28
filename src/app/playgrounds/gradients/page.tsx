@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import { Link } from "../../../components/Link";
 import { useElementSize } from "./_hooks/useElementSize";
+import { useList } from "./_hooks/useList";
+import { ColorList } from "./_components/ColorList";
 
 function makeGradientStops(
   colors: string[],
@@ -22,10 +24,15 @@ function makeGradientStops(
 function makeGradient(
   stops: { color: string; stop: number }[],
   angle: number,
-  type: "linear" | "radial" = "linear",
+  type: "linear" | "radial" | "conic" = "linear",
 ): string {
   if (type === "radial") {
     return `radial-gradient(circle, ${stops
+      .map(({ color, stop }) => `${color} ${(stop * 100).toFixed(3)}%`)
+      .join(", ")})`;
+  }
+  if (type === "conic") {
+    return `conic-gradient(from ${(angle * 360).toFixed(3)}deg, ${stops
       .map(({ color, stop }) => `${color} ${(stop * 100).toFixed(3)}%`)
       .join(", ")})`;
   }
@@ -38,19 +45,16 @@ export default function GradientsPage() {
   const outputRef = useRef<HTMLDivElement>(null);
   const { width, height } = useElementSize(outputRef);
   const [angle, setAngle] = useState(0.25);
-  const [gradientType, setGradientType] = useState<"linear" | "radial">(
-    "linear",
-  );
-
-  const colors = [
-    "red",
-    "orange",
-    "yellow",
-    "green",
-    "blue",
-    "indigo",
-    "violet",
-  ];
+  const {
+    list: colors,
+    set: setColors,
+    removeAt: removeColor,
+    setValueAt: setColorAt,
+    add: addColor,
+  } = useList(["#FF0000", "#00FF00", "#0000FF"]);
+  const [gradientType, setGradientType] = useState<
+    "linear" | "radial" | "conic"
+  >("linear");
 
   const stops = makeGradientStops(colors);
   const gradient = makeGradient(stops, angle, gradientType);
@@ -60,21 +64,22 @@ export default function GradientsPage() {
       <div className="p-2 col-span-2">
         <Link href="/">Home</Link>
       </div>
-      <div className="p-4">
+      <div className="p-4 overflow-y-auto">
         <div className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-2 items-center">
           <label htmlFor="gradient-type" className="text-right">
             Type
           </label>
           <select
             id="gradient-type"
-            className="w-full"
+            className="w-full p-2 rounded"
             value={gradientType}
             onChange={(e) =>
-              setGradientType(e.target.value as "linear" | "radial")
+              setGradientType(e.target.value as "linear" | "radial" | "conic")
             }
           >
             <option value="linear">Linear</option>
             <option value="radial">Radial</option>
+            <option value="conic">Conic</option>
           </select>
           <label htmlFor="angle" className="text-right">
             Angle
@@ -90,16 +95,15 @@ export default function GradientsPage() {
             onChange={(e) => setAngle(parseFloat(e.target.value))}
             disabled={gradientType === "radial"}
           />
-          <label htmlFor="gradient-code" className="text-right">
-            Code
-          </label>
-          <textarea
-            id="gradient-code"
-            className="w-full"
-            value={gradient}
-            readOnly
-          ></textarea>
         </div>
+        <ColorList
+          colors={colors}
+          onRemove={(index: number) => removeColor(index)}
+          onColorChange={(index: number, color: string) =>
+            setColorAt(index, color)
+          }
+          addColor={(color: string) => addColor(color)}
+        />
       </div>
       <div
         ref={outputRef}
