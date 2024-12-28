@@ -45,6 +45,10 @@ const Home: NextPage = (props) => {
         <li>
           <Link href="/playgrounds/subgrid-cards">Subgrid Cards</Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/gradient">Gradients</Link>
+        </li>
       </ul>
     </div>
   );
