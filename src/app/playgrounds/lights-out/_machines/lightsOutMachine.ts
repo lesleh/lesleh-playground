@@ -1,110 +1,106 @@
-import { createMachine } from "xstate";
+import { createMachine, assign, type StateValue } from "xstate";
 
-class LightsOutBoard {
-  grid: number[][];
+type LightsOutContext = {
+  board: boolean[][];
+};
 
-  constructor() {
-    this.grid = this.#createBoard();
-    this.toggleLight(2, 2);
-  }
+type LightsOutEvents =
+  | { type: "TOGGLE_LIGHT"; row: number; col: number }
+  | { type: "RESET" };
 
-  #createBoard() {
-    const grid = [] as number[][];
-    for (let i = 0; i < 5; i++) {
-      grid.push([]);
-      for (let j = 0; j < 5; j++) {
-        grid[i][j] = 0;
-      }
+const togglePositions = (board: boolean[][], row: number, col: number) => {
+  const newBoard = board.map((r) => [...r]);
+  const positions = [
+    [row, col],
+    [row - 1, col],
+    [row + 1, col],
+    [row, col - 1],
+    [row, col + 1],
+  ];
+
+  positions.forEach(([r, c]) => {
+    if (r >= 0 && r < 5 && c >= 0 && c < 5) {
+      newBoard[r][c] = !newBoard[r][c];
     }
-    return grid;
-  }
+  });
+  return newBoard;
+};
 
-  #isInBounds(row: number, col: number) {
-    return (
-      row >= 0 &&
-      row < this.grid.length &&
-      col >= 0 &&
-      col < this.grid[0].length
-    );
-  }
+const initializeBoard = () => {
+  const board = Array(5)
+    .fill(null)
+    .map(() => Array(5).fill(true));
+  return board;
+};
 
-  #createToggleList(row: number, col: number) {
-    const toggleList = [] as [number, number][];
-    const directions = [
-      [0, 0],
-      [0, 1],
-      [0, -1],
-      [1, 0],
-      [-1, 0],
-    ];
-
-    for (const [rowOffset, colOffset] of directions) {
-      const newRow = row + rowOffset;
-      const newCol = col + colOffset;
-
-      if (this.#isInBounds(newRow, newCol)) {
-        toggleList.push([newRow, newCol]);
-      }
-    }
-
-    return toggleList;
-  }
-
-  randomize() {
-    this.grid = this.#createBoard();
-    for (let i = 0; i < 10; i++) {
-      const row = Math.floor(Math.random() * 5);
-      const col = Math.floor(Math.random() * 5);
-      this.toggleLight(row, col);
-    }
-  }
-
-  toggleLight(row: number, col: number) {
-    const toggleList = this.#createToggleList(row, col);
-    for (const [row, col] of toggleList) {
-      this.grid[row][col] = this.grid[row][col] === 0 ? 1 : 0;
-    }
-  }
-
-  get isWon() {
-    return this.grid.every((row) => row.every((light) => light === 0));
-  }
-}
-
-export const lightsOutMachine = createMachine({
-  predictableActionArguments: true,
-  id: "lightsOut",
-  initial: "playing",
-  context: {
-    grid: new LightsOutBoard(),
-  },
-  states: {
-    playing: {
-      on: {
-        RANDOMIZE: {
-          actions: (ctx) => {
-            ctx.grid = new LightsOutBoard();
-            ctx.grid.randomize();
+export const lightsOutMachine = createMachine(
+  {
+    types: {} as {
+      context: LightsOutContext;
+      events: LightsOutEvents;
+      value: "playing" | "won";
+    },
+    id: "lightsOut",
+    initial: "playing",
+    context: {
+      board: initializeBoard(),
+    },
+    states: {
+      playing: {
+        on: {
+          TOGGLE_LIGHT: [
+            {
+              target: "won",
+              guard: "isWon",
+              actions: "toggleLight",
+            },
+            {
+              target: "playing",
+              guard: "isNotWon",
+              actions: "toggleLight",
+            },
+          ],
+          RESET: {
+            actions: "resetBoard",
           },
         },
-        TOGGLE: {
-          actions: (ctx, event) => {
-            const { row, col } = event.coordinates;
-            ctx.grid.toggleLight(row, col);
+      },
+      won: {
+        on: {
+          RESET: {
+            target: "playing",
+            actions: "resetBoard",
           },
         },
       },
     },
-    won: {
-      type: "final",
-    },
   },
-  always: [
-    {
-      target: "won",
-      cond: (ctx) => {
-        return ctx.grid.isWon;
+  {
+    actions: {
+      toggleLight: assign(({ context, event }) => {
+        if (event.type !== "TOGGLE_LIGHT") return context;
+        const { row, col } = event;
+        return {
+          board: togglePositions(context.board, row, col),
+        };
+      }),
+      resetBoard: assign(() => ({
+        board: initializeBoard(),
+      })),
+    },
+    guards: {
+      isWon: ({ context, event }) => {
+        if (event.type !== "TOGGLE_LIGHT") return false;
+        const { row, col } = event;
+        const newBoard = togglePositions(context.board, row, col);
+        return newBoard.every((row) => row.every((cell) => !cell));
+      },
+      isNotWon: ({ context, event }) => {
+        if (event.type !== "TOGGLE_LIGHT") return true;
+        const { row, col } = event;
+        const newBoard = togglePositions(context.board, row, col);
+        return !newBoard.every((row) => row.every((cell) => !cell));
       },
     },
-  ],
-});
+  },
+);
