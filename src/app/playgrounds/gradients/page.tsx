@@ -1,8 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Link } from "../../../components/Link";
-import { useElementSize } from "./_hooks/useElementSize";
 import { useList } from "./_hooks/useList";
 import { ColorList } from "./_components/ColorList";
 
@@ -43,7 +41,6 @@ function makeGradient(
 
 export default function GradientsPage() {
   const outputRef = useRef<HTMLDivElement>(null);
-  const { width, height } = useElementSize(outputRef);
   const [angle, setAngle] = useState(0.25);
   const {
     list: colors,
@@ -106,7 +103,6 @@ export default function GradientsPage() {
         ref={outputRef}
         style={{
           backgroundImage: gradient,
-          backgroundSize: `${width}px ${height}px`,
         }}
       ></div>
     </div>
