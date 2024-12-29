@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import "../styles/globals.css";
+import { Breadcrumbs } from "./_components/Breadcrumbs";
 
 export default function RootLayout({
   children,
@@ -22,7 +23,12 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="h-full">{children}</body>
+      <body className="h-full grid grid-cols-1 grid-rows-[auto,1fr">
+        <div className="px-4 pt-2 pb-1">
+          <Breadcrumbs />
+        </div>
+        <div>{children}</div>
+      </body>
     </html>
   );
 }
