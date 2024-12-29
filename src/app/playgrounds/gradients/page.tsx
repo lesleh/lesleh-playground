@@ -60,10 +60,7 @@ export default function GradientsPage() {
   const gradient = makeGradient(stops, angle, gradientType);
 
   return (
-    <div className="grid grid-cols-[300px,1fr] grid-rows-[auto,1fr] h-full">
-      <div className="p-2 col-span-2">
-        <Link href="/">Home</Link>
-      </div>
+    <div className="grid grid-cols-[300px,1fr] h-full">
       <div className="p-4 overflow-y-auto">
         <div className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-2 items-center">
           <label htmlFor="gradient-type" className="text-right">
