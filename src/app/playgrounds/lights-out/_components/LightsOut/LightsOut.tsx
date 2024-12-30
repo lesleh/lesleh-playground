@@ -34,7 +34,7 @@ export function LightsOut() {
         <button
           type="button"
           className="block bg-rose-500 text-white p-2 rounded col-span-5"
-          onClick={() => send({ type: "RESET" })}
+          onClick={() => send({ type: "RANDOMIZE" })}
         >
           Randomize
         </button>
