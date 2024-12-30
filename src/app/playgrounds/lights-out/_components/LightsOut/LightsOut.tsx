@@ -5,14 +5,22 @@ import { Fragment } from "react";
 import { lightsOutMachine } from "../../_machines/lightsOutMachine";
 import { Light } from "../Light/Light";
 
+const VALUE_LABELS = {
+  idle: "Idle",
+  playing: "Playing",
+  won: "You won!",
+  randomizing: "Randomizing",
+  solving: "Solving",
+};
+
 export function LightsOut() {
   const [current, send] = useMachine(lightsOutMachine);
 
   return (
     <div className="h-full grid">
-      <div className="grid justify-center grid-cols-5 grid-rows-7 gap-4 w-max h-max m-auto">
+      <div className="grid grid-cols-5 gap-4 w-max h-max mx-auto mt-6">
         <div className="col-span-5 text-2xl text-center grid items-center justify-center">
-          {current.matches("won") && "You won!"}
+          {VALUE_LABELS[current.value as keyof typeof VALUE_LABELS]}
         </div>
         {current.context.board.map((row, rowIndex) => (
           <Fragment key={rowIndex}>
