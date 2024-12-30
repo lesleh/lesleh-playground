@@ -33,10 +33,17 @@ export function LightsOut() {
         ))}
         <button
           type="button"
-          className="block bg-rose-500 text-white p-2 rounded col-span-5"
+          className="block bg-rose-500 text-white p-2 rounded col-span-3"
           onClick={() => send({ type: "RANDOMIZE" })}
         >
           Randomize
+        </button>
+        <button
+          type="button"
+          className="block bg-rose-500 text-white p-2 rounded col-span-2"
+          onClick={() => send({ type: "SOLVE" })}
+        >
+          Solve
         </button>
       </div>
       {current.matches("won") && <div className="text-4xl">You won!</div>}
