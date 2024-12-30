@@ -8,6 +8,7 @@ type LightsOutContext = {
 };
 
 type LightsOutEvents =
+  | { type: "START" }
   | { type: "TOGGLE_LIGHT"; row: number; col: number }
   | { type: "RESET" }
   | { type: "RANDOMIZE" }
@@ -108,10 +109,10 @@ export const lightsOutMachine = createMachine(
     types: {} as {
       context: LightsOutContext;
       events: LightsOutEvents;
-      value: "playing" | "won" | "randomizing" | "solving";
+      value: "idle" | "playing" | "won" | "randomizing" | "solving";
     },
     id: "lightsOut",
-    initial: "randomizing",
+    initial: "idle",
     context: {
       board: initializeBoard(),
       randomizeCount: 0,
@@ -119,6 +120,11 @@ export const lightsOutMachine = createMachine(
       solutionIndex: 0,
     },
     states: {
+      idle: {
+        on: {
+          START: "randomizing",
+        },
+      },
       playing: {
         on: {
           TOGGLE_LIGHT: [
@@ -133,9 +139,6 @@ export const lightsOutMachine = createMachine(
               actions: "toggleLight",
             },
           ],
-          RESET: {
-            actions: "resetBoard",
-          },
           RANDOMIZE: {
             target: "randomizing",
             actions: "clearBoard",
@@ -179,8 +182,8 @@ export const lightsOutMachine = createMachine(
       won: {
         on: {
           RESET: {
-            target: "playing",
-            actions: "resetBoard",
+            target: "randomizing",
+            actions: "clearBoard",
           },
         },
       },
@@ -196,10 +199,6 @@ export const lightsOutMachine = createMachine(
           board: togglePositions(context.board, row, col),
         };
       }),
-      resetBoard: assign(() => ({
-        board: initializeBoard(),
-        randomizeCount: 0,
-      })),
       clearBoard: assign(() => ({
         board: Array(5)
           .fill(null)

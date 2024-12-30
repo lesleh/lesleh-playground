@@ -10,7 +10,10 @@ export function LightsOut() {
 
   return (
     <div className="h-full grid">
-      <div className="grid justify-center grid-cols-5 grid-rows-6 gap-4 w-max h-max m-auto">
+      <div className="grid justify-center grid-cols-5 grid-rows-7 gap-4 w-max h-max m-auto">
+        <div className="col-span-5 text-2xl text-center grid items-center justify-center">
+          {current.matches("won") && "You won!"}
+        </div>
         {current.context.board.map((row, rowIndex) => (
           <Fragment key={rowIndex}>
             {row.map((light, columnIndex) => (
@@ -31,22 +34,34 @@ export function LightsOut() {
             ))}
           </Fragment>
         ))}
-        <button
-          type="button"
-          className="block bg-rose-500 text-white p-2 rounded col-span-3"
-          onClick={() => send({ type: "RANDOMIZE" })}
-        >
-          Randomize
-        </button>
-        <button
-          type="button"
-          className="block bg-rose-500 text-white p-2 rounded col-span-2"
-          onClick={() => send({ type: "SOLVE" })}
-        >
-          Solve
-        </button>
+        {current.matches("idle") && (
+          <button
+            type="button"
+            className="block bg-rose-500 text-white p-2 rounded col-span-5"
+            onClick={() => send({ type: "START" })}
+          >
+            Start
+          </button>
+        )}
+        {current.matches("playing") && (
+          <button
+            type="button"
+            className="block bg-rose-500 text-white p-2 rounded col-span-5"
+            onClick={() => send({ type: "SOLVE" })}
+          >
+            Solve
+          </button>
+        )}
+        {current.matches("won") && (
+          <button
+            type="button"
+            className="block bg-rose-500 text-white p-2 rounded col-span-5"
+            onClick={() => send({ type: "RESET" })}
+          >
+            Reset
+          </button>
+        )}
       </div>
-      {current.matches("won") && <div className="text-4xl">You won!</div>}
     </div>
   );
 }
