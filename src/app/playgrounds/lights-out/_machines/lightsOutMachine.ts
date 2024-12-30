@@ -36,13 +36,6 @@ const initializeBoard = () => {
   let board = Array(5)
     .fill(null)
     .map(() => Array(5).fill(false));
-
-  for (let i = 0; i < 10; i++) {
-    const row = Math.floor(Math.random() * 5);
-    const col = Math.floor(Math.random() * 5);
-    board = togglePositions(board, row, col);
-  }
-
   return board;
 };
 
@@ -118,7 +111,7 @@ export const lightsOutMachine = createMachine(
       value: "playing" | "won" | "randomizing" | "solving";
     },
     id: "lightsOut",
-    initial: "playing",
+    initial: "randomizing",
     context: {
       board: initializeBoard(),
       randomizeCount: 0,
