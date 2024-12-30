@@ -52,7 +52,7 @@ export function LightsOut() {
             Start
           </button>
         )}
-        {current.matches("playing") && (
+        {current.matches("playing") && false && (
           <button
             type="button"
             className="block bg-rose-500 text-white p-2 rounded col-span-5"
