@@ -5,6 +5,7 @@ type LightsOutContext = {
   randomizeCount: number;
   solution: Array<[number, number]>;
   solutionIndex: number;
+  moveCount: number;
 };
 
 type LightsOutEvents =
@@ -118,6 +119,7 @@ export const lightsOutMachine = createMachine(
       randomizeCount: 0,
       solution: [],
       solutionIndex: 0,
+      moveCount: 0,
     },
     states: {
       idle: {
@@ -207,6 +209,7 @@ export const lightsOutMachine = createMachine(
         return {
           ...context,
           board: togglePositions(context.board, row, col),
+          moveCount: context.moveCount + 1,
         };
       }),
       clearBoard: assign(() => ({
@@ -214,6 +217,7 @@ export const lightsOutMachine = createMachine(
           .fill(null)
           .map(() => Array(5).fill(false)),
         randomizeCount: 0,
+        moveCount: 0,
       })),
       randomToggle: assign(({ context }) => {
         const row = Math.floor(Math.random() * 5);
@@ -235,6 +239,7 @@ export const lightsOutMachine = createMachine(
           ...context,
           board: togglePositions(context.board, row, col),
           solutionIndex: context.solutionIndex + 1,
+          moveCount: context.moveCount + 1,
         };
       }),
     },

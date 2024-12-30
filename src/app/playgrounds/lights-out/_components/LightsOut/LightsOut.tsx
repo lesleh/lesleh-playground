@@ -21,6 +21,12 @@ export function LightsOut() {
       <div className="grid grid-cols-5 gap-4 w-max h-max mx-auto mt-6">
         <div className="col-span-5 text-2xl text-center grid items-center justify-center">
           {VALUE_LABELS[current.value as keyof typeof VALUE_LABELS]}
+          {current.matches("won") || current.matches("playing") ? (
+            <span className="text-base text-gray-500">
+              {current.context.moveCount}{" "}
+              {current.context.moveCount === 1 ? "move" : "moves"}
+            </span>
+          ) : null}
         </div>
         {current.context.board.map((row, rowIndex) => (
           <Fragment key={rowIndex}>
