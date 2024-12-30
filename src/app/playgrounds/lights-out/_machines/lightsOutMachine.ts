@@ -27,13 +27,16 @@ const togglePositions = (board: boolean[][], row: number, col: number) => {
 };
 
 const initializeBoard = () => {
-  const board = Array(5)
+  let board = Array(5)
     .fill(null)
-    .map(() =>
-      Array(5)
-        .fill(null)
-        .map(() => Math.random() < 0.5),
-    );
+    .map(() => Array(5).fill(false));
+
+  for (let i = 0; i < 10; i++) {
+    const row = Math.floor(Math.random() * 5);
+    const col = Math.floor(Math.random() * 5);
+    board = togglePositions(board, row, col);
+  }
+
   return board;
 };
 
