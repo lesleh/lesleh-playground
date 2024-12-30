@@ -26,6 +26,7 @@ export function LightsOut() {
           <Fragment key={rowIndex}>
             {row.map((light, columnIndex) => (
               <Light
+                className="rounded"
                 key={`${rowIndex}-${columnIndex}`}
                 onClick={() => {
                   if (current.matches("playing")) {
