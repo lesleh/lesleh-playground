@@ -29,7 +29,11 @@ const togglePositions = (board: boolean[][], row: number, col: number) => {
 const initializeBoard = () => {
   const board = Array(5)
     .fill(null)
-    .map(() => Array(5).fill(true));
+    .map(() =>
+      Array(5)
+        .fill(null)
+        .map(() => Math.random() < 0.5),
+    );
   return board;
 };
 
