@@ -133,12 +133,12 @@ export const lightsOutMachine = createMachine(
             {
               target: "won",
               guard: "isWon",
-              actions: "toggleLight",
+              actions: ["toggleLight", "resetSolution"],
             },
             {
               target: "playing",
               guard: "isNotWon",
-              actions: "toggleLight",
+              actions: ["toggleLight", "prepareSolution"],
             },
           ],
           RANDOMIZE: {
@@ -162,6 +162,7 @@ export const lightsOutMachine = createMachine(
             },
             {
               target: "playing",
+              actions: "prepareSolution",
             },
           ],
         },
@@ -177,6 +178,7 @@ export const lightsOutMachine = createMachine(
             },
             {
               target: "won",
+              actions: "resetSolution",
             },
           ],
         },
@@ -231,6 +233,11 @@ export const lightsOutMachine = createMachine(
       prepareSolution: assign(({ context }) => ({
         ...context,
         solution: findSolution(context.board),
+        solutionIndex: 0,
+      })),
+      resetSolution: assign(({ context }) => ({
+        ...context,
+        solution: [],
         solutionIndex: 0,
       })),
       executeNextMove: assign(({ context }) => {

@@ -4,6 +4,7 @@ import { useMachine } from "@xstate/react";
 import { Fragment } from "react";
 import { lightsOutMachine } from "../../_machines/lightsOutMachine";
 import { Light } from "../Light/Light";
+import clsx from "clsx";
 
 const VALUE_LABELS = {
   idle: "Idle",
@@ -15,6 +16,13 @@ const VALUE_LABELS = {
 
 export function LightsOut() {
   const [current, send] = useMachine(lightsOutMachine);
+  const solution = current.context.solution;
+
+  function cellIsInSolution(row: number, col: number) {
+    return solution.some(([solutionRow, solutionCol]) => {
+      return solutionRow === row && solutionCol === col;
+    });
+  }
 
   return (
     <div className="h-full grid">
@@ -32,7 +40,12 @@ export function LightsOut() {
           <Fragment key={rowIndex}>
             {row.map((light, columnIndex) => (
               <Light
-                className="rounded"
+                className={clsx({
+                  "border-solid border-black border-2": cellIsInSolution(
+                    rowIndex,
+                    columnIndex,
+                  ),
+                })}
                 key={`${rowIndex}-${columnIndex}`}
                 onClick={() => {
                   if (current.matches("playing")) {

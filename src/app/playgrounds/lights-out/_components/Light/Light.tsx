@@ -12,7 +12,7 @@ export function Light({ onClick, isOn, isPlaying, className }: LightProps) {
     <button
       disabled={!isPlaying}
       className={clsx(
-        "h-16 w-16 relative overflow-hidden transition-transform",
+        "h-16 w-16 relative overflow-hidden transition-transform rounded",
         {
           "bg-red-500": isOn,
           "bg-gray-500": !isOn,
