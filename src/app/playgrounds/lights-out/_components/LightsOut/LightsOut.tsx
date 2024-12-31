@@ -25,12 +25,25 @@ export function LightsOut() {
   }
 
   return (
-    <div className="h-full grid">
-      <div className="grid grid-cols-5 gap-4 w-max h-max mx-auto mt-6">
-        <div className="col-span-5 text-2xl text-center grid items-center justify-center">
+    <div className="h-full grid" role="main" aria-label="Lights Out Game">
+      <div
+        className="grid grid-cols-5 gap-4 w-max h-max mx-auto mt-6"
+        role="group"
+        aria-label="Game Board"
+      >
+        <div
+          className="col-span-5 text-2xl text-center grid items-center justify-center"
+          role="status"
+          aria-live="polite"
+        >
           {VALUE_LABELS[current.value as keyof typeof VALUE_LABELS]}
           {current.matches("won") || current.matches("playing") ? (
-            <span className="text-base text-gray-500">
+            <span
+              className="text-base text-gray-500"
+              aria-label={`${current.context.moveCount} ${
+                current.context.moveCount === 1 ? "move" : "moves"
+              } made`}
+            >
               {current.context.moveCount}{" "}
               {current.context.moveCount === 1 ? "move" : "moves"}
             </span>
@@ -58,6 +71,12 @@ export function LightsOut() {
                 }}
                 isOn={light === true}
                 isPlaying={current.matches("playing")}
+                aria-label={`Light at row ${rowIndex + 1}, column ${
+                  columnIndex + 1
+                }`}
+                aria-checked={light}
+                role="switch"
+                disabled={!current.matches("playing")}
               />
             ))}
           </Fragment>
@@ -67,6 +86,7 @@ export function LightsOut() {
             type="button"
             className="block bg-rose-500 text-white p-2 rounded col-span-5"
             onClick={() => send({ type: "START" })}
+            aria-label="Start new game"
           >
             Start
           </button>
@@ -76,6 +96,7 @@ export function LightsOut() {
             type="button"
             className="block bg-rose-500 text-white p-2 rounded col-span-5"
             onClick={() => send({ type: "SOLVE" })}
+            aria-label="Show solution"
           >
             Solve
           </button>
@@ -85,6 +106,7 @@ export function LightsOut() {
             type="button"
             className="block bg-rose-500 text-white p-2 rounded col-span-5"
             onClick={() => send({ type: "RESET" })}
+            aria-label="Start new game"
           >
             Reset
           </button>

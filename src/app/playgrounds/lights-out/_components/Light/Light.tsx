@@ -1,10 +1,13 @@
 import clsx from "clsx";
+import { AriaRole } from "react";
 
 interface LightProps {
   onClick: () => void;
   isOn: boolean;
   isPlaying: boolean;
   className?: string;
+  role?: AriaRole;
+  disabled?: boolean;
 }
 
 export function Light({ onClick, isOn, isPlaying, className }: LightProps) {
