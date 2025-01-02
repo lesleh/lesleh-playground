@@ -6,9 +6,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        "source-sans-pro": ["Source Sans Pro", "sans-serif"],
-        quattrocento: ["Quattrocento", "serif"],
-        "special-elite": ["Special Elite", "serif"],
+        "roboto-slab": "var(--font-roboto-slab)",
       },
       keyframes: {
         blink: {
