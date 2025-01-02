@@ -2,79 +2,82 @@
 "use client";
 
 import React, { useState } from "react";
+import { useMachine } from "@xstate/react";
+import { numberGuessingGameMachine } from "../../_machines/numberGuessingGameMachine";
 
 const NumberGuesser = () => {
-  // State to store the correct number and the user's guess
-  const [correctNumber, setCorrectNumber] = useState(undefined);
   const [userGuess, setUserGuess] = useState("");
+  const [state, send] = useMachine(numberGuessingGameMachine);
 
-  function setCorrectNumberToGuess() {
-    setCorrectNumber(Math.floor(Math.random() * 100) + 1);
-  }
-
-  function resetCorrectNumberToGuess() {
-    setCorrectNumber(undefined);
-  }
-
-  // State to store the status message
-  const [status, setStatus] = useState("Make a guess!");
-
-  // Function to handle the user's guess
-  const handleGuess = (event) => {
-    event.preventDefault();
-
-    // Update the status message based on the user's guess
-    if (userGuess < correctNumber) {
-      setStatus("Your guess is too low.");
-    } else if (userGuess > correctNumber) {
-      setStatus("Your guess is too high.");
-    } else {
-      setStatus("Correct! Click the button below to play again.");
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const guess = parseInt(userGuess);
+    if (!isNaN(guess)) {
+      send({ type: "GUESS", value: guess });
+      setUserGuess("");
     }
   };
 
-  if (!correctNumber)
-    return (
-      <button
-        type="button"
-        onClick={setCorrectNumberToGuess}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-      >
-        Start game
-      </button>
-    );
-
   return (
-    <div className="p-5">
-      <h1 className="text-2xl font-bold mb-4">
-        Number Guesser (between 1 and 100)
-      </h1>
-      <p className="mb-4">{status}</p>
-      {userGuess !== correctNumber ? (
-        <form onSubmit={handleGuess}>
-          <label className="block mb-2">
-            Your guess:
-            <input
-              type="number"
-              value={userGuess}
-              onChange={(event) => setUserGuess(event.target.value)}
-              className="form-input mt-1 block w-full"
-            />
-          </label>
-          <input
-            type="submit"
-            value="Guess"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          />
-        </form>
-      ) : (
-        <button
-          onClick={resetCorrectNumberToGuess}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Play again
-        </button>
-      )}
+    <div className="grid items-center justify-center h-full">
+      <div className="p-7 m-3 md:border md:border-solid md:border-gray-200 md: rounded-lg md:shadow-md">
+        <h1 className="text-2xl font-bold mb-4">
+          Number Guesser (between 1 and 100)
+        </h1>
+
+        {state.matches("idle") && (
+          <button
+            onClick={() => send({ type: "START" })}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Start Game
+          </button>
+        )}
+
+        {(state.matches("playing") || state.matches("won")) && (
+          <div className="space-y-4">
+            <div>Previous guesses: {state.context.guesses.join(", ")}</div>
+
+            {state.matches("playing") && (
+              <form onSubmit={handleSubmit} className="flex items-stretch">
+                <input
+                  type="number"
+                  value={userGuess}
+                  onChange={(e) => setUserGuess(e.target.value)}
+                  className="border rounded flex-grow p-2"
+                  min="1"
+                  max="100"
+                />
+                <button
+                  disabled={userGuess === ""}
+                  type="submit"
+                  className="disabled:bg-neutral-500 bg-green-500 text-white px-4 py-2 rounded ml-2"
+                >
+                  Guess
+                </button>
+              </form>
+            )}
+
+            {state.context.lastGuessStatus && state.matches("playing") && (
+              <div>Your guess was too {state.context.lastGuessStatus}!</div>
+            )}
+
+            {state.matches("won") && (
+              <div className="text-green-500 font-bold">
+                Congratulations! You won in {state.context.guesses.length}{" "}
+                guesses!
+              </div>
+            )}
+
+            <button
+              onClick={() => send({ type: "RESET" })}
+              className="bg-red-500 text-white px-4 py-2 rounded"
+            >
+              Reset Game
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
