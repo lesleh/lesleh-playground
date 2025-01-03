@@ -1,5 +1,5 @@
 import React from "react";
-import clsx from "clsx";
+import { twMerge } from "tailwind-merge";
 import { HeadingProps } from "./types";
 
 const classNameMap = [
@@ -21,12 +21,7 @@ export function Heading({
 
   return (
     <Component
-      className={clsx(
-        "font-quattrocento",
-        "font-bold",
-        classNameMap[level],
-        className,
-      )}
+      className={twMerge("font-robotto-slab", classNameMap[level], className)}
     >
       {children}
     </Component>

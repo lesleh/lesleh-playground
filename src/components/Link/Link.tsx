@@ -1,4 +1,4 @@
-import clsx from "clsx";
+import { twMerge } from "tailwind-merge";
 import NextLink from "next/link";
 import type { ComponentProps } from "react";
 import { LinkProps } from "./types";
@@ -8,7 +8,7 @@ function isInternalLink(href: ComponentProps<typeof NextLink>["href"]) {
 }
 
 export function Link({ href, className, ...props }: LinkProps) {
-  const classNames = clsx("text-blue-500 underline", className);
+  const classNames = twMerge("text-blue-500 underline", className);
 
   return isInternalLink(href) ? (
     <NextLink href={href} className={classNames} {...props} />

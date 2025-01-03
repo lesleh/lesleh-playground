@@ -4,7 +4,8 @@ import { useMachine } from "@xstate/react";
 import { Fragment } from "react";
 import { lightsOutMachine } from "../../_machines/lightsOutMachine";
 import { Light } from "../Light/Light";
-import clsx from "clsx";
+import { Heading } from "../../../../../components/Heading";
+import { twMerge } from "tailwind-merge";
 
 const VALUE_LABELS = {
   idle: "Idle",
@@ -31,6 +32,9 @@ export function LightsOut() {
         role="group"
         aria-label="Game Board"
       >
+        <Heading level={1} className="col-span-full text-center my-0">
+          Lights Out
+        </Heading>
         <div
           className="col-span-5 text-2xl text-center grid items-center justify-center"
           role="status"
@@ -67,11 +71,11 @@ export function LightsOut() {
           <Fragment key={rowIndex}>
             {row.map((light, columnIndex) => (
               <Light
-                className={clsx({
-                  "border-solid border-black border-2":
-                    cellIsInSolution(rowIndex, columnIndex) &&
-                    current.context.showSolution,
-                })}
+                className={twMerge([
+                  cellIsInSolution(rowIndex, columnIndex) &&
+                    current.context.showSolution &&
+                    "border-solid border-black border-2",
+                ])}
                 key={`${rowIndex}-${columnIndex}`}
                 onClick={() => {
                   send({
