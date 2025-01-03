@@ -21,7 +21,7 @@ const NumberGuesser = () => {
   return (
     <div className="grid items-center justify-center h-full">
       <div className="p-7 m-3 md:border md:border-solid md:border-gray-200 md: rounded-lg md:shadow-md">
-        <h1 className="text-2xl font-bold mb-4">
+        <h1 className="text-2xl font-bold mb-4 font-roboto-slab">
           Number Guesser (between 1 and 100)
         </h1>
 

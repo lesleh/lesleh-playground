@@ -6,6 +6,7 @@ type LightsOutContext = {
   solution: Array<[number, number]>;
   solutionIndex: number;
   moveCount: number;
+  showSolution: boolean;
 };
 
 type LightsOutEvents =
@@ -14,7 +15,8 @@ type LightsOutEvents =
   | { type: "RESET" }
   | { type: "RANDOMIZE" }
   | { type: "RANDOM_TOGGLE" }
-  | { type: "SOLVE" };
+  | { type: "SOLVE" }
+  | { type: "TOGGLE_SHOW_SOLUTION"; show: boolean };
 
 const togglePositions = (board: boolean[][], row: number, col: number) => {
   const newBoard = board.map((r) => [...r]);
@@ -120,6 +122,7 @@ export const lightsOutMachine = createMachine(
       solution: [],
       solutionIndex: 0,
       moveCount: 0,
+      showSolution: false,
     },
     states: {
       idle: {
@@ -129,6 +132,9 @@ export const lightsOutMachine = createMachine(
       },
       playing: {
         on: {
+          TOGGLE_SHOW_SOLUTION: {
+            actions: "toggleShowSolution",
+          },
           TOGGLE_LIGHT: [
             {
               target: "won",
@@ -205,6 +211,14 @@ export const lightsOutMachine = createMachine(
   },
   {
     actions: {
+      toggleShowSolution: assign(({ context, event }) => {
+        console.log("toggleShowSolution", event);
+        if (event.type !== "TOGGLE_SHOW_SOLUTION") return context;
+        return {
+          ...context,
+          showSolution: event.show,
+        };
+      }),
       toggleLight: assign(({ context, event }) => {
         if (event.type !== "TOGGLE_LIGHT") return context;
         const { row, col } = event;
