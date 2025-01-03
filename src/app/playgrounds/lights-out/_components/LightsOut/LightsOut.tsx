@@ -49,15 +49,28 @@ export function LightsOut() {
             </span>
           ) : null}
         </div>
+        {current.matches("playing") && (
+          <div className="col-span-5">
+            <label>
+              <input
+                type="checkbox"
+                checked={current.context.showSolution}
+                onChange={(e) =>
+                  send({ type: "TOGGLE_SHOW_SOLUTION", show: e.target.checked })
+                }
+              />{" "}
+              Show solution
+            </label>
+          </div>
+        )}
         {current.context.board.map((row, rowIndex) => (
           <Fragment key={rowIndex}>
             {row.map((light, columnIndex) => (
               <Light
                 className={clsx({
-                  "border-solid border-black border-2": cellIsInSolution(
-                    rowIndex,
-                    columnIndex,
-                  ),
+                  "border-solid border-black border-2":
+                    cellIsInSolution(rowIndex, columnIndex) &&
+                    current.context.showSolution,
                 })}
                 key={`${rowIndex}-${columnIndex}`}
                 onClick={() => {
