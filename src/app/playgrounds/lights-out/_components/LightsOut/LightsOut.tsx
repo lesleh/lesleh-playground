@@ -74,13 +74,11 @@ export function LightsOut() {
                 })}
                 key={`${rowIndex}-${columnIndex}`}
                 onClick={() => {
-                  if (current.matches("playing")) {
-                    send({
-                      type: "TOGGLE_LIGHT",
-                      row: rowIndex,
-                      col: columnIndex,
-                    });
-                  }
+                  send({
+                    type: "TOGGLE_LIGHT",
+                    row: rowIndex,
+                    col: columnIndex,
+                  });
                 }}
                 isOn={light === true}
                 isPlaying={current.matches("playing")}
