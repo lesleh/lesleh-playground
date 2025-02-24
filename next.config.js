@@ -7,8 +7,10 @@ const nextConfig = {
   experimental: {
     webpackBuildWorker: true,
     reactCompiler: true,
+    turbotrace: true,
   },
-  output: "standalone",
+  output:
+    process.env.NEXTJS_OUTPUT_MODE === "standalone" ? "standalone" : undefined,
   images: {
     remotePatterns: [
       {

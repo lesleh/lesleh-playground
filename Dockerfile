@@ -12,6 +12,7 @@ RUN pnpm install
 
 COPY . .
 
+ENV NEXTJS_OUTPUT_MODE=standalone
 RUN pnpm build
 
 FROM node:20-alpine AS production
