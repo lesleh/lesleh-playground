@@ -57,6 +57,38 @@ export default function PlanetsPage() {
         color: "#CD5C5C",
         speed: 0.0008, // reduced from 0.008
       },
+      {
+        id: 5,
+        name: "Jupiter",
+        radius: 20,
+        distance: 200,
+        color: "#D2691E",
+        speed: 0.0005, // reduced from 0.005
+      },
+      {
+        id: 6,
+        name: "Saturn",
+        radius: 17,
+        distance: 250,
+        color: "#DAA520",
+        speed: 0.0004, // reduced from 0.004
+      },
+      {
+        id: 7,
+        name: "Uranus",
+        radius: 14,
+        distance: 300,
+        color: "#4682B4",
+        speed: 0.0003, // reduced from 0.003
+      },
+      {
+        id: 8,
+        name: "Neptune",
+        radius: 13,
+        distance: 350,
+        color: "#4169E1",
+        speed: 0.0002, // reduced from 0.002
+      },
     ];
 
     const svg = d3
