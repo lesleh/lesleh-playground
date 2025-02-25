@@ -29,65 +29,65 @@ export default function PlanetsPage() {
         id: 1,
         name: "Mercury",
         radius: 4,
-        distance: 50,
+        distance: 60, // increased from 50
         color: "#A0522D",
-        speed: 0.002, // reduced from 0.02
+        speed: 0.002,
       },
       {
         id: 2,
         name: "Venus",
         radius: 8,
-        distance: 80,
+        distance: 100, // increased from 80
         color: "#DEB887",
-        speed: 0.0015, // reduced from 0.015
+        speed: 0.0015,
       },
       {
         id: 3,
         name: "Earth",
         radius: 9,
-        distance: 110,
+        distance: 140, // increased from 110
         color: "#4169E1",
-        speed: 0.001, // reduced from 0.01
+        speed: 0.001,
       },
       {
         id: 4,
         name: "Mars",
         radius: 5,
-        distance: 140,
+        distance: 180, // increased from 140
         color: "#CD5C5C",
-        speed: 0.0008, // reduced from 0.008
+        speed: 0.0008,
       },
       {
         id: 5,
         name: "Jupiter",
         radius: 20,
-        distance: 200,
+        distance: 250, // increased from 200
         color: "#D2691E",
-        speed: 0.0005, // reduced from 0.005
+        speed: 0.0005,
       },
       {
         id: 6,
         name: "Saturn",
         radius: 17,
-        distance: 250,
+        distance: 310, // increased from 250
         color: "#DAA520",
-        speed: 0.0004, // reduced from 0.004
+        speed: 0.0004,
       },
       {
         id: 7,
         name: "Uranus",
         radius: 14,
-        distance: 300,
+        distance: 370, // increased from 300
         color: "#4682B4",
-        speed: 0.0003, // reduced from 0.003
+        speed: 0.0003,
       },
       {
         id: 8,
         name: "Neptune",
         radius: 13,
-        distance: 350,
+        distance: 430, // increased from 350
         color: "#4169E1",
-        speed: 0.0002, // reduced from 0.002
+        speed: 0.0002,
       },
     ];
 
@@ -101,7 +101,7 @@ export default function PlanetsPage() {
       .append("circle")
       .attr("cx", centerX)
       .attr("cy", centerY)
-      .attr("r", 20)
+      .attr("r", 30) // increased from 20
       .attr("fill", "yellow")
       .attr("filter", "blur(2px)");
 
