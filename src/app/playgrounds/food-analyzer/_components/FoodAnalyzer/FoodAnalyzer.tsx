@@ -257,11 +257,35 @@ export function FoodAnalyzer() {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             {image && (
-              <div className="mt-4">
+              <div className="mt-4 relative">
+                <button
+                  onClick={() => {
+                    setImage(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg z-10"
+                  title="Remove image"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
                 <img
                   src={image}
                   alt="Uploaded ingredients"
-                  className="max-w-full h-auto rounded-lg border border-gray-300"
+                  className="max-w-full max-h-96 h-auto rounded-lg border border-gray-300 object-contain"
                 />
               </div>
             )}
