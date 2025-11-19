@@ -90,42 +90,12 @@ export function FoodAnalyzer() {
         throw new Error(errorData.error || "Failed to analyze food");
       }
 
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let partialData: Partial<FoodAnalysis> = {};
+      const data = await response.json();
+      setAnalysis(data);
 
-      if (!reader) {
-        throw new Error("Response body is not readable");
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("0:")) {
-            try {
-              const jsonStr = line.slice(2); // Remove "0:" prefix
-              const parsed = JSON.parse(jsonStr);
-              partialData = { ...partialData, ...parsed };
-              // Update UI with partial data
-              setAnalysis(partialData as FoodAnalysis);
-            } catch (e) {
-              // Skip invalid JSON chunks
-            }
-          }
-        }
-      }
-
-      // Add to history with final data
-      if (partialData) {
-        const inputText = inputMode === "text" ? ingredients : "Image upload";
-        addToHistory(inputText, partialData as FoodAnalysis);
-      }
+      // Add to history
+      const inputText = inputMode === "text" ? ingredients : "Image upload";
+      addToHistory(inputText, data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -163,9 +133,7 @@ Reasoning: ${analysis.reasoning}
 Key Ingredients: ${analysis.keyIngredients.join(", ")}
 ${
   analysis.recommendations && analysis.recommendations.length > 0
-    ? `\nRecommendations:\n${analysis.recommendations
-        .map((r) => `- ${r}`)
-        .join("\n")}`
+    ? `\nRecommendations:\n${analysis.recommendations.map((r) => `- ${r}`).join("\n")}`
     : ""
 }`;
 
@@ -181,9 +149,7 @@ ${
   const handleShare = async () => {
     if (!analysis) return;
 
-    const text = `NOVA Group ${analysis.novaGroup}: ${
-      novaGroupDescriptions[analysis.novaGroup]
-    } - Health Score: ${analysis.healthScore}/10`;
+    const text = `NOVA Group ${analysis.novaGroup}: ${novaGroupDescriptions[analysis.novaGroup]} - Health Score: ${analysis.healthScore}/10`;
 
     if (navigator.share) {
       try {
@@ -240,9 +206,7 @@ KEY INGREDIENTS:
 ${analysis.keyIngredients.map((ing) => `• ${ing}`).join("\n")}
 ${
   analysis.recommendations && analysis.recommendations.length > 0
-    ? `\nRECOMMENDATIONS:\n${analysis.recommendations
-        .map((r) => `• ${r}`)
-        .join("\n")}`
+    ? `\nRECOMMENDATIONS:\n${analysis.recommendations.map((r) => `• ${r}`).join("\n")}`
     : ""
 }`;
 
@@ -261,9 +225,7 @@ ${
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4">
-          <h2 className="text-xl sm:text-2xl font-bold">
-            Food Classification Analyzer
-          </h2>
+          <h2 className="text-xl sm:text-2xl font-bold">Food Classification Analyzer</h2>
           <button
             onClick={() => setShowNovaInfo(!showNovaInfo)}
             className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm sm:text-base"
@@ -445,7 +407,8 @@ ${
           <button
             onClick={handleAnalyze}
             disabled={
-              loading || (inputMode === "text" ? !ingredients.trim() : !image)
+              loading ||
+              (inputMode === "text" ? !ingredients.trim() : !image)
             }
             className="flex-1 bg-blue-600 text-white py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
@@ -498,9 +461,7 @@ ${
               className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
             >
               <svg
-                className={`w-5 h-5 transition-transform ${
-                  showHistory ? "rotate-90" : ""
-                }`}
+                className={`w-5 h-5 transition-transform ${showHistory ? "rotate-90" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -690,9 +651,7 @@ ${
               novaGroupColors[analysis.novaGroup]
             }`}
           >
-            <div className="text-xl sm:text-2xl">
-              Group {analysis.novaGroup}
-            </div>
+            <div className="text-xl sm:text-2xl">Group {analysis.novaGroup}</div>
             <div className="text-xs sm:text-sm">
               {novaGroupDescriptions[analysis.novaGroup]}
             </div>
@@ -706,7 +665,7 @@ ${
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               <div
                 className={`text-2xl sm:text-3xl font-bold ${getHealthScoreColor(
-                  analysis.healthScore,
+                  analysis.healthScore
                 )}`}
               >
                 {analysis.healthScore}/10
@@ -733,9 +692,7 @@ ${
             <h4 className="text-sm font-medium text-gray-700 mb-2">
               Reasoning
             </h4>
-            <p className="text-gray-800 leading-relaxed">
-              {analysis.reasoning}
-            </p>
+            <p className="text-gray-800 leading-relaxed">{analysis.reasoning}</p>
           </div>
 
           {/* Key Ingredients */}
