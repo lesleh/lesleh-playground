@@ -2,6 +2,7 @@
 
 import { useState, useRef, ChangeEvent } from "react";
 import type { FoodAnalysis } from "../../types";
+import { useAnalysisHistory } from "../../_hooks/useAnalysisHistory";
 
 const novaGroupColors = {
   "1": "bg-green-100 border-green-500 text-green-900",
@@ -47,8 +48,11 @@ export function FoodAnalyzer() {
   const [error, setError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<"text" | "image">("text");
   const [showNovaInfo, setShowNovaInfo] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [copied, setCopied] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { history, addToHistory, removeFromHistory, clearHistory } =
+    useAnalysisHistory();
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,6 +92,10 @@ export function FoodAnalyzer() {
 
       const data = await response.json();
       setAnalysis(data);
+
+      // Add to history
+      const inputText = inputMode === "text" ? ingredients : "Image upload";
+      addToHistory(inputText, data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -388,6 +396,98 @@ ${
           </div>
         )}
       </div>
+
+      {/* History */}
+      {history.length > 0 && (
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+            >
+              <svg
+                className={`w-5 h-5 transition-transform ${showHistory ? "rotate-90" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+              <h3 className="text-lg font-bold">
+                Recent Analyses ({history.length})
+              </h3>
+            </button>
+            {showHistory && (
+              <button
+                onClick={clearHistory}
+                className="text-sm text-red-600 hover:text-red-700"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+
+          {showHistory && (
+            <div className="space-y-2">
+              {history.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-start justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => {
+                    setAnalysis(item.analysis);
+                    setIngredients(item.input);
+                    setInputMode("text");
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span
+                        className={`px-2 py-0.5 text-xs font-bold rounded ${
+                          novaGroupColors[item.analysis.novaGroup]
+                        }`}
+                      >
+                        Group {item.analysis.novaGroup}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(item.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 truncate">
+                      {item.input}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromHistory(item.id);
+                    }}
+                    className="ml-2 text-gray-400 hover:text-red-600"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Results */}
       {analysis && (
