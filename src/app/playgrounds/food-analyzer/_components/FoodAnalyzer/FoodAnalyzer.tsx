@@ -166,6 +166,61 @@ ${
     }
   };
 
+  const handleExportJSON = () => {
+    if (!analysis) return;
+
+    const data = {
+      timestamp: new Date().toISOString(),
+      input: inputMode === "text" ? ingredients : "Image upload",
+      analysis,
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `food-analysis-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportText = () => {
+    if (!analysis) return;
+
+    const text = `FOOD ANALYSIS REPORT
+Generated: ${new Date().toLocaleString()}
+
+NOVA Classification: Group ${analysis.novaGroup}
+Category: ${novaGroupDescriptions[analysis.novaGroup]}
+
+Health Score: ${analysis.healthScore}/10
+
+REASONING:
+${analysis.reasoning}
+
+KEY INGREDIENTS:
+${analysis.keyIngredients.map((ing) => `• ${ing}`).join("\n")}
+${
+  analysis.recommendations && analysis.recommendations.length > 0
+    ? `\nRECOMMENDATIONS:\n${analysis.recommendations.map((r) => `• ${r}`).join("\n")}`
+    : ""
+}`;
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `food-analysis-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
@@ -546,6 +601,44 @@ ${
                     strokeLinejoin="round"
                     strokeWidth={2}
                     d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={handleExportJSON}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Export as JSON"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={handleExportText}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Export as Text"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
               </button>
