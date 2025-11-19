@@ -48,6 +48,10 @@ const Home: NextPage = (props) => {
         <li>
           <Link href="/playgrounds/planets">Planets</Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/food-analyzer">Food Analyzer</Link>
+        </li>
       </ul>
     </div>
   );
