@@ -1,8 +1,8 @@
 import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { streamObject } from "ai";
 import { FoodAnalysisSchema } from "../../playgrounds/food-analyzer/types";
 
-export const maxDuration = 60; // Extends timeout to 60 seconds
+export const maxDuration = 60; // Extends timeout to 60 seconds for streaming
 
 export async function POST(req: Request) {
   try {
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     if (imageBase64) {
       // For image analysis
-      result = await generateObject({
+      result = streamObject({
         model: google("gemini-2.0-flash-exp"),
         schema: FoodAnalysisSchema,
         system: systemPrompt,
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       });
     } else {
       // For text-based ingredients
-      result = await generateObject({
+      result = streamObject({
         model: google("gemini-2.0-flash-exp"),
         schema: FoodAnalysisSchema,
         system: systemPrompt,
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       });
     }
 
-    return result.toJsonResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error("Error analyzing food:", error);
     return Response.json(
