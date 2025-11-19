@@ -2,6 +2,8 @@ import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { FoodAnalysisSchema } from "../../playgrounds/food-analyzer/types";
 
+export const runtime = 'edge';
+
 export async function POST(req: Request) {
   try {
     const { ingredients, imageBase64 } = await req.json();
@@ -54,7 +56,7 @@ export async function POST(req: Request) {
     } else {
       // For text-based ingredients
       result = await generateObject({
-        model: google("gemini-3-pro-preview"),
+        model: google("gemini-2.0-flash-exp"),
         temperature: 1,
         schema: FoodAnalysisSchema,
         system: systemPrompt,
