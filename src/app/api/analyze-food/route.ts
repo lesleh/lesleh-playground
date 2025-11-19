@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       // For text-based ingredients
       result = await generateObject({
         model: google("gemini-3-pro-preview"),
+        temperature: 1,
         schema: FoodAnalysisSchema,
         system: systemPrompt,
         prompt: `Analyze these ingredients: "${ingredients}"`,
