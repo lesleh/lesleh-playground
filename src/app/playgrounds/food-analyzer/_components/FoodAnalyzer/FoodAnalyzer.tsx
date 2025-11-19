@@ -112,17 +112,17 @@ export function FoodAnalyzer() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-start justify-between mb-4">
-          <h2 className="text-2xl font-bold">Food Classification Analyzer</h2>
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold">Food Classification Analyzer</h2>
           <button
             onClick={() => setShowNovaInfo(!showNovaInfo)}
-            className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm sm:text-base"
             title="Learn about NOVA groups"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4 sm:w-5 sm:h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -182,13 +182,13 @@ export function FoodAnalyzer() {
         </p>
 
         {/* Input Mode Toggle */}
-        <div className="flex gap-4 mb-4">
+        <div className="flex gap-2 sm:gap-4 mb-4">
           <button
             onClick={() => {
               setInputMode("text");
               setImage(null);
             }}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex-1 px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base transition-colors ${
               inputMode === "text"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -201,7 +201,7 @@ export function FoodAnalyzer() {
               setInputMode("image");
               setIngredients("");
             }}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`flex-1 px-3 sm:px-4 py-2 rounded-lg font-medium text-sm sm:text-base transition-colors ${
               inputMode === "image"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -293,14 +293,14 @@ export function FoodAnalyzer() {
         )}
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             onClick={handleAnalyze}
             disabled={
               loading ||
               (inputMode === "text" ? !ingredients.trim() : !image)
             }
-            className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="flex-1 bg-blue-600 text-white py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {loading && (
               <svg
@@ -328,7 +328,7 @@ export function FoodAnalyzer() {
           </button>
           <button
             onClick={handleReset}
-            className="bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+            className="sm:flex-initial bg-gray-200 text-gray-700 py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-300 transition-colors"
           >
             Reset
           </button>
@@ -344,17 +344,17 @@ export function FoodAnalyzer() {
 
       {/* Results */}
       {analysis && (
-        <div className="bg-white rounded-lg shadow-lg p-6 space-y-4">
-          <h3 className="text-xl font-bold mb-4">Analysis Results</h3>
+        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 space-y-4">
+          <h3 className="text-lg sm:text-xl font-bold mb-4">Analysis Results</h3>
 
           {/* NOVA Group Badge */}
           <div
-            className={`inline-block px-4 py-2 rounded-lg border-2 font-bold ${
+            className={`inline-block px-3 sm:px-4 py-2 rounded-lg border-2 font-bold ${
               novaGroupColors[analysis.novaGroup]
             }`}
           >
-            <div className="text-2xl">Group {analysis.novaGroup}</div>
-            <div className="text-sm">
+            <div className="text-xl sm:text-2xl">Group {analysis.novaGroup}</div>
+            <div className="text-xs sm:text-sm">
               {novaGroupDescriptions[analysis.novaGroup]}
             </div>
           </div>
@@ -364,9 +364,9 @@ export function FoodAnalyzer() {
             <div className="text-sm font-medium text-gray-700 mb-1">
               Health Score
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               <div
-                className={`text-3xl font-bold ${getHealthScoreColor(
+                className={`text-2xl sm:text-3xl font-bold ${getHealthScoreColor(
                   analysis.healthScore
                 )}`}
               >
