@@ -90,42 +90,12 @@ export function FoodAnalyzer() {
         throw new Error(errorData.error || "Failed to analyze food");
       }
 
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let partialData: Partial<FoodAnalysis> = {};
+      const data = await response.json();
+      setAnalysis(data.object);
 
-      if (!reader) {
-        throw new Error("Response body is not readable");
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("0:")) {
-            try {
-              const jsonStr = line.slice(2); // Remove "0:" prefix
-              const parsed = JSON.parse(jsonStr);
-              partialData = { ...partialData, ...parsed };
-              // Update UI with partial data
-              setAnalysis(partialData as FoodAnalysis);
-            } catch (e) {
-              // Skip invalid JSON chunks
-            }
-          }
-        }
-      }
-
-      // Add to history with final data
-      if (partialData) {
-        const inputText = inputMode === "text" ? ingredients : "Image upload";
-        addToHistory(inputText, partialData as FoodAnalysis);
-      }
+      // Add to history
+      const inputText = inputMode === "text" ? ingredients : "Image upload";
+      addToHistory(inputText, data.object);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
