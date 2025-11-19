@@ -63,7 +63,7 @@ export function FoodAnalyzer() {
       }
 
       const data = await response.json();
-      setAnalysis(data.object);
+      setAnalysis(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
