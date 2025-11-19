@@ -17,6 +17,28 @@ const novaGroupDescriptions = {
   "4": "Ultra-Processed Foods",
 };
 
+const exampleIngredients = [
+  {
+    label: "Whole Grain Bread",
+    ingredients:
+      "Whole Wheat Flour, Water, Wheat Gluten, Oat Fiber, Yeast, Salt",
+  },
+  {
+    label: "Soda",
+    ingredients:
+      "Carbonated Water, High Fructose Corn Syrup, Caramel Color, Phosphoric Acid, Natural Flavors, Caffeine",
+  },
+  {
+    label: "Fresh Apple",
+    ingredients: "Apple",
+  },
+  {
+    label: "Instant Noodles",
+    ingredients:
+      "Wheat Flour, Palm Oil, Salt, Modified Tapioca Starch, Monosodium Glutamate, Disodium Inosinate, Disodium Guanylate, Tertiary Butylhydroquinone",
+  },
+];
+
 export function FoodAnalyzer() {
   const [ingredients, setIngredients] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -126,6 +148,26 @@ export function FoodAnalyzer() {
             Image Upload
           </button>
         </div>
+
+        {/* Example Inputs */}
+        {inputMode === "text" && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Try an example:
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {exampleIngredients.map((example) => (
+                <button
+                  key={example.label}
+                  onClick={() => setIngredients(example.ingredients)}
+                  className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors"
+                >
+                  {example.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Input Area */}
         {inputMode === "text" ? (
