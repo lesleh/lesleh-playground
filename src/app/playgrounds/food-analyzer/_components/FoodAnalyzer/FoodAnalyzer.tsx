@@ -46,6 +46,7 @@ export function FoodAnalyzer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<"text" | "image">("text");
+  const [showNovaInfo, setShowNovaInfo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -113,7 +114,68 @@ export function FoodAnalyzer() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4">Food Classification Analyzer</h2>
+        <div className="flex items-start justify-between mb-4">
+          <h2 className="text-2xl font-bold">Food Classification Analyzer</h2>
+          <button
+            onClick={() => setShowNovaInfo(!showNovaInfo)}
+            className="text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            title="Learn about NOVA groups"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            NOVA Groups
+          </button>
+        </div>
+
+        {showNovaInfo && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-blue-900 mb-3">
+              NOVA Classification System
+            </h3>
+            <div className="space-y-2 text-sm text-blue-900">
+              <div className="flex gap-2">
+                <span className="font-semibold">Group 1:</span>
+                <span>
+                  Unprocessed or minimally processed foods (fruits, vegetables,
+                  meat, eggs, milk, plain grains)
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold">Group 2:</span>
+                <span>
+                  Processed culinary ingredients (butter, oil, sugar, salt,
+                  honey)
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold">Group 3:</span>
+                <span>
+                  Processed foods - Group 1 + Group 2 (canned beans, salted
+                  nuts, fresh bread, cheese)
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold">Group 4:</span>
+                <span>
+                  Ultra-processed foods with industrial additives, emulsifiers,
+                  sweeteners, or preservatives
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <p className="text-gray-600 mb-6">
           Analyze food products using the NOVA classification system. Enter
           ingredients or upload a photo of the ingredients list.
