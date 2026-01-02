@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     if (imageBase64) {
       // For image analysis
       result = await generateText({
-        model: google("gemini-2.0-flash-exp"),
+        model: google("gemini-3-flash-preview"),
         output: Output.object({
           schema: FoodAnalysisSchema,
         }),
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     } else {
       // For text-based ingredients
       result = await generateText({
-        model: google("gemini-2.0-flash-exp"),
+        model: google("gemini-3-flash-preview"),
         temperature: 1,
         output: Output.object({
           schema: FoodAnalysisSchema,
