@@ -4,10 +4,6 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    webpackBuildWorker: true,
-    reactCompiler: true,
-  },
   output:
     process.env.NEXTJS_OUTPUT_MODE === "standalone" ? "standalone" : undefined,
   images: {
