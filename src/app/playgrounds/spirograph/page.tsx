@@ -53,6 +53,7 @@ export default function Spirograph() {
     { id: 1, r: 65, d: 90, color: "#8aa4ff" },
   ]);
   const [nextId, setNextId] = useState(2);
+  const [showCircles, setShowCircles] = useState(false);
 
   const gcd = useCallback((a: number, b: number) => {
     a = Math.abs(Math.round(a));
@@ -205,6 +206,63 @@ export default function Spirograph() {
     ctx.scale(view.scale, view.scale);
     ctx.translate(-view.cx, -view.cy);
 
+    // Draw guide circles if enabled
+    if (showCircles) {
+      ctx.save();
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = 2 / view.scale;
+
+      // Draw the large outer circle (R)
+      ctx.strokeStyle = "#666";
+      ctx.beginPath();
+      ctx.arc(0, 0, R, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // For each spirograph circle, draw the rolling circle at its current position
+      circles.forEach((circle, idx) => {
+        const pts = allPaths[idx];
+        const count = Math.max(1, Math.ceil(progress * pts.length));
+        const cur = pts[count - 1];
+
+        // Calculate the current angle and position of the rolling circle's center
+        const g = gcd(R, circle.r);
+        const turnsToComplete = circle.r / g;
+        const tMax = Math.PI * 2 * turnsToComplete;
+        const t = (count / pts.length) * tMax;
+
+        let cx: number, cy: number;
+        if (mode === "inside") {
+          const k = R - circle.r;
+          cx = k * Math.cos(t);
+          cy = k * Math.sin(t);
+        } else {
+          const k = R + circle.r;
+          cx = k * Math.cos(t);
+          cy = k * Math.sin(t);
+        }
+
+        // Draw the rolling circle
+        ctx.strokeStyle = circle.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, circle.r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Draw a line from the rolling circle's center to the pen point
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cur.x, cur.y);
+        ctx.stroke();
+
+        // Draw a small dot at the rolling circle's center
+        ctx.fillStyle = circle.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3 / view.scale, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.restore();
+    }
+
     // Draw all circles
     circles.forEach((circle, idx) => {
       const pts = allPaths[idx];
@@ -229,7 +287,7 @@ export default function Spirograph() {
     });
 
     ctx.restore();
-  }, [progress, mode, R, circles, computePath, autoRecenter]);
+  }, [progress, mode, R, circles, computePath, autoRecenter, showCircles, gcd]);
 
   const handleRecenter = useCallback(() => {
     const canvas = canvasRef.current;
@@ -362,6 +420,18 @@ export default function Spirograph() {
                 value={progress}
                 onChange={(e) => setProgress(parseFloat(e.target.value))}
               />
+            </div>
+
+            <div className="row">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showCircles}
+                  onChange={(e) => setShowCircles(e.target.checked)}
+                  style={{ marginRight: "8px" }}
+                />
+                Show guide circles
+              </label>
             </div>
 
             <div className="row">
