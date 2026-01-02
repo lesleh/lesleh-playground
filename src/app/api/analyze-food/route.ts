@@ -2,7 +2,7 @@ import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
 import { FoodAnalysisSchema } from "../../playgrounds/food-analyzer/types";
 
-export const runtime = 'edge';
+export const runtime = "edge";
 
 export async function POST(req: Request) {
   try {
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       });
     }
 
-    return result.toJsonResponse();
+    return Response.json(result.object);
   } catch (error) {
     console.error("Error analyzing food:", error);
     return Response.json(
