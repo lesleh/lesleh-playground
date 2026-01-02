@@ -1,5 +1,5 @@
 import { google } from "@ai-sdk/google";
-import { generateObject } from "ai";
+import { generateText, Output } from "ai";
 import { FoodAnalysisSchema } from "../../playgrounds/food-analyzer/types";
 
 export const runtime = "edge";
@@ -33,9 +33,11 @@ export async function POST(req: Request) {
 
     if (imageBase64) {
       // For image analysis
-      result = await generateObject({
+      result = await generateText({
         model: google("gemini-2.0-flash-exp"),
-        schema: FoodAnalysisSchema,
+        output: Output.object({
+          schema: FoodAnalysisSchema,
+        }),
         system: systemPrompt,
         messages: [
           {
@@ -55,16 +57,18 @@ export async function POST(req: Request) {
       });
     } else {
       // For text-based ingredients
-      result = await generateObject({
+      result = await generateText({
         model: google("gemini-2.0-flash-exp"),
         temperature: 1,
-        schema: FoodAnalysisSchema,
+        output: Output.object({
+          schema: FoodAnalysisSchema,
+        }),
         system: systemPrompt,
         prompt: `Analyze these ingredients: "${ingredients}"`,
       });
     }
 
-    return Response.json(result.object);
+    return Response.json(result.output);
   } catch (error) {
     console.error("Error analyzing food:", error);
     return Response.json(
