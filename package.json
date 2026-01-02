@@ -11,15 +11,15 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@ai-sdk/google": "^2.0.36",
+    "@ai-sdk/google": "^2.0.52",
     "@faker-js/faker": "^9.9.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "22.10.2",
     "@types/react": "19.0.2",
     "@types/react-dom": "19.0.2",
     "@xstate/react": "^5.0.5",
-    "ai": "^5.0.95",
-    "autoprefixer": "^10.4.22",
+    "ai": "^5.0.117",
+    "autoprefixer": "^10.4.23",
     "canvas-confetti": "^1.9.4",
     "d3": "^7.9.0",
     "eslint": "9.17.0",
@@ -32,26 +32,26 @@
     "react-markdown": "^10.1.0",
     "sharp": "^0.33.5",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss": "^3.4.18",
+    "tailwindcss": "^3.4.19",
     "typescript": "5.7.2",
-    "xstate": "^5.24.0",
-    "zod": "^4.1.12"
+    "xstate": "^5.25.0",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.39.1",
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.2",
     "@happy-dom/jest-environment": "^16.8.1",
     "@jest/types": "^29.6.3",
-    "@next/bundle-analyzer": "^15.5.6",
+    "@next/bundle-analyzer": "^15.5.9",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
+    "@testing-library/react": "^16.3.1",
     "@types/canvas-confetti": "^1.9.0",
     "@types/d3": "^7.4.3",
     "@types/jest": "^29.5.14",
     "babel-plugin-react-compiler": "19.0.0-beta-df7b47d-20241124",
     "jest": "^29.7.0",
-    "ts-jest": "^29.4.5"
+    "ts-jest": "^29.4.6"
   },
   "packageManager": "pnpm@9.15.2"
 }
