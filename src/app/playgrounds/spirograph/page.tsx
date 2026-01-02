@@ -188,7 +188,6 @@ export default function Spirograph() {
     const h = rect.height;
 
     ctx.clearRect(0, 0, w, h);
-    drawGrid(ctx, w, h);
 
     // Compute all paths
     const allPaths = circles.map((circle) =>
@@ -230,7 +229,7 @@ export default function Spirograph() {
     });
 
     ctx.restore();
-  }, [progress, mode, R, circles, computePath, autoRecenter, drawGrid]);
+  }, [progress, mode, R, circles, computePath, autoRecenter]);
 
   const handleRecenter = useCallback(() => {
     const canvas = canvasRef.current;
