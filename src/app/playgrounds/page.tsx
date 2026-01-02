@@ -33,6 +33,10 @@ export default function PlaygroundsPage() {
         <li>
           <Link href="/playgrounds/gradients">Gradients</Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/spirograph">Spirograph</Link>
+        </li>
       </ul>
     </>
   );

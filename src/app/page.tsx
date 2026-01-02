@@ -52,6 +52,10 @@ const Home: NextPage = (props) => {
         <li>
           <Link href="/playgrounds/food-analyzer">Food Analyzer</Link>
         </li>
+
+        <li>
+          <Link href="/playgrounds/spirograph">Spirograph</Link>
+        </li>
       </ul>
     </div>
   );
