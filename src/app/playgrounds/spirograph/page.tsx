@@ -121,6 +121,25 @@ export default function Spirograph() {
         }
       }
 
+      // If showing circles, also account for the guide circles in bounds
+      if (showCircles) {
+        // Account for the large outer circle (R)
+        if (-R < minX) minX = -R;
+        if (R > maxX) maxX = R;
+        if (-R < minY) minY = -R;
+        if (R > maxY) maxY = R;
+
+        // Account for each rolling circle
+        circles.forEach((circle) => {
+          const k = mode === "inside" ? R - circle.r : R + circle.r;
+          const maxRadius = k + circle.r;
+          if (-maxRadius < minX) minX = -maxRadius;
+          if (maxRadius > maxX) maxX = maxRadius;
+          if (-maxRadius < minY) minY = -maxRadius;
+          if (maxRadius > maxY) maxY = maxRadius;
+        });
+      }
+
       const rect = canvas.getBoundingClientRect();
       const pad = 36;
       const spanX = Math.max(1e-6, maxX - minX);
@@ -137,7 +156,7 @@ export default function Spirograph() {
         initialized: true,
       };
     },
-    [],
+    [showCircles, R, circles, mode],
   );
 
   const drawGrid = useCallback(
