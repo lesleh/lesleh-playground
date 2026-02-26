@@ -137,11 +137,14 @@ const playgrounds = [
 const Home: NextPage = () => {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-12 text-center">
-        <Heading level={1} className="mb-4">
+      <div className="mb-16 text-center py-12">
+        <Heading
+          level={1}
+          className="mb-6 text-7xl sm:text-8xl lg:text-9xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+        >
           Playground
         </Heading>
-        <Paragraph className="text-xl text-gray-600">
+        <Paragraph className="text-xl sm:text-2xl text-gray-500">
           Interactive experiments with web technologies
         </Paragraph>
       </div>
