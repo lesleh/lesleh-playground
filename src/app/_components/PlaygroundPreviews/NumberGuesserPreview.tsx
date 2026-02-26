@@ -7,7 +7,7 @@ export function NumberGuesserPreview() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isVisible = useIntersectionObserver(containerRef);
   const [number, setNumber] = useState(50);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     if (!isVisible) {

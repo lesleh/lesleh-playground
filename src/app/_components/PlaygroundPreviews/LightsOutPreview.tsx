@@ -7,7 +7,7 @@ export function LightsOutPreview() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isVisible = useIntersectionObserver(containerRef);
   const [grid, setGrid] = useState<boolean[][]>([]);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     // Initialize 3x3 grid
