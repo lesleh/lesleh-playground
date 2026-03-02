@@ -1,6 +1,4 @@
 import type { NextPage } from "next";
-import { Heading } from "../components/Heading";
-import { Paragraph } from "../components/Paragraph";
 import { PlaygroundCard } from "./_components/PlaygroundCard";
 import {
   SpirographPreview,
@@ -24,7 +22,7 @@ const playgrounds = [
     id: "spirograph",
     title: "Spirograph",
     description:
-      "Draw mesmerizing spirograph patterns by rolling circles within circles. Adjust parameters and watch mathematical art come to life.",
+      "Draw mesmerizing spirograph patterns by rolling circles within circles.",
     href: "/playgrounds/spirograph",
     preview: SpirographPreview,
   },
@@ -32,15 +30,14 @@ const playgrounds = [
     id: "number-guesser",
     title: "Number Guesser",
     description:
-      "Classic number guessing game with hints. Try to guess the secret number with as few attempts as possible.",
+      "Classic number guessing game with hints. How few guesses does it take?",
     href: "/playgrounds/number-guesser",
     preview: NumberGuesserPreview,
   },
   {
     id: "rock-paper-scissors",
     title: "Rock Paper Scissors",
-    description:
-      "Play the timeless game against the computer. Best of three wins!",
+    description: "Play the timeless game against the computer. Best of three!",
     href: "/playgrounds/rock-paper-scissors",
     preview: RockPaperScissorsPreview,
   },
@@ -48,7 +45,7 @@ const playgrounds = [
     id: "homer",
     title: "Homer Simpson",
     description:
-      "Homer's eyes follow your cursor around the screen. A fun interactive demo with smooth animations.",
+      "Homer's eyes follow your cursor around the screen.",
     href: "/playgrounds/homer",
     preview: HomerPreview,
   },
@@ -56,15 +53,15 @@ const playgrounds = [
     id: "lights-out",
     title: "Lights Out",
     description:
-      "Puzzle game where clicking lights toggles them and their neighbors. Clear the grid or let the auto-solver do it!",
+      "Toggle lights to clear the grid. Or let the auto-solver handle it.",
     href: "/playgrounds/lights-out",
     preview: LightsOutPreview,
   },
   {
     id: "unit-price",
-    title: "Unit Price Calculator",
+    title: "Unit Price",
     description:
-      "Compare products by calculating their unit prices. Never overpay at the grocery store again.",
+      "Compare products by unit price. Never overpay at the grocery store again.",
     href: "/playgrounds/unit-price",
     preview: UnitPricePreview,
   },
@@ -72,7 +69,7 @@ const playgrounds = [
     id: "subgrid-cards",
     title: "Subgrid Cards",
     description:
-      "Explore CSS subgrid with responsive card layouts. See how modern CSS makes complex layouts simple.",
+      "Explore CSS subgrid with responsive card layouts.",
     href: "/playgrounds/subgrid-cards",
     preview: SubgridCardsPreview,
   },
@@ -80,7 +77,7 @@ const playgrounds = [
     id: "gradients",
     title: "Gradients",
     description:
-      "Experiment with color gradients and transitions. Create beautiful color combinations dynamically.",
+      "Experiment with colour gradients and transitions.",
     href: "/playgrounds/gradients",
     preview: GradientsPreview,
   },
@@ -88,7 +85,7 @@ const playgrounds = [
     id: "graphs",
     title: "Graphs",
     description:
-      "Interactive graph visualizations using D3.js. Explore nodes, connections, and data relationships.",
+      "Interactive graph visualizations using D3.js.",
     href: "/playgrounds/graphs",
     preview: GraphsPreview,
   },
@@ -96,7 +93,7 @@ const playgrounds = [
     id: "planets",
     title: "Planets",
     description:
-      "Watch planets orbit in smooth animations. Built with Motion for buttery-smooth performance.",
+      "Watch planets orbit in smooth animations using the Motion library.",
     href: "/playgrounds/planets",
     preview: PlanetsPreview,
   },
@@ -104,7 +101,7 @@ const playgrounds = [
     id: "food-analyzer",
     title: "Food Analyzer",
     description:
-      "AI-powered food analysis and nutritional insights. Upload food photos and get instant analysis.",
+      "AI-powered food analysis. Upload a photo and get instant nutritional insights.",
     href: "/playgrounds/food-analyzer",
     preview: FoodAnalyzerPreview,
   },
@@ -112,7 +109,7 @@ const playgrounds = [
     id: "animate",
     title: "Animate",
     description:
-      "React Markdown animation experiments. Watch text and content come alive with smooth transitions.",
+      "React Markdown animation experiments with smooth transitions.",
     href: "/playgrounds/animate",
     preview: AnimatePreview,
   },
@@ -120,7 +117,7 @@ const playgrounds = [
     id: "motion",
     title: "Motion",
     description:
-      "Motion library playground. Explore animation primitives and spring physics.",
+      "Motion library playground. Spring physics and animation primitives.",
     href: "/playgrounds/motion",
     preview: MotionPreview,
   },
@@ -128,7 +125,7 @@ const playgrounds = [
     id: "trees",
     title: "Trees",
     description:
-      "Recursive tree generation and visualization. Watch fractal trees grow algorithmically.",
+      "Recursive fractal tree generation and visualization.",
     href: "/playgrounds/trees",
     preview: TreesPreview,
   },
@@ -136,29 +133,84 @@ const playgrounds = [
 
 const Home: NextPage = () => {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-16 text-center py-12">
-        <Heading
-          level={1}
-          className="mb-6 text-7xl sm:text-8xl lg:text-9xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
-        >
-          Playground
-        </Heading>
-        <Paragraph className="text-xl sm:text-2xl text-gray-500">
-          Interactive experiments with web technologies
-        </Paragraph>
-      </div>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: "#fffef5",
+        backgroundImage: `
+          linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px)
+        `,
+        backgroundSize: "32px 32px",
+      }}
+    >
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        {/* Header */}
+        <header className="mb-16 relative">
+          {/* Thick rule above */}
+          <div className="h-1 bg-black mb-6" />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {playgrounds.map((playground) => (
-          <PlaygroundCard
-            key={playground.id}
-            title={playground.title}
-            description={playground.description}
-            href={playground.href}
-            preview={playground.preview}
-          />
-        ))}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <p className="font-mono text-xs text-black/50 tracking-widest uppercase mb-2">
+                lesleh · web experiments
+              </p>
+              <h1 className="font-roboto-slab font-black text-[clamp(3.5rem,12vw,8rem)] leading-[0.9] text-black tracking-tight">
+                Play<br />ground
+              </h1>
+            </div>
+
+            {/* Rotated stamp */}
+            <div className="hidden sm:flex items-center justify-center rotate-6 shrink-0">
+              <div className="border-4 border-black rounded-full w-28 h-28 flex flex-col items-center justify-center text-center p-2">
+                <span className="font-mono text-[9px] tracking-widest uppercase text-black leading-tight">
+                  {playgrounds.length} demos
+                </span>
+                <span className="font-roboto-slab font-black text-2xl leading-none text-black">
+                  ★
+                </span>
+                <span className="font-mono text-[9px] tracking-widest uppercase text-black leading-tight">
+                  all free
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Thick rule below */}
+          <div className="mt-6 flex gap-1">
+            <div className="h-2 bg-black flex-1" />
+            <div className="h-2 bg-black w-8" />
+            <div className="h-2 bg-black w-2" />
+          </div>
+
+          <p className="mt-4 font-mono text-sm text-black/50 max-w-md">
+            A scratchpad of web experiments. Click anything that looks interesting.
+          </p>
+        </header>
+
+        {/* Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+          {playgrounds.map((playground, i) => (
+            <PlaygroundCard
+              key={playground.id}
+              title={playground.title}
+              description={playground.description}
+              href={playground.href}
+              preview={playground.preview}
+              index={i}
+            />
+          ))}
+        </div>
+
+        {/* Footer rule */}
+        <div className="mt-20 flex gap-1">
+          <div className="h-2 bg-black w-2" />
+          <div className="h-2 bg-black w-8" />
+          <div className="h-2 bg-black flex-1" />
+        </div>
+        <p className="mt-4 font-mono text-xs text-black/30 text-right">
+          made with curiosity
+        </p>
       </div>
     </div>
   );
