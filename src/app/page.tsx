@@ -1,21 +1,19 @@
 import type { NextPage } from "next";
 import { PlaygroundCard } from "./_components/PlaygroundCard";
-import {
-  SpirographPreview,
-  HomerPreview,
-  LightsOutPreview,
-  RockPaperScissorsPreview,
-  NumberGuesserPreview,
-  UnitPricePreview,
-  GradientsPreview,
-  GraphsPreview,
-  PlanetsPreview,
-  FoodAnalyzerPreview,
-  SubgridCardsPreview,
-  AnimatePreview,
-  MotionPreview,
-  TreesPreview,
-} from "./_components/PlaygroundPreviews";
+import { SpirographPreview } from "./playgrounds/spirograph/Preview";
+import { NumberGuesserPreview } from "./playgrounds/number-guesser/Preview";
+import { RockPaperScissorsPreview } from "./playgrounds/rock-paper-scissors/Preview";
+import { HomerPreview } from "./playgrounds/homer/Preview";
+import { LightsOutPreview } from "./playgrounds/lights-out/Preview";
+import { UnitPricePreview } from "./playgrounds/unit-price/Preview";
+import { SubgridCardsPreview } from "./playgrounds/subgrid-cards/Preview";
+import { GradientsPreview } from "./playgrounds/gradients/Preview";
+import { GraphsPreview } from "./playgrounds/graphs/Preview";
+import { PlanetsPreview } from "./playgrounds/planets/Preview";
+import { FoodAnalyzerPreview } from "./playgrounds/food-analyzer/Preview";
+import { AnimatePreview } from "./playgrounds/animate/Preview";
+import { MotionPreview } from "./playgrounds/motion/Preview";
+import { TreesPreview } from "./playgrounds/trees/Preview";
 
 const playgrounds = [
   {
@@ -44,16 +42,14 @@ const playgrounds = [
   {
     id: "homer",
     title: "Homer Simpson",
-    description:
-      "Homer's eyes follow your cursor around the screen.",
+    description: "Homer's eyes follow your cursor around the screen.",
     href: "/playgrounds/homer",
     preview: HomerPreview,
   },
   {
     id: "lights-out",
     title: "Lights Out",
-    description:
-      "Toggle lights to clear the grid. Or let the auto-solver handle it.",
+    description: "Toggle lights to clear the grid. Or let the auto-solver handle it.",
     href: "/playgrounds/lights-out",
     preview: LightsOutPreview,
   },
@@ -68,32 +64,28 @@ const playgrounds = [
   {
     id: "subgrid-cards",
     title: "Subgrid Cards",
-    description:
-      "Explore CSS subgrid with responsive card layouts.",
+    description: "Explore CSS subgrid with responsive card layouts.",
     href: "/playgrounds/subgrid-cards",
     preview: SubgridCardsPreview,
   },
   {
     id: "gradients",
     title: "Gradients",
-    description:
-      "Experiment with colour gradients and transitions.",
+    description: "Experiment with colour gradients and transitions.",
     href: "/playgrounds/gradients",
     preview: GradientsPreview,
   },
   {
     id: "graphs",
     title: "Graphs",
-    description:
-      "Interactive graph visualizations using D3.js.",
+    description: "Interactive graph visualizations using D3.js.",
     href: "/playgrounds/graphs",
     preview: GraphsPreview,
   },
   {
     id: "planets",
     title: "Planets",
-    description:
-      "Watch planets orbit in smooth animations using the Motion library.",
+    description: "Watch planets orbit in smooth animations using the Motion library.",
     href: "/playgrounds/planets",
     preview: PlanetsPreview,
   },
@@ -108,24 +100,21 @@ const playgrounds = [
   {
     id: "animate",
     title: "Animate",
-    description:
-      "React Markdown animation experiments with smooth transitions.",
+    description: "React Markdown animation experiments with smooth transitions.",
     href: "/playgrounds/animate",
     preview: AnimatePreview,
   },
   {
     id: "motion",
     title: "Motion",
-    description:
-      "Motion library playground. Spring physics and animation primitives.",
+    description: "Motion library playground. Spring physics and animation primitives.",
     href: "/playgrounds/motion",
     preview: MotionPreview,
   },
   {
     id: "trees",
     title: "Trees",
-    description:
-      "Recursive fractal tree generation and visualization.",
+    description: "Recursive fractal tree generation and visualization.",
     href: "/playgrounds/trees",
     preview: TreesPreview,
   },
@@ -147,7 +136,6 @@ const Home: NextPage = () => {
       <div className="mx-auto max-w-6xl px-4 py-12">
         {/* Header */}
         <header className="mb-16 relative">
-          {/* Thick rule above */}
           <div className="h-1 bg-black mb-6" />
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
@@ -160,7 +148,6 @@ const Home: NextPage = () => {
               </h1>
             </div>
 
-            {/* Rotated stamp */}
             <div className="hidden sm:flex items-center justify-center rotate-6 shrink-0">
               <div className="border-4 border-black rounded-full w-28 h-28 flex flex-col items-center justify-center text-center p-2">
                 <span className="font-mono text-[9px] tracking-widest uppercase text-black leading-tight">
@@ -176,7 +163,6 @@ const Home: NextPage = () => {
             </div>
           </div>
 
-          {/* Thick rule below */}
           <div className="mt-6 flex gap-1">
             <div className="h-2 bg-black flex-1" />
             <div className="h-2 bg-black w-8" />

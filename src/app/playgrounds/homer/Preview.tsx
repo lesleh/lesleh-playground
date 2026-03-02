@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import homer from "../../playgrounds/homer/_assets/homer.png";
+import homer from "./_assets/homer.png";
 
 export function HomerPreview() {
   return (
