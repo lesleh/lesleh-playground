@@ -14,6 +14,7 @@ import { FoodAnalyzerPreview } from "./playgrounds/food-analyzer/Preview";
 import { AnimatePreview } from "./playgrounds/animate/Preview";
 import { MotionPreview } from "./playgrounds/motion/Preview";
 import { TreesPreview } from "./playgrounds/trees/Preview";
+import { ConnectFourPreview } from "./playgrounds/connect-four/Preview";
 
 const playgrounds = [
   {
@@ -117,6 +118,13 @@ const playgrounds = [
     description: "Recursive fractal tree generation and visualization.",
     href: "/playgrounds/trees",
     preview: TreesPreview,
+  },
+  {
+    id: "connect-four",
+    title: "Connect 4",
+    description: "Play Connect 4 against an AlphaZero-style AI trained via self-play.",
+    href: "/playgrounds/connect-four",
+    preview: ConnectFourPreview,
   },
 ];
 

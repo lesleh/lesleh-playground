@@ -13,9 +13,14 @@ module.exports = {
           "0%, 100%": { opacity: "0" },
           "50%": { opacity: "1" },
         },
+        drop: {
+          from: { transform: "translateY(var(--drop-from))" },
+          to: { transform: "translateY(0)" },
+        },
       },
       animation: {
         blink: "blink 1s steps(1, start) infinite",
+        drop: "drop 0.3s ease-out",
       },
     },
   },
