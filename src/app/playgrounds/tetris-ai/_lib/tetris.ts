@@ -63,7 +63,7 @@ export interface Placement {
   rotation: number;
   col: number;
   row: number;
-  features: [number, number, number, number]; // lines, holes, bumpiness, height
+  features: [number, number, number, number, number]; // lines, holes, bumpiness, height, max_height
 }
 
 export class TetrisGame {
@@ -209,7 +209,7 @@ export class TetrisGame {
 function computeFeatures(
   board: number[][],
   linesCleared: number
-): [number, number, number, number] {
+): [number, number, number, number, number] {
   const heights = new Array(COLS).fill(0);
   for (let c = 0; c < COLS; c++) {
     for (let r = 0; r < ROWS; r++) {
@@ -236,5 +236,7 @@ function computeFeatures(
 
   const totalHeight = heights.reduce((a, b) => a + b, 0);
 
-  return [linesCleared, holes, bumpiness, totalHeight];
+  const maxHeight = Math.max(...heights);
+
+  return [linesCleared, holes, bumpiness, totalHeight, maxHeight];
 }
