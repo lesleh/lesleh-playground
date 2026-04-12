@@ -1,56 +1,58 @@
 const ROWS = 20;
 const COLS = 10;
 
-// Standard Tetris pieces (each rotation as a 2D boolean grid)
+// Piece matrices from tetris-gymnasium (exact match for model compatibility)
+// Order: I(id=2), O(id=3), T(id=4), S(id=5), Z(id=6), J(id=7), L(id=8)
+// Each piece has 4 rotations (original, CW, 180, CCW)
 const TETROMINOES: boolean[][][][] = [
-  // I
+  // I (id=2)
   [
     [[false,false,false,false],[true,true,true,true],[false,false,false,false],[false,false,false,false]],
-    [[false,false,true,false],[false,false,true,false],[false,false,true,false],[false,false,true,false]],
-    [[false,false,false,false],[false,false,false,false],[true,true,true,true],[false,false,false,false]],
     [[false,true,false,false],[false,true,false,false],[false,true,false,false],[false,true,false,false]],
+    [[false,false,false,false],[false,false,false,false],[true,true,true,true],[false,false,false,false]],
+    [[false,false,true,false],[false,false,true,false],[false,false,true,false],[false,false,true,false]],
   ],
-  // O
+  // O (id=3)
   [
     [[true,true],[true,true]],
     [[true,true],[true,true]],
     [[true,true],[true,true]],
     [[true,true],[true,true]],
   ],
-  // T
+  // T (id=4)
   [
     [[false,true,false],[true,true,true],[false,false,false]],
-    [[false,true,false],[false,true,true],[false,true,false]],
-    [[false,false,false],[true,true,true],[false,true,false]],
     [[false,true,false],[true,true,false],[false,true,false]],
+    [[false,false,false],[true,true,true],[false,true,false]],
+    [[false,true,false],[false,true,true],[false,true,false]],
   ],
-  // S
+  // S (id=5)
   [
     [[false,true,true],[true,true,false],[false,false,false]],
-    [[false,true,false],[false,true,true],[false,false,true]],
-    [[false,false,false],[false,true,true],[true,true,false]],
     [[true,false,false],[true,true,false],[false,true,false]],
+    [[false,false,false],[false,true,true],[true,true,false]],
+    [[false,true,false],[false,true,true],[false,false,true]],
   ],
-  // Z
+  // Z (id=6)
   [
     [[true,true,false],[false,true,true],[false,false,false]],
-    [[false,false,true],[false,true,true],[false,true,false]],
-    [[false,false,false],[true,true,false],[false,true,true]],
     [[false,true,false],[true,true,false],[true,false,false]],
+    [[false,false,false],[true,true,false],[false,true,true]],
+    [[false,false,true],[false,true,true],[false,true,false]],
   ],
-  // J
+  // J (id=7)
   [
     [[true,false,false],[true,true,true],[false,false,false]],
-    [[false,true,true],[false,true,false],[false,true,false]],
-    [[false,false,false],[true,true,true],[false,false,true]],
     [[false,true,false],[false,true,false],[true,true,false]],
+    [[false,false,false],[true,true,true],[false,false,true]],
+    [[false,true,true],[false,true,false],[false,true,false]],
   ],
-  // L
+  // L (id=8)
   [
     [[false,false,true],[true,true,true],[false,false,false]],
-    [[false,true,false],[false,true,false],[false,true,true]],
-    [[false,false,false],[true,true,true],[true,false,false]],
     [[true,true,false],[false,true,false],[false,true,false]],
+    [[false,false,false],[true,true,true],[true,false,false]],
+    [[false,true,false],[false,true,false],[false,true,true]],
   ],
 ];
 
