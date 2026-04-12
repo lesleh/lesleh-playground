@@ -15,6 +15,7 @@ import { AnimatePreview } from "./playgrounds/animate/Preview";
 import { MotionPreview } from "./playgrounds/motion/Preview";
 import { TreesPreview } from "./playgrounds/trees/Preview";
 import { ConnectFourPreview } from "./playgrounds/connect-four/Preview";
+import { TetrisAIPreview } from "./playgrounds/tetris-ai/Preview";
 
 const playgrounds = [
   {
@@ -125,6 +126,13 @@ const playgrounds = [
     description: "Play Connect 4 against an AlphaZero-style AI trained via self-play.",
     href: "/playgrounds/connect-four",
     preview: ConnectFourPreview,
+  },
+  {
+    id: "tetris-ai",
+    title: "Tetris AI",
+    description: "Watch a neural network play Tetris. Trained with deep reinforcement learning.",
+    href: "/playgrounds/tetris-ai",
+    preview: TetrisAIPreview,
   },
 ];
 
