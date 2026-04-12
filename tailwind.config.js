@@ -6,7 +6,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        "roboto-slab": "var(--font-roboto-slab)",
+        "roboto-slab": ["'Rockwell'", "'Roboto Slab'", "Georgia", "serif"],
       },
       keyframes: {
         blink: {

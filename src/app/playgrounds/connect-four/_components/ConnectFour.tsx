@@ -136,8 +136,8 @@ export function ConnectFour() {
   const totalVisits = visits ? Array.from(visits).reduce((a, b) => a + b, 0) : 0;
 
   return (
-    <div className="min-h-full flex flex-col items-center p-6 bg-slate-900 text-slate-200">
-      <Heading level={1} className="text-white mb-4">Connect 4</Heading>
+    <div className="flex flex-col items-center pt-4 pb-6 bg-slate-900 text-slate-200">
+      <Heading level={1} className="text-white my-0 mb-4">Connect 4</Heading>
 
       {loading ? (
         <p className="text-lg">Loading AI model...</p>
