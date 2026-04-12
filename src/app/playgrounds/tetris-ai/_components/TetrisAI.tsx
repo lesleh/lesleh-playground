@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TetrisGame, TETROMINOES } from "../_lib/tetris";
 import { loadModel, scorePlacements, isLoaded } from "../_lib/model";
-import { Board } from "./Board";
+import { Board, PIECE_COLORS } from "./Board";
 import { Heading } from "../../../../components/Heading";
 
 const PIECE_NAMES = ["I", "O", "T", "S", "Z", "J", "L"];
@@ -109,16 +109,20 @@ export function TetrisAI() {
             <div className="flex flex-col gap-4 min-w-32">
               <div>
                 <p className="text-sm text-gray-500 font-mono">Next</p>
-                {nextPieceGrid && (
-                  <div className="grid gap-px mt-1" style={{ gridTemplateColumns: `repeat(${nextPieceGrid[0].length}, 1fr)` }}>
-                    {nextPieceGrid.flat().map((filled, i) => (
+                <div className="grid gap-px mt-1 w-[84px] h-[84px]" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+                  {Array.from({ length: 16 }, (_, i) => {
+                    const r = Math.floor(i / 4);
+                    const c = i % 4;
+                    const filled = nextPieceGrid && r < nextPieceGrid.length && c < nextPieceGrid[0].length && nextPieceGrid[r][c];
+                    const colorIdx = game ? game.nextPiece + 1 : 0;
+                    return (
                       <div
                         key={i}
-                        className={`w-5 h-5 rounded-sm ${filled ? "bg-gray-400" : "bg-transparent"}`}
+                        className={`w-5 h-5 rounded-sm ${filled ? PIECE_COLORS[colorIdx] : "bg-transparent"}`}
                       />
-                    ))}
-                  </div>
-                )}
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="font-mono text-sm space-y-1">

@@ -2,7 +2,7 @@
 
 import { ROWS, COLS } from "../_lib/tetris";
 
-const PIECE_COLORS: Record<number, string> = {
+export const PIECE_COLORS: Record<number, string> = {
   0: "bg-gray-800",
   1: "bg-cyan-400",    // I
   2: "bg-yellow-400",  // O
