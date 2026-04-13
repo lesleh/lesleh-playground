@@ -120,7 +120,10 @@ export class TetrisGame {
         for (let r = 0; r < pieceH; r++) {
           for (let c = 0; c < pieceW; c++) {
             if (piece[r][c]) {
-              boardCopy[row + r][col + c] = this.currentPiece + 1;
+              const boardC = col + c;
+              if (boardC >= 0 && boardC < COLS) {
+                boardCopy[row + r][boardC] = this.currentPiece + 1;
+              }
             }
           }
         }
@@ -166,7 +169,10 @@ export class TetrisGame {
     for (let r = 0; r < piece.length; r++) {
       for (let c = 0; c < piece[r].length; c++) {
         if (piece[r][c]) {
-          this.board[placement.row + r][placement.col + c] = this.currentPiece + 1;
+          const boardC = placement.col + c;
+          if (boardC >= 0 && boardC < COLS) {
+            this.board[placement.row + r][boardC] = this.currentPiece + 1;
+          }
         }
       }
     }
