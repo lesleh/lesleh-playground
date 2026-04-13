@@ -22,7 +22,7 @@ export function ConnectFour() {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<GameResult>(null);
   const [humanPlayer, setHumanPlayer] = useState<1 | -1>(1);
-  const [numSims, setNumSims] = useState(0);
+  const [numSims, setNumSims] = useState(20);
   const [visits, setVisits] = useState<Float32Array | null>(null);
 
   useEffect(() => {
