@@ -2,17 +2,6 @@
 
 import { motion } from "motion/react";
 import { ComponentProps } from "react";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Motion | Playground",
-  description: "Motion library playground. Spring physics and animation primitives.",
-  openGraph: {
-    title: "Motion",
-    description: "Motion library playground. Spring physics and animation primitives.",
-  },
-};
-
 
 function Para(props: ComponentProps<typeof motion.p>) {
   return (

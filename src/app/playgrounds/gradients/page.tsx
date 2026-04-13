@@ -3,17 +3,6 @@
 import { useRef, useState } from "react";
 import { useList } from "./_hooks/useList";
 import { ColorList } from "./_components/ColorList";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Gradients | Playground",
-  description: "Experiment with colour gradients and transitions.",
-  openGraph: {
-    title: "Gradients",
-    description: "Experiment with colour gradients and transitions.",
-  },
-};
-
 
 function makeGradientStops(
   colors: string[],
