@@ -57,7 +57,7 @@ export function TetrisAI() {
     const minH = Math.min(...heights);
 
     let bestIdx = -1;
-    if (maxH >= 12 && maxH - minH >= 4) {
+    if (maxH >= 16 && maxH - minH >= 8) {
       // Find the well column (lowest) and pick placement that fills it most
       const wellCol = heights.indexOf(minH);
       let bestFill = -1;
