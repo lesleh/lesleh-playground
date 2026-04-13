@@ -1,34 +1,21 @@
-import * as ort from "onnxruntime-web";
+import { MLP } from "./mlp";
 
-let session: ort.InferenceSession | null = null;
+let model: MLP | null = null;
 
 export async function loadModel(): Promise<void> {
-  if (session) return;
-  session = await ort.InferenceSession.create("/tetris-model.onnx", {
-    executionProviders: ["wasm"],
-  });
+  if (model) return;
+  const response = await fetch("/tetris-model.json");
+  const json = await response.text();
+  model = MLP.deserialize(json);
 }
 
 export async function scorePlacements(
   features: number[][]
 ): Promise<number[]> {
-  if (!session) throw new Error("Model not loaded");
-
-  const numFeatures = 6;
-  const flat = new Float32Array(features.length * numFeatures);
-  for (let i = 0; i < features.length; i++) {
-    for (let j = 0; j < numFeatures; j++) {
-      flat[i * numFeatures + j] = features[i][j];
-    }
-  }
-
-  const input = new ort.Tensor("float32", flat, [features.length, numFeatures]);
-  const results = await session.run({ input: input });
-  const scores = results.output.data as Float32Array;
-
-  return Array.from(scores);
+  if (!model) throw new Error("Model not loaded");
+  return features.map((f) => model!.forward(f));
 }
 
 export function isLoaded(): boolean {
-  return session !== null;
+  return model !== null;
 }
