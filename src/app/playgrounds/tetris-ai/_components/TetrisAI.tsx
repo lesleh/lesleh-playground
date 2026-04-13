@@ -81,7 +81,7 @@ export function TetrisAI() {
       stepCount++;
       if (speedRef.current > 0) {
         await new Promise((r) => setTimeout(r, speedRef.current));
-      } else if (stepCount % 50 === 0) {
+      } else if (stepCount % 500 === 0) {
         // Yield to browser every 50 pieces on instant mode
         await new Promise((r) => setTimeout(r, 0));
       }
