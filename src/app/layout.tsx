@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     title: "Playground",
     description: "A scratchpad of web experiments. Click anything that looks interesting.",
     siteName: "lesleh playground",
+    locale: "en_GB",
+    type: "website",
+    url: "https://lesleh.uk",
   },
 };
 
