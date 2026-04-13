@@ -2,6 +2,17 @@
 
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Planets | Playground",
+  description: "Watch planets orbit in smooth animations using the Motion library.",
+  openGraph: {
+    title: "Planets",
+    description: "Watch planets orbit in smooth animations using the Motion library.",
+  },
+};
+
 
 interface Planet {
   id: number;

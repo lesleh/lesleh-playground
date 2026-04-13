@@ -1,4 +1,15 @@
 import { Graph } from "./_components";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Graphs | Playground",
+  description: "Interactive graph visualizations using D3.js.",
+  openGraph: {
+    title: "Graphs",
+    description: "Interactive graph visualizations using D3.js.",
+  },
+};
+
 
 export default async function GraphsPage({
   searchParams,

@@ -1,4 +1,15 @@
 import { Card } from "./_components/Card";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Subgrid Cards | Playground",
+  description: "Explore CSS subgrid with responsive card layouts.",
+  openGraph: {
+    title: "Subgrid Cards",
+    description: "Explore CSS subgrid with responsive card layouts.",
+  },
+};
+
 
 export default function SubgridCardsPage() {
   return (

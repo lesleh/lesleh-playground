@@ -6,6 +6,17 @@ import { useClientBoundingRect } from "./_hooks/useClientBoundingRect";
 import homer from "./_assets/homer.png";
 import eyedot from "./_assets/eyedot.png";
 import { useMousePosition } from "./_hooks/useMousePosition";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Homer Simpson | Playground",
+  description: "Homer's eyes follow your cursor around the screen.",
+  openGraph: {
+    title: "Homer Simpson",
+    description: "Homer's eyes follow your cursor around the screen.",
+  },
+};
+
 
 const LEFT_EYE = {
   x: 288,

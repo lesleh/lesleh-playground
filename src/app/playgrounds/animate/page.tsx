@@ -1,5 +1,16 @@
 import * as motion from "motion/react-client";
 import Markdown from "react-markdown";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Animate | Playground",
+  description: "React Markdown animation experiments with smooth transitions.",
+  openGraph: {
+    title: "Animate",
+    description: "React Markdown animation experiments with smooth transitions.",
+  },
+};
+
 
 const items = Array.from({ length: 200 }, (_, i) => `Item ${i + 1}`);
 

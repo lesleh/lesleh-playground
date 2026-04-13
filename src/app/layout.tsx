@@ -1,5 +1,16 @@
+import type { Metadata } from "next";
 import "../styles/globals.css";
 import { Breadcrumbs } from "./_components/Breadcrumbs";
+
+export const metadata: Metadata = {
+  title: "Playground | lesleh",
+  description: "A scratchpad of web experiments. Click anything that looks interesting.",
+  openGraph: {
+    title: "Playground",
+    description: "A scratchpad of web experiments. Click anything that looks interesting.",
+    siteName: "lesleh playground",
+  },
+};
 
 export default function RootLayout({
   children,
