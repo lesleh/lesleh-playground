@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TetrisGame } from "../_lib/tetris";
+import { TetrisGame, TETROMINOES } from "../_lib/tetris";
 import { loadModel, scorePlacements, isLoaded } from "../_lib/model";
 import { Board, PIECE_COLORS } from "./Board";
 import { Heading } from "../../../../components/Heading";
