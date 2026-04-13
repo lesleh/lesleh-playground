@@ -10,11 +10,11 @@ export async function loadModel(): Promise<void> {
 }
 
 export async function scorePlacements(
-  features: [number, number, number, number, number][]
+  features: number[][]
 ): Promise<number[]> {
   if (!session) throw new Error("Model not loaded");
 
-  const numFeatures = 5;
+  const numFeatures = 6;
   const flat = new Float32Array(features.length * numFeatures);
   for (let i = 0; i < features.length; i++) {
     for (let j = 0; j < numFeatures; j++) {
