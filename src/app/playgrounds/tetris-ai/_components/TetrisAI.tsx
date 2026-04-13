@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TetrisGame, TETROMINOES, COLS } from "../_lib/tetris";
+import { TetrisGame } from "../_lib/tetris";
 import { loadModel, scorePlacements, isLoaded } from "../_lib/model";
 import { Board, PIECE_COLORS } from "./Board";
 import { Heading } from "../../../../components/Heading";
@@ -46,52 +46,15 @@ export function TetrisAI() {
     const placements = g.getValidPlacements();
     if (placements.length === 0) return false;
 
-    // Emergency well-fill: if board is high and there's a deep well, fill it
-    const heights = new Array(COLS).fill(0);
-    for (let c = 0; c < COLS; c++) {
-      for (let r = 0; r < 20; r++) {
-        if (g.board[r][c] !== 0) { heights[c] = 20 - r; break; }
-      }
-    }
-    const maxH = Math.max(...heights);
-    const minH = Math.min(...heights);
+    const features = placements.map((p) => p.features);
+    const scores = await scorePlacements(features);
 
-    let bestIdx = -1;
-    if (maxH >= 16 && maxH - minH >= 8) {
-      // Find the well column (lowest) and pick placement that fills it most
-      const wellCol = heights.indexOf(minH);
-      let bestFill = -1;
-      for (let i = 0; i < placements.length; i++) {
-        const p = placements[i];
-        // Check if this placement puts cells in the well column
-        const piece = TETROMINOES[g.currentPiece][p.rotation];
-        let fillCount = 0;
-        for (let r = 0; r < piece.length; r++) {
-          for (let c = 0; c < piece[r].length; c++) {
-            if (piece[r][c] && p.col + c === wellCol) fillCount++;
-          }
-        }
-        // Prefer placements that fill the well and don't create holes
-        if (fillCount > bestFill || (fillCount === bestFill && p.features[1] < placements[bestIdx]?.features[1])) {
-          bestFill = fillCount;
-          bestIdx = i;
-        }
-      }
-      if (bestFill === 0) bestIdx = -1; // No placement fills the well, fall back to model
-    }
-
-    // Normal model scoring
-    if (bestIdx === -1) {
-      const features = placements.map((p) => p.features);
-      const scores = await scorePlacements(features);
-
-      bestIdx = 0;
-      let bestScore = -Infinity;
-      for (let i = 0; i < scores.length; i++) {
-        if (scores[i] > bestScore) {
-          bestScore = scores[i];
-          bestIdx = i;
-        }
+    let bestIdx = 0;
+    let bestScore = -Infinity;
+    for (let i = 0; i < scores.length; i++) {
+      if (scores[i] > bestScore) {
+        bestScore = scores[i];
+        bestIdx = i;
       }
     }
 
