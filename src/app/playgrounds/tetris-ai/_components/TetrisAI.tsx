@@ -74,11 +74,16 @@ export function TetrisAI() {
     setRunning(true);
     runningRef.current = true;
 
+    let stepCount = 0;
     while (runningRef.current) {
       const alive = await step();
       if (!alive) break;
+      stepCount++;
       if (speedRef.current > 0) {
         await new Promise((r) => setTimeout(r, speedRef.current));
+      } else if (stepCount % 50 === 0) {
+        // Yield to browser every 50 pieces on instant mode
+        await new Promise((r) => setTimeout(r, 0));
       }
     }
 
