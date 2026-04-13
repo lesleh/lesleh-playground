@@ -66,6 +66,15 @@ export interface Placement {
   features: number[]; // lines, holes, bumpiness, height, max_height, height_diff
 }
 
+function shuffled(arr: number[]): number[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export class TetrisGame {
   board: number[][]; // 0 = empty, 1-7 = piece color
   currentPiece: number;
@@ -74,11 +83,20 @@ export class TetrisGame {
   linesCleared: number;
   piecesPlaced: number;
   gameOver: boolean;
+  private bag: number[];
+
+  private nextFromBag(): number {
+    if (this.bag.length === 0) {
+      this.bag = shuffled([0, 1, 2, 3, 4, 5, 6]);
+    }
+    return this.bag.pop()!;
+  }
 
   constructor() {
     this.board = Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
-    this.currentPiece = Math.floor(Math.random() * 7);
-    this.nextPiece = Math.floor(Math.random() * 7);
+    this.bag = [];
+    this.currentPiece = this.nextFromBag();
+    this.nextPiece = this.nextFromBag();
     this.score = 0;
     this.linesCleared = 0;
     this.piecesPlaced = 0;
@@ -200,7 +218,7 @@ export class TetrisGame {
 
     // Next piece
     this.currentPiece = this.nextPiece;
-    this.nextPiece = Math.floor(Math.random() * 7);
+    this.nextPiece = this.nextFromBag();
 
     // Check game over
     const nextPlacements = this.getValidPlacements();
