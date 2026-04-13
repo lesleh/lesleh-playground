@@ -63,7 +63,8 @@ export interface Placement {
   rotation: number;
   col: number;
   row: number;
-  features: number[]; // lines, holes, bumpiness, height, max_height, height_diff
+  features: number[]; // lines, holes, bumpiness, height, max_height, height_diff, low_columns
+  swap: boolean;
 }
 
 function shuffled(arr: number[]): number[] {
@@ -79,6 +80,8 @@ export class TetrisGame {
   board: number[][]; // 0 = empty, 1-7 = piece color
   currentPiece: number;
   nextPiece: number;
+  heldPiece: number | null;
+  canSwap: boolean;
   score: number;
   linesCleared: number;
   piecesPlaced: number;
@@ -97,6 +100,8 @@ export class TetrisGame {
     this.bag = [];
     this.currentPiece = this.nextFromBag();
     this.nextPiece = this.nextFromBag();
+    this.heldPiece = null;
+    this.canSwap = true;
     this.score = 0;
     this.linesCleared = 0;
     this.piecesPlaced = 0;
@@ -116,10 +121,10 @@ export class TetrisGame {
     return false;
   }
 
-  getValidPlacements(): Placement[] {
+  private enumeratePlacements(pieceIdx: number, swap: boolean): Placement[] {
     const placements: Placement[] = [];
     const seen = new Set<string>();
-    const rotations = TETROMINOES[this.currentPiece];
+    const rotations = TETROMINOES[pieceIdx];
 
     for (let rot = 0; rot < 4; rot++) {
       const piece = rotations[rot];
@@ -129,24 +134,21 @@ export class TetrisGame {
       for (let col = -2; col <= COLS; col++) {
         if (this.collision(piece, col, 0)) continue;
 
-        // Drop to lowest valid row
         let row = 0;
         while (!this.collision(piece, col, row + 1)) row++;
 
-        // Simulate placement
         const boardCopy = this.board.map((r) => [...r]);
         for (let r = 0; r < pieceH; r++) {
           for (let c = 0; c < pieceW; c++) {
             if (piece[r][c]) {
               const boardC = col + c;
               if (boardC >= 0 && boardC < COLS) {
-                boardCopy[row + r][boardC] = this.currentPiece + 1;
+                boardCopy[row + r][boardC] = pieceIdx + 1;
               }
             }
           }
         }
 
-        // Clear lines
         let lines = 0;
         const cleaned: number[][] = [];
         for (let r = 0; r < ROWS; r++) {
@@ -168,11 +170,12 @@ export class TetrisGame {
 
         const features = computeFeatures(resultBoard, lines);
         placements.push({
-          pieceIdx: this.currentPiece,
+          pieceIdx: pieceIdx,
           rotation: rot,
           col,
           row,
           features,
+          swap,
         });
       }
     }
@@ -180,7 +183,25 @@ export class TetrisGame {
     return placements;
   }
 
+  getValidPlacements(): Placement[] {
+    const placements = this.enumeratePlacements(this.currentPiece, false);
+
+    if (this.canSwap && this.heldPiece !== null) {
+      const swapPlacements = this.enumeratePlacements(this.heldPiece, true);
+      placements.push(...swapPlacements);
+    }
+
+    return placements;
+  }
+
   executePlacement(placement: Placement): number {
+    if (placement.swap && this.heldPiece !== null) {
+      const temp = this.currentPiece;
+      this.currentPiece = this.heldPiece;
+      this.heldPiece = temp;
+      this.canSwap = false;
+    }
+
     const piece = TETROMINOES[this.currentPiece][placement.rotation];
 
     // Place piece
@@ -219,6 +240,7 @@ export class TetrisGame {
     // Next piece
     this.currentPiece = this.nextPiece;
     this.nextPiece = this.nextFromBag();
+    this.canSwap = true;
 
     // Check game over
     const nextPlacements = this.getValidPlacements();
@@ -264,5 +286,11 @@ function computeFeatures(
   const minHeight = Math.min(...heights);
   const heightDiff = maxHeight - minHeight;
 
-  return [linesCleared, holes, bumpiness, totalHeight, maxHeight, heightDiff];
+  const halfMax = maxHeight / 2;
+  let lowColumns = 0;
+  for (const h of heights) {
+    if (h < halfMax) lowColumns++;
+  }
+
+  return [linesCleared, holes, bumpiness, totalHeight, maxHeight, heightDiff, lowColumns];
 }
