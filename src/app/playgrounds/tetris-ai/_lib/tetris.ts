@@ -264,5 +264,12 @@ function computeFeatures(
   const minHeight = Math.min(...heights);
   const heightDiff = maxHeight - minHeight;
 
-  return [linesCleared, holes, bumpiness, totalHeight, maxHeight, heightDiff];
+  let heightVariance = 0;
+  const meanHeight = totalHeight / COLS;
+  for (const h of heights) {
+    heightVariance += (h - meanHeight) ** 2;
+  }
+  heightVariance /= COLS;
+
+  return [linesCleared, holes, bumpiness, totalHeight, maxHeight, heightDiff, heightVariance];
 }
