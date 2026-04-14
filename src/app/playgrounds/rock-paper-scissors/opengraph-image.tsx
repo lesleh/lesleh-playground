@@ -5,4 +5,4 @@ export const alt = "Rock Paper Scissors";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default createOgImage("Rock Paper Scissors", "Play the timeless game against the computer. Best of three!");
+export default createOgImage("Rock Paper Scissors", "Play against an adaptive AI that learns your patterns in real-time. Can you stay unpredictable?");

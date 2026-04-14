@@ -3,10 +3,12 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Rock Paper Scissors | Playground",
-  description: "Play the timeless game against the computer. Best of three!",
+  description:
+    "Play against an adaptive AI that learns your patterns in real-time. Can you stay unpredictable?",
   openGraph: {
     title: "Rock Paper Scissors",
-    description: "Play the timeless game against the computer. Best of three!",
+    description:
+      "Play against an adaptive AI that learns your patterns in real-time. Can you stay unpredictable?",
   },
 };
 
