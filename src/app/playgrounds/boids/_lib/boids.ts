@@ -150,6 +150,15 @@ export function updateBoids(
     b.vx += (Math.random() - 0.5) * 0.3 * params.noise;
     b.vy += (Math.random() - 0.5) * 0.1 * params.noise;
 
+    // Soft vertical boundaries — push back when near top or bottom, proportional to proximity.
+    // Birds don't wrap vertically; they stay in an altitude band like real starlings.
+    const margin = height * 0.15;
+    if (b.y < margin) {
+      b.vy += 0.4 * (1 - b.y / margin);
+    } else if (b.y > height - margin) {
+      b.vy -= 0.4 * (1 - (height - b.y) / margin);
+    }
+
     const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
     const maxSpeed = params.speed;
     const minSpeed = maxSpeed * 0.6;
@@ -163,6 +172,6 @@ export function updateBoids(
     }
 
     b.x = (b.x + b.vx + width) % width;
-    b.y = (b.y + b.vy + height) % height;
+    b.y = Math.max(0, Math.min(height - 1, b.y + b.vy));
   }
 }

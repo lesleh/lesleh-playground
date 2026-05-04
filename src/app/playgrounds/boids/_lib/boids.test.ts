@@ -38,11 +38,11 @@ describe("updateBoids — toroidal wrapping", () => {
     expect(boid.x).toBeCloseTo(797);
   });
 
-  it("wraps a boid past the bottom edge", () => {
+  it("clamps a boid at the bottom edge", () => {
     const boid: Boid = { x: 300, y: 598, vx: 0, vy: 5 };
     const grid = new SpatialGrid(800, 600, 75);
     updateBoids([boid], grid, noForce, 800, 600);
-    // 598 + 5 = 603, wraps to 3
-    expect(boid.y).toBeCloseTo(3);
+    expect(boid.y).toBeLessThanOrEqual(599);
+    expect(boid.y).toBeGreaterThanOrEqual(0);
   });
 });
