@@ -12,6 +12,7 @@ export interface BoidParams {
   alignment: number;
   cohesion: number;
   speed: number;
+  noise: number;
 }
 
 export const DEFAULT_PARAMS: BoidParams = {
@@ -19,6 +20,7 @@ export const DEFAULT_PARAMS: BoidParams = {
   alignment: 1.5,
   cohesion: 1.0,
   speed: 5.0,
+  noise: 1.0,
 };
 
 export const VISUAL_RANGE = 100;
@@ -36,8 +38,8 @@ export function createBoids(count: number, width: number, height: number): Boid[
   return Array.from({ length: count }, () => ({
     x: Math.random() * width,
     y: Math.random() * height,
-    vx: (Math.random() - 0.5) * 2,
-    vy: (Math.random() - 0.5) * 2,
+    vx: (Math.random() - 0.5) * 4, // wider horizontal range biases flock toward horizontal flight
+    vy: (Math.random() - 0.5) * 1,
   }));
 }
 
@@ -134,14 +136,19 @@ export function updateBoids(
     b.vy += sepY;
 
     if (nearLen > 0) {
-      b.vx += (avgVx / nearLen - b.vx) * params.alignment * 0.2;
-      b.vy += (avgVy / nearLen - b.vy) * params.alignment * 0.2;
+      b.vx += (avgVx / nearLen - b.vx) * params.alignment * 0.15;
+      b.vy += (avgVy / nearLen - b.vy) * params.alignment * 0.15;
       b.vx += (avgX / nearLen - b.x) * params.cohesion * 0.001;
       b.vy += (avgY / nearLen - b.y) * params.cohesion * 0.001;
     }
 
     b.vx += (globalX - b.x) * 0.00008;
     b.vy += (globalY - b.y) * 0.00008;
+
+    // Per-boid random perturbation — creates natural divergences that let sub-groups peel off.
+    // Less vertical noise than horizontal so the flock stays roughly level.
+    b.vx += (Math.random() - 0.5) * 0.3 * params.noise;
+    b.vy += (Math.random() - 0.5) * 0.1 * params.noise;
 
     const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
     const maxSpeed = params.speed;

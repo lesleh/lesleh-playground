@@ -7,6 +7,7 @@ const SLIDERS: { label: string; key: keyof BoidParams; min: number; max: number;
   { label: "Alignment",  key: "alignment",  min: 0, max: 3, step: 0.05 },
   { label: "Cohesion",   key: "cohesion",   min: 0, max: 3, step: 0.05 },
   { label: "Speed",      key: "speed",      min: 1, max: 8, step: 0.1 },
+  { label: "Noise",      key: "noise",      min: 0, max: 3, step: 0.05 },
 ];
 
 interface Props {
