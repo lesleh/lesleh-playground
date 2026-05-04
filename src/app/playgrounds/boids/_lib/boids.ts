@@ -15,13 +15,13 @@ export interface BoidParams {
 }
 
 export const DEFAULT_PARAMS: BoidParams = {
-  separation: 1.0,
+  separation: 0.8,
   alignment: 1.5,
-  cohesion: 1.2,
-  speed: 2.5,
+  cohesion: 1.0,
+  speed: 3.0,
 };
 
-export const VISUAL_RANGE = 75;
+export const VISUAL_RANGE = 100;
 const SEPARATION_RANGE = 25;
 
 export function createBoids(count: number, width: number, height: number): Boid[] {
@@ -40,6 +40,15 @@ export function updateBoids(
   width: number,
   height: number
 ): void {
+  // Global centre of mass — very weak pull keeps flock unified instead of fragmenting
+  let globalX = 0, globalY = 0;
+  for (let i = 0; i < boids.length; i++) {
+    globalX += boids[i].x;
+    globalY += boids[i].y;
+  }
+  globalX /= boids.length;
+  globalY /= boids.length;
+
   grid.clear();
   for (let i = 0; i < boids.length; i++) {
     grid.insert(i, boids[i].x, boids[i].y);
@@ -80,14 +89,17 @@ export function updateBoids(
     b.vy += sepY;
 
     if (alignCount > 0) {
-      b.vx += (avgVx / alignCount - b.vx) * params.alignment * 0.1;
-      b.vy += (avgVy / alignCount - b.vy) * params.alignment * 0.1;
+      b.vx += (avgVx / alignCount - b.vx) * params.alignment * 0.2;
+      b.vy += (avgVy / alignCount - b.vy) * params.alignment * 0.2;
     }
 
     if (cohCount > 0) {
       b.vx += (avgX / cohCount - b.x) * params.cohesion * 0.0008;
       b.vy += (avgY / cohCount - b.y) * params.cohesion * 0.0008;
     }
+
+    b.vx += (globalX - b.x) * 0.00008;
+    b.vy += (globalY - b.y) * 0.00008;
 
     const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
     const maxSpeed = params.speed;
