@@ -150,14 +150,14 @@ export function updateBoids(
     b.vx += (Math.random() - 0.5) * 0.3 * params.noise;
     b.vy += (Math.random() - 0.5) * 0.1 * params.noise;
 
-    // Soft vertical boundaries — push back when near top or bottom, proportional to proximity.
-    // Birds don't wrap vertically; they stay in an altitude band like real starlings.
-    const margin = height * 0.15;
-    if (b.y < margin) {
-      b.vy += 0.4 * (1 - b.y / margin);
-    } else if (b.y > height - margin) {
-      b.vy -= 0.4 * (1 - (height - b.y) / margin);
-    }
+    // Soft boundaries on all four edges — boids turn back proportional to how close they are.
+    const marginX = width * 0.12;
+    const marginY = height * 0.15;
+    const turnForce = 0.4;
+    if (b.x < marginX)            b.vx += turnForce * (1 - b.x / marginX);
+    if (b.x > width - marginX)    b.vx -= turnForce * (1 - (width - b.x) / marginX);
+    if (b.y < marginY)            b.vy += turnForce * (1 - b.y / marginY);
+    if (b.y > height - marginY)   b.vy -= turnForce * (1 - (height - b.y) / marginY);
 
     const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
     const maxSpeed = params.speed;
@@ -171,7 +171,7 @@ export function updateBoids(
       b.vy = (b.vy / speed) * minSpeed;
     }
 
-    b.x = (b.x + b.vx + width) % width;
+    b.x = Math.max(0, Math.min(width - 1, b.x + b.vx));
     b.y = Math.max(0, Math.min(height - 1, b.y + b.vy));
   }
 }

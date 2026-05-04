@@ -21,21 +21,20 @@ describe("createBoids", () => {
 describe("updateBoids — toroidal wrapping", () => {
   const noForce: BoidParams = { separation: 0, alignment: 0, cohesion: 0, speed: 5, noise: 0 };
 
-  it("wraps a boid past the right edge", () => {
+  it("clamps a boid at the right edge", () => {
     const boid: Boid = { x: 798, y: 300, vx: 5, vy: 0 };
     const grid = new SpatialGrid(800, 600, 75);
     updateBoids([boid], grid, noForce, 800, 600);
-    // 798 + 5 = 803, wraps to 3
-    expect(boid.x).toBeCloseTo(3);
-    expect(boid.y).toBeCloseTo(300);
+    expect(boid.x).toBeLessThanOrEqual(799);
+    expect(boid.x).toBeGreaterThanOrEqual(0);
   });
 
-  it("wraps a boid past the left edge", () => {
+  it("clamps a boid at the left edge", () => {
     const boid: Boid = { x: 2, y: 300, vx: -5, vy: 0 };
     const grid = new SpatialGrid(800, 600, 75);
     updateBoids([boid], grid, noForce, 800, 600);
-    // 2 - 5 = -3, + 800 = 797
-    expect(boid.x).toBeCloseTo(797);
+    expect(boid.x).toBeGreaterThanOrEqual(0);
+    expect(boid.x).toBeLessThanOrEqual(799);
   });
 
   it("clamps a boid at the bottom edge", () => {
