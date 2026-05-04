@@ -16,6 +16,7 @@ import { MotionPreview } from "./playgrounds/motion/Preview";
 import { TreesPreview } from "./playgrounds/trees/Preview";
 import { ConnectFourPreview } from "./playgrounds/connect-four/Preview";
 import { TetrisAIPreview } from "./playgrounds/tetris-ai/Preview";
+import { BoidsPreview } from "./playgrounds/boids/Preview";
 
 const playgrounds = [
   {
@@ -133,6 +134,13 @@ const playgrounds = [
     description: "Watch a neural network play Tetris. Trained with deep reinforcement learning.",
     href: "/playgrounds/tetris-ai",
     preview: TetrisAIPreview,
+  },
+  {
+    id: "boids",
+    title: "Boids",
+    description: "700 agents follow three simple rules and emergent murmurations appear.",
+    href: "/playgrounds/boids",
+    preview: BoidsPreview,
   },
 ];
 
