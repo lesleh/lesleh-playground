@@ -5,7 +5,7 @@ import { createBoids, updateBoids, VISUAL_RANGE } from "../../_lib/boids";
 import { SpatialGrid } from "../../_lib/spatialGrid";
 import type { BoidParams } from "../../_lib/boids";
 
-const BOID_COUNT = 1200;
+const BOID_COUNT = 3000;
 
 interface Props {
   paramsRef: React.RefObject<BoidParams>;
@@ -34,12 +34,14 @@ export function BoidsCanvas({ paramsRef }: Props) {
 
       updateBoids(boids, grid, paramsRef.current, canvas.width, canvas.height);
 
+      // Single path + one fill() call — orders of magnitude faster than fill() per boid
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.beginPath();
       for (const b of boids) {
-        ctx.beginPath();
+        ctx.moveTo(b.x + 2.5, b.y);
         ctx.arc(b.x, b.y, 2.5, 0, Math.PI * 2);
-        ctx.fill();
       }
+      ctx.fill();
 
       animId = requestAnimationFrame(frame);
     };

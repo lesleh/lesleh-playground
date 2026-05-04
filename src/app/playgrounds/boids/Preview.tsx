@@ -35,11 +35,12 @@ export function BoidsPreview() {
       updateBoids(boids, grid, DEFAULT_PARAMS, canvas.width, canvas.height);
 
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+      ctx.beginPath();
       for (const b of boids) {
-        ctx.beginPath();
+        ctx.moveTo(b.x + 2, b.y);
         ctx.arc(b.x, b.y, 2, 0, Math.PI * 2);
-        ctx.fill();
       }
+      ctx.fill();
 
       animId = requestAnimationFrame(frame);
     };
