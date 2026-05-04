@@ -15,10 +15,10 @@ export interface BoidParams {
 }
 
 export const DEFAULT_PARAMS: BoidParams = {
-  separation: 1.5,
-  alignment: 1.0,
-  cohesion: 1.0,
-  speed: 2.0,
+  separation: 1.0,
+  alignment: 1.5,
+  cohesion: 1.2,
+  speed: 2.5,
 };
 
 export const VISUAL_RANGE = 75;
@@ -62,8 +62,8 @@ export function updateBoids(
 
       if (distSq < SEPARATION_RANGE * SEPARATION_RANGE && distSq > 0) {
         const dist = Math.sqrt(distSq);
-        sepX += (dx / dist) * params.separation * 0.3;
-        sepY += (dy / dist) * params.separation * 0.3;
+        sepX += (dx / dist) * params.separation * 0.1;
+        sepY += (dy / dist) * params.separation * 0.1;
       }
 
       if (distSq < VISUAL_RANGE * VISUAL_RANGE) {
@@ -80,8 +80,8 @@ export function updateBoids(
     b.vy += sepY;
 
     if (alignCount > 0) {
-      b.vx += (avgVx / alignCount - b.vx) * params.alignment * 0.05;
-      b.vy += (avgVy / alignCount - b.vy) * params.alignment * 0.05;
+      b.vx += (avgVx / alignCount - b.vx) * params.alignment * 0.1;
+      b.vy += (avgVy / alignCount - b.vy) * params.alignment * 0.1;
     }
 
     if (cohCount > 0) {
