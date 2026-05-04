@@ -138,7 +138,7 @@ const playgrounds = [
   {
     id: "boids",
     title: "Boids",
-    description: "700 agents follow three simple rules and emergent murmurations appear.",
+    description: "3000 agents follow three simple rules and emergent murmurations appear.",
     href: "/playgrounds/boids",
     preview: BoidsPreview,
   },
