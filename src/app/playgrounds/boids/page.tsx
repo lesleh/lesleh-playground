@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function BoidsPage() {
   return (
-    <div className="min-h-full">
+    <div className="h-full">
       <Boids />
     </div>
   );

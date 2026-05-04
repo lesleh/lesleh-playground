@@ -19,7 +19,7 @@ export function Boids() {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-[#0d0d0d]">
+    <div className="flex flex-col h-full bg-[#0d0d0d]">
       <div className="flex-1 overflow-hidden">
         <BoidsCanvas paramsRef={paramsRef} />
       </div>
