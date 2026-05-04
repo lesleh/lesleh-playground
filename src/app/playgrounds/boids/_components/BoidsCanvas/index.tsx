@@ -1,0 +1,1 @@
+export { BoidsCanvas } from "./BoidsCanvas";
