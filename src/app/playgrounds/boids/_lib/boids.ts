@@ -25,6 +25,13 @@ export const VISUAL_RANGE = 100;
 const SEPARATION_RANGE = 25;
 const TOPOLOGICAL_N = 7;
 
+// Pre-allocated buffers reused every frame — zero heap allocation in the hot path
+const MAX_CANDIDATES = 512;
+const _buf = new Int32Array(MAX_CANDIDATES);    // candidate indices (queryInto output, then compacted in-place)
+const _dSq = new Float64Array(MAX_CANDIDATES);  // candidate distances²
+const _nearIdx = new Int32Array(TOPOLOGICAL_N); // nearest-N indices
+const _nearDSq = new Float64Array(TOPOLOGICAL_N); // nearest-N distances²
+
 export function createBoids(count: number, width: number, height: number): Boid[] {
   return Array.from({ length: count }, () => ({
     x: Math.random() * width,
@@ -41,7 +48,6 @@ export function updateBoids(
   width: number,
   height: number
 ): void {
-  // Global centre of mass — weak pull keeps the flock from fragmenting
   let globalX = 0, globalY = 0;
   for (let i = 0; i < boids.length; i++) {
     globalX += boids[i].x;
@@ -60,31 +66,60 @@ export function updateBoids(
 
   for (let i = 0; i < boids.length; i++) {
     const b = boids[i];
-    const candidates = grid.query(b.x, b.y);
 
-    // Topological neighbours: respond to the TOPOLOGICAL_N nearest visible boids,
-    // not all boids within a fixed radius. This is what real starlings do (Ballerini 2008).
-    const visible: Array<{ j: number; distSq: number }> = [];
-    for (const j of candidates) {
+    // Write grid candidates into _buf with no allocation
+    const candLen = grid.queryInto(b.x, b.y, _buf);
+
+    // Filter by visual range, skipping self. Compact _buf in-place
+    // (safe because visLen <= k always holds, so writes never overtake reads)
+    let visLen = 0;
+    for (let k = 0; k < candLen; k++) {
+      const j = _buf[k];
       if (j === i) continue;
       const n = boids[j];
       const dx = b.x - n.x, dy = b.y - n.y;
-      const distSq = dx * dx + dy * dy;
-      if (distSq < vr2) visible.push({ j, distSq });
+      const d = dx * dx + dy * dy;
+      if (d < vr2) {
+        _buf[visLen] = j;
+        _dSq[visLen] = d;
+        visLen++;
+      }
     }
-    visible.sort((a, b) => a.distSq - b.distSq);
-    const nearest = visible.length > TOPOLOGICAL_N ? visible.slice(0, TOPOLOGICAL_N) : visible;
+
+    // Max-heap selection: find TOPOLOGICAL_N nearest with zero allocation.
+    // Track the current worst slot in the heap so replacements are O(k).
+    let nearLen = 0;
+    let heapMax = 0;
+    let heapMaxPos = 0;
+
+    for (let k = 0; k < visLen; k++) {
+      const d = _dSq[k];
+      if (nearLen < TOPOLOGICAL_N) {
+        _nearIdx[nearLen] = _buf[k];
+        _nearDSq[nearLen] = d;
+        nearLen++;
+        if (d > heapMax) { heapMax = d; heapMaxPos = nearLen - 1; }
+      } else if (d < heapMax) {
+        _nearIdx[heapMaxPos] = _buf[k];
+        _nearDSq[heapMaxPos] = d;
+        heapMax = 0;
+        for (let m = 0; m < TOPOLOGICAL_N; m++) {
+          if (_nearDSq[m] > heapMax) { heapMax = _nearDSq[m]; heapMaxPos = m; }
+        }
+      }
+    }
 
     let sepX = 0, sepY = 0;
     let avgVx = 0, avgVy = 0;
     let avgX = 0, avgY = 0;
 
-    for (const { j, distSq } of nearest) {
-      const n = boids[j];
+    for (let k = 0; k < nearLen; k++) {
+      const n = boids[_nearIdx[k]];
       const dx = b.x - n.x, dy = b.y - n.y;
+      const d = _nearDSq[k];
 
-      if (distSq < sr2 && distSq > 0) {
-        const dist = Math.sqrt(distSq);
+      if (d < sr2 && d > 0) {
+        const dist = Math.sqrt(d);
         sepX += (dx / dist) * params.separation * 0.15;
         sepY += (dy / dist) * params.separation * 0.15;
       }
@@ -95,27 +130,22 @@ export function updateBoids(
       avgY += n.y;
     }
 
-    const count = nearest.length;
     b.vx += sepX;
     b.vy += sepY;
 
-    if (count > 0) {
-      // Strong, fast alignment — direction changes ripple across the flock
-      b.vx += (avgVx / count - b.vx) * params.alignment * 0.2;
-      b.vy += (avgVy / count - b.vy) * params.alignment * 0.2;
-
-      // Local cohesion toward nearest neighbours' centre
-      b.vx += (avgX / count - b.x) * params.cohesion * 0.001;
-      b.vy += (avgY / count - b.y) * params.cohesion * 0.001;
+    if (nearLen > 0) {
+      b.vx += (avgVx / nearLen - b.vx) * params.alignment * 0.2;
+      b.vy += (avgVy / nearLen - b.vy) * params.alignment * 0.2;
+      b.vx += (avgX / nearLen - b.x) * params.cohesion * 0.001;
+      b.vy += (avgY / nearLen - b.y) * params.cohesion * 0.001;
     }
 
-    // Weak global pull keeps flock unified
     b.vx += (globalX - b.x) * 0.00008;
     b.vy += (globalY - b.y) * 0.00008;
 
     const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
     const maxSpeed = params.speed;
-    const minSpeed = maxSpeed * 0.6; // birds maintain speed — don't slow down much
+    const minSpeed = maxSpeed * 0.6;
 
     if (speed > maxSpeed) {
       b.vx = (b.vx / speed) * maxSpeed;

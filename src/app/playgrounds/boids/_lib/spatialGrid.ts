@@ -37,4 +37,22 @@ export class SpatialGrid {
     }
     return result;
   }
+
+  // Zero-allocation variant — writes into a caller-provided typed array, returns count
+  queryInto(x: number, y: number, out: Int32Array): number {
+    const cx = Math.floor(x / this.cellSize);
+    const cy = Math.floor(y / this.cellSize);
+    let len = 0;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const cell = this.cells.get(this.key(cx + dx, cy + dy));
+        if (cell) {
+          for (let k = 0; k < cell.length; k++) {
+            if (len < out.length) out[len++] = cell[k];
+          }
+        }
+      }
+    }
+    return len;
+  }
 }
