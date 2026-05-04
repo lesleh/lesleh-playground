@@ -19,7 +19,7 @@ describe("createBoids", () => {
 });
 
 describe("updateBoids — toroidal wrapping", () => {
-  const noForce: BoidParams = { separation: 0, alignment: 0, cohesion: 0, speed: 10 };
+  const noForce: BoidParams = { separation: 0, alignment: 0, cohesion: 0, speed: 5 };
 
   it("wraps a boid past the right edge", () => {
     const boid: Boid = { x: 798, y: 300, vx: 5, vy: 0 };

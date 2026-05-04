@@ -15,14 +15,15 @@ export interface BoidParams {
 }
 
 export const DEFAULT_PARAMS: BoidParams = {
-  separation: 0.8,
+  separation: 1.0,
   alignment: 1.5,
   cohesion: 1.0,
-  speed: 3.0,
+  speed: 5.0,
 };
 
 export const VISUAL_RANGE = 100;
 const SEPARATION_RANGE = 25;
+const TOPOLOGICAL_N = 7;
 
 export function createBoids(count: number, width: number, height: number): Boid[] {
   return Array.from({ length: count }, () => ({
@@ -40,7 +41,7 @@ export function updateBoids(
   width: number,
   height: number
 ): void {
-  // Global centre of mass — very weak pull keeps flock unified instead of fragmenting
+  // Global centre of mass — weak pull keeps the flock from fragmenting
   let globalX = 0, globalY = 0;
   for (let i = 0; i < boids.length; i++) {
     globalX += boids[i].x;
@@ -54,56 +55,67 @@ export function updateBoids(
     grid.insert(i, boids[i].x, boids[i].y);
   }
 
+  const vr2 = VISUAL_RANGE * VISUAL_RANGE;
+  const sr2 = SEPARATION_RANGE * SEPARATION_RANGE;
+
   for (let i = 0; i < boids.length; i++) {
     const b = boids[i];
-    const neighbors = grid.query(b.x, b.y);
+    const candidates = grid.query(b.x, b.y);
 
-    let sepX = 0, sepY = 0;
-    let avgVx = 0, avgVy = 0, alignCount = 0;
-    let avgX = 0, avgY = 0, cohCount = 0;
-
-    for (const j of neighbors) {
+    // Topological neighbours: respond to the TOPOLOGICAL_N nearest visible boids,
+    // not all boids within a fixed radius. This is what real starlings do (Ballerini 2008).
+    const visible: Array<{ j: number; distSq: number }> = [];
+    for (const j of candidates) {
       if (j === i) continue;
       const n = boids[j];
-      const dx = b.x - n.x;
-      const dy = b.y - n.y;
+      const dx = b.x - n.x, dy = b.y - n.y;
       const distSq = dx * dx + dy * dy;
+      if (distSq < vr2) visible.push({ j, distSq });
+    }
+    visible.sort((a, b) => a.distSq - b.distSq);
+    const nearest = visible.length > TOPOLOGICAL_N ? visible.slice(0, TOPOLOGICAL_N) : visible;
 
-      if (distSq < SEPARATION_RANGE * SEPARATION_RANGE && distSq > 0) {
+    let sepX = 0, sepY = 0;
+    let avgVx = 0, avgVy = 0;
+    let avgX = 0, avgY = 0;
+
+    for (const { j, distSq } of nearest) {
+      const n = boids[j];
+      const dx = b.x - n.x, dy = b.y - n.y;
+
+      if (distSq < sr2 && distSq > 0) {
         const dist = Math.sqrt(distSq);
-        sepX += (dx / dist) * params.separation * 0.1;
-        sepY += (dy / dist) * params.separation * 0.1;
+        sepX += (dx / dist) * params.separation * 0.15;
+        sepY += (dy / dist) * params.separation * 0.15;
       }
 
-      if (distSq < VISUAL_RANGE * VISUAL_RANGE) {
-        avgVx += n.vx;
-        avgVy += n.vy;
-        alignCount++;
-        avgX += n.x;
-        avgY += n.y;
-        cohCount++;
-      }
+      avgVx += n.vx;
+      avgVy += n.vy;
+      avgX += n.x;
+      avgY += n.y;
     }
 
+    const count = nearest.length;
     b.vx += sepX;
     b.vy += sepY;
 
-    if (alignCount > 0) {
-      b.vx += (avgVx / alignCount - b.vx) * params.alignment * 0.2;
-      b.vy += (avgVy / alignCount - b.vy) * params.alignment * 0.2;
+    if (count > 0) {
+      // Strong, fast alignment — direction changes ripple across the flock
+      b.vx += (avgVx / count - b.vx) * params.alignment * 0.2;
+      b.vy += (avgVy / count - b.vy) * params.alignment * 0.2;
+
+      // Local cohesion toward nearest neighbours' centre
+      b.vx += (avgX / count - b.x) * params.cohesion * 0.001;
+      b.vy += (avgY / count - b.y) * params.cohesion * 0.001;
     }
 
-    if (cohCount > 0) {
-      b.vx += (avgX / cohCount - b.x) * params.cohesion * 0.0008;
-      b.vy += (avgY / cohCount - b.y) * params.cohesion * 0.0008;
-    }
-
+    // Weak global pull keeps flock unified
     b.vx += (globalX - b.x) * 0.00008;
     b.vy += (globalY - b.y) * 0.00008;
 
     const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
     const maxSpeed = params.speed;
-    const minSpeed = maxSpeed * 0.3;
+    const minSpeed = maxSpeed * 0.6; // birds maintain speed — don't slow down much
 
     if (speed > maxSpeed) {
       b.vx = (b.vx / speed) * maxSpeed;

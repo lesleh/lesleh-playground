@@ -5,7 +5,7 @@ import { useIntersectionObserver } from "../../_hooks";
 import { createBoids, updateBoids, DEFAULT_PARAMS, VISUAL_RANGE } from "./_lib/boids";
 import { SpatialGrid } from "./_lib/spatialGrid";
 
-const PREVIEW_COUNT = 150;
+const PREVIEW_COUNT = 300;
 
 export function BoidsPreview() {
   const containerRef = useRef<HTMLDivElement>(null);

@@ -5,7 +5,7 @@ import { createBoids, updateBoids, VISUAL_RANGE } from "../../_lib/boids";
 import { SpatialGrid } from "../../_lib/spatialGrid";
 import type { BoidParams } from "../../_lib/boids";
 
-const BOID_COUNT = 700;
+const BOID_COUNT = 1200;
 
 interface Props {
   paramsRef: React.RefObject<BoidParams>;
