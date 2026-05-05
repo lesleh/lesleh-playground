@@ -5,7 +5,10 @@ export type PresetId =
   | "lagrange"
   | "euler"
   | "binary-planet"
-  | "random";
+  | "trisolaran"
+  | "pythagorean"
+  | "free-fall"
+  | "bound-chaotic";
 
 export interface PresetOption {
   id: PresetId;
@@ -35,9 +38,24 @@ export const PRESETS: PresetOption[] = [
     description: "Tight binary with a distant low-mass companion.",
   },
   {
-    id: "random",
-    label: "Random",
-    description: "Random initial conditions. Almost always chaotic.",
+    id: "trisolaran",
+    label: "Trisolaran",
+    description: "Three close suns of unequal mass. Bound chaos with stable interludes.",
+  },
+  {
+    id: "pythagorean",
+    label: "Pythagorean (Burrau)",
+    description: "Masses 3·4·5 at the corners of a 3·4·5 right triangle, at rest.",
+  },
+  {
+    id: "free-fall",
+    label: "Free-fall",
+    description: "Three equal stars at rest in a perturbed triangle. Fall, scatter, repeat.",
+  },
+  {
+    id: "bound-chaotic",
+    label: "Bound chaos",
+    description: "Random initial conditions, rejection-sampled to guarantee bound orbits.",
   },
 ];
 
@@ -51,8 +69,14 @@ export function buildPreset(id: PresetId): Body[] {
       return euler();
     case "binary-planet":
       return binaryPlanet();
-    case "random":
-      return randomChaos();
+    case "trisolaran":
+      return trisolaran();
+    case "pythagorean":
+      return pythagorean();
+    case "free-fall":
+      return freeFall();
+    case "bound-chaotic":
+      return boundChaotic();
   }
 }
 
@@ -123,12 +147,93 @@ function binaryPlanet(): Body[] {
   ];
 }
 
-function randomChaos(): Body[] {
-  return [0, 1, 2].map(() => ({
-    x: (Math.random() - 0.5) * 4,
-    y: (Math.random() - 0.5) * 4,
-    vx: (Math.random() - 0.5) * 4,
-    vy: (Math.random() - 0.5) * 4,
-    mass: 0.5 + Math.random() * 1.5,
-  }));
+function trisolaran(): Body[] {
+  // Three close suns with unequal masses and sub-orbital velocities. Strongly bound,
+  // so they stay near each other for a long time, but the dynamics are chaotic.
+  const bodies: Body[] = [
+    { x: -0.6, y: 0.3, vx: 1.5, vy: 2.0, mass: 1.0 },
+    { x: 0.6, y: -0.2, vx: -1.0, vy: -2.5, mass: 0.8 },
+    { x: 0.0, y: 0.7, vx: -0.5, vy: 0.5, mass: 1.2 },
+  ];
+  zeroCOM(bodies);
+  return bodies;
+}
+
+function pythagorean(): Body[] {
+  // Burrau 1913. Masses 3, 4, 5 placed at the vertices of a 3-4-5 right triangle
+  // such that each is opposite the corresponding edge. All starting at rest.
+  return [
+    { x: 1, y: 3, vx: 0, vy: 0, mass: 3 },
+    { x: -2, y: -1, vx: 0, vy: 0, mass: 4 },
+    { x: 1, y: -1, vx: 0, vy: 0, mass: 5 },
+  ];
+}
+
+function freeFall(): Body[] {
+  // Equal masses at rest in an equilateral triangle. Perfect symmetry collapses to
+  // a 1D bounce, so a tiny jitter breaks symmetry and produces chaotic scattering.
+  const r = 1.5;
+  const jitter = 0.04;
+  return [0, 1, 2].map((k) => {
+    const a = (2 * Math.PI * k) / 3 + Math.PI / 2;
+    return {
+      x: r * Math.cos(a) + (Math.random() - 0.5) * jitter,
+      y: r * Math.sin(a) + (Math.random() - 0.5) * jitter,
+      vx: 0,
+      vy: 0,
+      mass: 1,
+    };
+  });
+}
+
+function boundChaotic(): Body[] {
+  // Reject samples until the total energy is comfortably negative and COM momentum
+  // is zeroed. Negative energy guarantees the system is bound; COM=0 keeps it on screen.
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const bodies: Body[] = [0, 1, 2].map(() => ({
+      x: (Math.random() - 0.5) * 2.4,
+      y: (Math.random() - 0.5) * 2.4,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      mass: 0.6 + Math.random() * 1.6,
+    }));
+    zeroCOM(bodies);
+    if (energy(bodies) < -10) return bodies;
+  }
+  // Fallback that's always bound.
+  return trisolaran();
+}
+
+function zeroCOM(bodies: Body[]): void {
+  let totalMass = 0;
+  let px = 0;
+  let py = 0;
+  for (const b of bodies) {
+    totalMass += b.mass;
+    px += b.mass * b.vx;
+    py += b.mass * b.vy;
+  }
+  const vcx = px / totalMass;
+  const vcy = py / totalMass;
+  for (const b of bodies) {
+    b.vx -= vcx;
+    b.vy -= vcy;
+  }
+}
+
+function energy(bodies: Body[]): number {
+  let ke = 0;
+  for (const b of bodies) {
+    ke += 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy);
+  }
+  let pe = 0;
+  for (let i = 0; i < bodies.length; i++) {
+    for (let j = i + 1; j < bodies.length; j++) {
+      const dx = bodies[j].x - bodies[i].x;
+      const dy = bodies[j].y - bodies[i].y;
+      const r = Math.sqrt(dx * dx + dy * dy + 0.05 * 0.05);
+      pe -= (G * bodies[i].mass * bodies[j].mass) / r;
+    }
+  }
+  return ke + pe;
 }
