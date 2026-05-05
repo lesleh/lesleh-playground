@@ -59,6 +59,10 @@ export const PRESETS: PresetOption[] = [
   },
 ];
 
+export function isPresetId(value: string | undefined): value is PresetId {
+  return PRESETS.some((p) => p.id === value);
+}
+
 export function buildPreset(id: PresetId): Body[] {
   switch (id) {
     case "figure-eight":

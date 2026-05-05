@@ -12,11 +12,13 @@ import { ThreeBodyCanvas } from "../ThreeBodyCanvas";
 import { Controls } from "../Controls";
 import { Readouts } from "../Readouts";
 
-const DEFAULT_PRESET: PresetId = "figure-eight";
+interface Props {
+  initialPreset: PresetId;
+}
 
-export function ThreeBody() {
-  const [presetId, setPresetId] = useState<PresetId>(DEFAULT_PRESET);
-  const [bodies, setBodies] = useState<Body[]>(() => buildPreset(DEFAULT_PRESET));
+export function ThreeBody({ initialPreset }: Props) {
+  const [presetId, setPresetId] = useState<PresetId>(initialPreset);
+  const [bodies, setBodies] = useState<Body[]>(() => buildPreset(initialPreset));
   const [params, setParams] = useState<SimParams>(DEFAULT_PARAMS);
   const [playing, setPlaying] = useState(true);
 
@@ -63,6 +65,10 @@ export function ThreeBody() {
       const next = buildPreset(id);
       updateInitial(next);
       resetSignalRef.current++;
+      // Sync URL so the link is shareable. replaceState avoids cluttering history.
+      const url = new URL(window.location.href);
+      url.searchParams.set("preset", id);
+      window.history.replaceState(null, "", url);
     },
     [updateInitial]
   );
