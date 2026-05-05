@@ -26,7 +26,7 @@ const BODY_SLIDERS: { key: keyof Body; label: string; min: number; max: number; 
 
 const SIM_SLIDERS: { key: keyof SimParams; label: string; min: number; max: number; step: number }[] = [
   { key: "speed",       label: "Speed",  min: 0.1, max: 5,    step: 0.05 },
-  { key: "trailLength", label: "Trail",  min: 100, max: 2000, step: 50 },
+  { key: "trailLength", label: "Trail",  min: 0,   max: 2000, step: 50 },
   { key: "zoom",        label: "Zoom (AU)", min: 1, max: 20,  step: 0.5 },
 ];
 

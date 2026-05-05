@@ -107,9 +107,10 @@ export function ThreeBodyCanvas({
         fillBg();
       }
 
-      // Persistence-canvas trail: low-alpha black overlay each frame fades old strokes.
-      // Fade rate maps trail length to (1 - 0.05)^L ≈ 0.05 → α ≈ 3/L.
-      const fadeAlpha = Math.min(0.4, 3 / params.trailLength);
+      // Persistence-canvas trail: black overlay each frame fades old strokes. Trail length
+      // L maps to fade α = 3/L (so trails decay to ~5% over L frames). At L=0, α=1 — a full
+      // opaque clear, leaving no trail residue and no accumulated halo tint.
+      const fadeAlpha = params.trailLength <= 0 ? 1 : Math.min(1, 3 / params.trailLength);
       ctx.fillStyle = `rgba(13, 13, 13, ${fadeAlpha})`;
       ctx.fillRect(0, 0, w, h);
 

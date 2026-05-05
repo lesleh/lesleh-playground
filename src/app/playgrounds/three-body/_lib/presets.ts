@@ -148,13 +148,22 @@ function binaryPlanet(): Body[] {
 }
 
 function trisolaran(): Body[] {
-  // Three close suns with unequal masses and sub-orbital velocities. Strongly bound,
-  // so they stay near each other for a long time, but the dynamics are chaotic.
-  const bodies: Body[] = [
-    { x: -0.6, y: 0.3, vx: 1.5, vy: 2.0, mass: 1.0 },
-    { x: 0.6, y: -0.2, vx: -1.0, vy: -2.5, mass: 0.8 },
-    { x: 0.0, y: 0.7, vx: -0.5, vy: 0.5, mass: 1.2 },
-  ];
+  // Three heavy suns near a Lagrange equilateral configuration but with sub-circular,
+  // randomly-perturbed velocities. The deep gravitational well plus latent rotation
+  // produce long-lived bounded chaos: individual KE stays small relative to binding
+  // energy, so a slingshot ejection requires a deep close encounter. It always
+  // eventually happens in 3-body systems, but it takes many orbital periods.
+  const L = 1.6;
+  const M = 1.5;
+  const r = L / Math.sqrt(3);
+  const omegaCircular = Math.sqrt((3 * G * M) / (L * L * L));
+  const bodies: Body[] = [0, 1, 2].map((k) => {
+    const a = (2 * Math.PI * k) / 3;
+    const x = r * Math.cos(a);
+    const y = r * Math.sin(a);
+    const omega = omegaCircular * 0.7 * (0.8 + Math.random() * 0.4);
+    return { x, y, vx: -omega * y, vy: omega * x, mass: M };
+  });
   zeroCOM(bodies);
   return bodies;
 }
