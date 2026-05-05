@@ -74,7 +74,7 @@ export function ThreeBody() {
   }, []);
 
   return (
-    <div className="flex flex-col lg:flex-row h-full bg-[#0d0d0d]">
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden bg-[#0d0d0d]">
       <div className="flex-1 min-h-0 lg:min-w-0 relative">
         <ThreeBodyCanvas
           liveBodiesRef={liveBodiesRef}

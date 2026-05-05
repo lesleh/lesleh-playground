@@ -30,7 +30,7 @@ export default function RootLayout({
         <div className="px-4 pt-2 pb-1 shrink-0">
           <Breadcrumbs />
         </div>
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 min-h-0">{children}</div>
       </body>
     </html>
   );
