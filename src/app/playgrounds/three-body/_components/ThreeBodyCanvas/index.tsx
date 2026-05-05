@@ -1,0 +1,1 @@
+export { ThreeBodyCanvas } from "./ThreeBodyCanvas";

@@ -17,6 +17,7 @@ import { TreesPreview } from "./playgrounds/trees/Preview";
 import { ConnectFourPreview } from "./playgrounds/connect-four/Preview";
 import { TetrisAIPreview } from "./playgrounds/tetris-ai/Preview";
 import { BoidsPreview } from "./playgrounds/boids/Preview";
+import { ThreeBodyPreview } from "./playgrounds/three-body/Preview";
 
 const playgrounds = [
   {
@@ -141,6 +142,13 @@ const playgrounds = [
     description: "3000 agents follow three simple rules and emergent murmurations appear.",
     href: "/playgrounds/boids",
     preview: BoidsPreview,
+  },
+  {
+    id: "three-body",
+    title: "Three Body Problem",
+    description: "Three gravitating stars. Stable dances or chaos, depending where you start.",
+    href: "/playgrounds/three-body",
+    preview: ThreeBodyPreview,
   },
 ];
 
