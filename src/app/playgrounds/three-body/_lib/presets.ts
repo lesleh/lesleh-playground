@@ -174,11 +174,15 @@ function trisolaran(): Body[] {
 
 function pythagorean(): Body[] {
   // Burrau 1913. Masses 3, 4, 5 placed at the vertices of a 3-4-5 right triangle
-  // such that each is opposite the corresponding edge. All starting at rest.
+  // such that each is opposite the corresponding edge, all at rest. Scaled up by 3
+  // so the famous chaotic dance plays out at human-watchable speeds (free-fall time
+  // scales as R^1.5; the 1913 original would otherwise eject within ~4 seconds at
+  // default playback speed).
+  const s = 3;
   return [
-    { x: 1, y: 3, vx: 0, vy: 0, mass: 3 },
-    { x: -2, y: -1, vx: 0, vy: 0, mass: 4 },
-    { x: 1, y: -1, vx: 0, vy: 0, mass: 5 },
+    { x: 1 * s, y: 3 * s, vx: 0, vy: 0, mass: 3 },
+    { x: -2 * s, y: -1 * s, vx: 0, vy: 0, mass: 4 },
+    { x: 1 * s, y: -1 * s, vx: 0, vy: 0, mass: 5 },
   ];
 }
 
