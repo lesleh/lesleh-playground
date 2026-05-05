@@ -34,12 +34,29 @@ export function BoidsCanvas({ paramsRef }: Props) {
 
       updateBoids(boids, grid, paramsRef.current, canvas.width, canvas.height);
 
-      // Single path + one fill() call — orders of magnitude faster than fill() per boid
+      // Single path + one fill() call — orders of magnitude faster than fill() per boid.
+      // Isoceles triangles pointing along velocity: longer front, shorter back, narrow base.
+      const FRONT = 5;
+      const BACK = 3;
+      const HALF_BASE = 2;
       ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
       ctx.beginPath();
       for (const b of boids) {
-        ctx.moveTo(b.x + 2.5, b.y);
-        ctx.arc(b.x, b.y, 2.5, 0, Math.PI * 2);
+        const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+        const fx = speed > 0 ? b.vx / speed : 1;
+        const fy = speed > 0 ? b.vy / speed : 0;
+        const px = -fy;
+        const py = fx;
+        const tipX = b.x + fx * FRONT;
+        const tipY = b.y + fy * FRONT;
+        const blX = b.x - fx * BACK + px * HALF_BASE;
+        const blY = b.y - fy * BACK + py * HALF_BASE;
+        const brX = b.x - fx * BACK - px * HALF_BASE;
+        const brY = b.y - fy * BACK - py * HALF_BASE;
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(blX, blY);
+        ctx.lineTo(brX, brY);
+        ctx.closePath();
       }
       ctx.fill();
 
