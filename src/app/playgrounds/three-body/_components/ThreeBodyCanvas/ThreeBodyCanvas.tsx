@@ -88,11 +88,29 @@ export function ThreeBodyCanvas({
     ro.observe(canvas);
 
     let animId = 0;
+    // Effective zoom auto-widens past the slider value if any body escapes the view.
+    // Initialised from the slider; reset signals snap it back so a fresh preset starts framed.
+    let effectiveZoom = paramsRef.current.zoom;
 
     const frame = () => {
       const params = paramsRef.current;
-      const halfW = params.zoom;
-      const halfH = (params.zoom * h) / w;
+      const bodies = liveBodiesRef.current;
+
+      // Auto-fit: widen if any body needs more room. Slider value is the minimum (floor).
+      let needed = params.zoom;
+      const aspect = w / h;
+      for (const b of bodies) {
+        const fromX = Math.abs(b.x);
+        const fromY = Math.abs(b.y) * aspect;
+        const r = Math.max(fromX, fromY) * 1.1;
+        if (r > needed) needed = r;
+      }
+      // Asymmetric lerp: fast zoom-out (catch escapes), slow zoom-in (avoid jitter).
+      const lerp = needed > effectiveZoom ? 0.15 : 0.02;
+      effectiveZoom += (needed - effectiveZoom) * lerp;
+
+      const halfW = effectiveZoom;
+      const halfH = (effectiveZoom * h) / w;
       const toPx = (au: number) => ((au + halfW) / (2 * halfW)) * w;
       const toPy = (au: number) => ((halfH - au) / (2 * halfH)) * h;
 
@@ -108,14 +126,14 @@ export function ThreeBodyCanvas({
         }
         lastReset = resetSignalRef.current;
         resetTrails();
+        // Snap zoom so a fresh preset frames immediately rather than zooming in.
+        effectiveZoom = params.zoom;
       }
 
       if (clearSignalRef.current !== lastClear) {
         lastClear = clearSignalRef.current;
         resetTrails();
       }
-
-      const bodies = liveBodiesRef.current;
 
       if (playingRef.current) {
         const dt = (BASE_DT * params.speed) / SUBSTEPS;
