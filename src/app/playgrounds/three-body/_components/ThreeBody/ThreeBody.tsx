@@ -25,6 +25,7 @@ export function ThreeBody() {
   const paramsRef = useRef<SimParams>(params);
   const playingRef = useRef<boolean>(true);
   const resetSignalRef = useRef<number>(0);
+  const clearSignalRef = useRef<number>(0);
 
   const updateInitial = useCallback((next: Body[]) => {
     initialBodiesRef.current = next;
@@ -37,6 +38,8 @@ export function ThreeBody() {
         idx === i ? { ...b, [key]: value } : b
       );
       updateInitial(next);
+      // Editing a body teleports it; reset the live sim so the user sees their change.
+      resetSignalRef.current++;
     },
     [bodies, updateInitial]
   );
@@ -48,6 +51,8 @@ export function ThreeBody() {
         paramsRef.current = next;
         return next;
       });
+      // Zoom remaps AU→px, so existing trails sit at the wrong pixels and smear. Wipe them.
+      if (key === "zoom") clearSignalRef.current++;
     },
     []
   );
@@ -82,6 +87,7 @@ export function ThreeBody() {
           paramsRef={paramsRef}
           playingRef={playingRef}
           resetSignalRef={resetSignalRef}
+          clearSignalRef={clearSignalRef}
         />
       </div>
       <div className="h-[45%] lg:h-full lg:w-96 lg:flex-shrink-0 overflow-y-auto bg-[#111] border-t border-slate-800 lg:border-t-0 lg:border-l">

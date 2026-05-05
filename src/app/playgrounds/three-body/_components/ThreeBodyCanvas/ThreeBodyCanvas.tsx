@@ -16,6 +16,7 @@ interface Props {
   paramsRef: React.RefObject<SimParams>;
   playingRef: React.RefObject<boolean>;
   resetSignalRef: React.RefObject<number>;
+  clearSignalRef: React.RefObject<number>;
 }
 
 export function ThreeBodyCanvas({
@@ -24,6 +25,7 @@ export function ThreeBodyCanvas({
   paramsRef,
   playingRef,
   resetSignalRef,
+  clearSignalRef,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -34,6 +36,7 @@ export function ThreeBodyCanvas({
     if (!ctx) return;
 
     let lastReset = resetSignalRef.current;
+    let lastClear = clearSignalRef.current;
 
     const sizeFor = () => {
       const rect = canvas.getBoundingClientRect();
@@ -90,6 +93,17 @@ export function ThreeBodyCanvas({
           prev[i].y = init[i].y;
         }
         lastReset = resetSignalRef.current;
+        fillBg();
+      }
+
+      // Clear-only signal: wipe trails but keep the simulation running (e.g. zoom change).
+      if (clearSignalRef.current !== lastClear) {
+        lastClear = clearSignalRef.current;
+        const live = liveBodiesRef.current;
+        for (let i = 0; i < live.length; i++) {
+          prev[i].x = live[i].x;
+          prev[i].y = live[i].y;
+        }
         fillBg();
       }
 
@@ -152,6 +166,7 @@ export function ThreeBodyCanvas({
     paramsRef,
     playingRef,
     resetSignalRef,
+    clearSignalRef,
   ]);
 
   return <canvas ref={canvasRef} className="w-full h-full block" />;
