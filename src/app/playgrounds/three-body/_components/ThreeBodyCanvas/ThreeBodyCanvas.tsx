@@ -168,9 +168,9 @@ export function ThreeBodyCanvas({
         const px = toPx(bodies[i].x);
         const py = toPy(bodies[i].y);
         if (px < -50 || px > w + 50 || py < -50 || py > h + 50) continue;
-        // Radius ∝ ∛mass (stars at fixed density would scale this way). Min clamp so
-        // very light bodies (e.g. binary-planet's 0.001 M☉ companion) stay visible.
-        const radius = Math.max(1.5, 4.5 * Math.cbrt(bodies[i].mass));
+        // Linear-ish scaling for visual drama (real stars are M^0.7, but that's too tame
+        // at this slider range). Clamps keep tiny bodies visible and giants from blowing up.
+        const radius = Math.max(1.8, Math.min(18, 4.5 * bodies[i].mass));
         const c = STAR_COLORS[i];
 
         // Soft halo (kept tight so it doesn't smear).
