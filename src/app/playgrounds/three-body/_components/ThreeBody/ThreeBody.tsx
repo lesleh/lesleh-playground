@@ -68,8 +68,12 @@ export function ThreeBody() {
   );
 
   const handleReset = useCallback(() => {
+    // Rebuild from the current preset so randomised presets reroll on each reset.
+    // For deterministic presets the result is the same as the previous initial state.
+    const next = buildPreset(presetId);
+    updateInitial(next);
     resetSignalRef.current++;
-  }, []);
+  }, [presetId, updateInitial]);
 
   const handlePlayPauseToggle = useCallback(() => {
     setPlaying((prev) => {
