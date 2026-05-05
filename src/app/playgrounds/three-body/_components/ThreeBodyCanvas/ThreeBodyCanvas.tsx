@@ -10,6 +10,9 @@ import {
 } from "../../_lib/threeBody";
 import { STAR_COLORS } from "../../_lib/colors";
 
+const MAX_TRAIL = 2000;
+const TRAIL_BINS = 10;
+
 interface Props {
   liveBodiesRef: React.RefObject<Body[]>;
   initialBodiesRef: React.RefObject<Body[]>;
@@ -55,10 +58,24 @@ export function ThreeBodyCanvas({
     };
     fillBg();
 
-    const prev: { x: number; y: number }[] = liveBodiesRef.current.map((b) => ({
-      x: b.x,
-      y: b.y,
-    }));
+    // Ring-buffer trails: each body keeps the last MAX_TRAIL positions in AU. Trails are
+    // redrawn cleanly every frame, so there's no accumulated halo tint or persistence blur.
+    const bodyCount = liveBodiesRef.current.length;
+    const trailX: Float64Array[] = Array.from(
+      { length: bodyCount },
+      () => new Float64Array(MAX_TRAIL)
+    );
+    const trailY: Float64Array[] = Array.from(
+      { length: bodyCount },
+      () => new Float64Array(MAX_TRAIL)
+    );
+    let trailHead = 0;
+    let trailCount = 0;
+
+    const resetTrails = () => {
+      trailHead = 0;
+      trailCount = 0;
+    };
 
     const ro = new ResizeObserver(() => {
       const next = sizeFor();
@@ -79,7 +96,6 @@ export function ThreeBodyCanvas({
       const toPx = (au: number) => ((au + halfW) / (2 * halfW)) * w;
       const toPy = (au: number) => ((halfH - au) / (2 * halfH)) * h;
 
-      // Reset signal: snap live bodies back to initial state and clear trails.
       if (resetSignalRef.current !== lastReset) {
         const init = initialBodiesRef.current;
         const live = liveBodiesRef.current;
@@ -89,30 +105,15 @@ export function ThreeBodyCanvas({
           live[i].vx = init[i].vx;
           live[i].vy = init[i].vy;
           live[i].mass = init[i].mass;
-          prev[i].x = init[i].x;
-          prev[i].y = init[i].y;
         }
         lastReset = resetSignalRef.current;
-        fillBg();
+        resetTrails();
       }
 
-      // Clear-only signal: wipe trails but keep the simulation running (e.g. zoom change).
       if (clearSignalRef.current !== lastClear) {
         lastClear = clearSignalRef.current;
-        const live = liveBodiesRef.current;
-        for (let i = 0; i < live.length; i++) {
-          prev[i].x = live[i].x;
-          prev[i].y = live[i].y;
-        }
-        fillBg();
+        resetTrails();
       }
-
-      // Persistence-canvas trail: black overlay each frame fades old strokes. Trail length
-      // L maps to fade α = 3/L (so trails decay to ~5% over L frames). At L=0, α=1 — a full
-      // opaque clear, leaving no trail residue and no accumulated halo tint.
-      const fadeAlpha = params.trailLength <= 0 ? 1 : Math.min(1, 3 / params.trailLength);
-      ctx.fillStyle = `rgba(13, 13, 13, ${fadeAlpha})`;
-      ctx.fillRect(0, 0, w, h);
 
       const bodies = liveBodiesRef.current;
 
@@ -121,35 +122,76 @@ export function ThreeBodyCanvas({
         for (let s = 0; s < SUBSTEPS; s++) step(bodies, dt);
       }
 
-      // Trail segments.
-      ctx.lineWidth = 1.4;
-      ctx.lineCap = "round";
+      // Append current positions to ring buffer.
       for (let i = 0; i < bodies.length; i++) {
-        ctx.strokeStyle = STAR_COLORS[i].trail;
-        ctx.beginPath();
-        ctx.moveTo(toPx(prev[i].x), toPy(prev[i].y));
-        ctx.lineTo(toPx(bodies[i].x), toPy(bodies[i].y));
-        ctx.stroke();
-        prev[i].x = bodies[i].x;
-        prev[i].y = bodies[i].y;
+        trailX[i][trailHead] = bodies[i].x;
+        trailY[i][trailHead] = bodies[i].y;
+      }
+      trailHead = (trailHead + 1) % MAX_TRAIL;
+      if (trailCount < MAX_TRAIL) trailCount++;
+
+      // Clean slate every frame — crisp, no persistence blur.
+      fillBg();
+
+      // Trails. Discrete N points per body, drawn as a polyline split into TRAIL_BINS
+      // age groups. Older bins use lower globalAlpha for the fade effect. Each bin is
+      // a single beginPath/stroke so we draw at most TRAIL_BINS × bodies strokes/frame.
+      const trailLen = Math.min(trailCount, params.trailLength);
+      if (trailLen > 1) {
+        ctx.lineWidth = 1.2;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        const start = (trailHead - trailLen + MAX_TRAIL) % MAX_TRAIL;
+        for (let bin = 0; bin < TRAIL_BINS; bin++) {
+          const binStart = Math.floor((bin / TRAIL_BINS) * trailLen);
+          const binEnd = Math.floor(((bin + 1) / TRAIL_BINS) * trailLen);
+          if (binEnd <= binStart) continue;
+          // Older bins (lower index) are dimmer.
+          ctx.globalAlpha = ((bin + 1) / TRAIL_BINS) ** 1.4;
+          for (let i = 0; i < bodies.length; i++) {
+            ctx.strokeStyle = STAR_COLORS[i].trailSolid;
+            ctx.beginPath();
+            const seg0 = (start + binStart) % MAX_TRAIL;
+            ctx.moveTo(toPx(trailX[i][seg0]), toPy(trailY[i][seg0]));
+            for (let k = binStart + 1; k <= binEnd; k++) {
+              const idx = (start + k) % MAX_TRAIL;
+              ctx.lineTo(toPx(trailX[i][idx]), toPy(trailY[i][idx]));
+            }
+            ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
       }
 
-      // Glowing bodies.
+      // Bodies. Tight glow + hard bright core for a sharp, star-like look.
       for (let i = 0; i < bodies.length; i++) {
         const px = toPx(bodies[i].x);
         const py = toPy(bodies[i].y);
         if (px < -50 || px > w + 50 || py < -50 || py > h + 50) continue;
-        const radius = 3 + 2 * Math.cbrt(bodies[i].mass);
-        const haloR = radius * 4;
+        const radius = 2.5 + 1.8 * Math.cbrt(bodies[i].mass);
         const c = STAR_COLORS[i];
-        const grad = ctx.createRadialGradient(px, py, 0, px, py, haloR);
-        grad.addColorStop(0, c.core);
-        grad.addColorStop(0.15, c.bright);
-        grad.addColorStop(0.4, c.mid);
+
+        // Soft halo (kept tight so it doesn't smear).
+        const haloR = radius * 2.2;
+        const grad = ctx.createRadialGradient(px, py, radius * 0.5, px, py, haloR);
+        grad.addColorStop(0, c.bright);
+        grad.addColorStop(0.6, c.mid);
         grad.addColorStop(1, c.rim);
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(px, py, haloR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hard bright disc.
+        ctx.fillStyle = c.bright;
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // White-hot core.
+        ctx.fillStyle = c.core;
+        ctx.beginPath();
+        ctx.arc(px, py, radius * 0.45, 0, Math.PI * 2);
         ctx.fill();
       }
 
