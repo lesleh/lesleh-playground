@@ -15,9 +15,10 @@ export interface SimParams {
 // Solar units: AU, M☉, years. Kepler's 3rd law gives G = 4π² for these units.
 export const G = 4 * Math.PI * Math.PI;
 
-// Softening length prevents singular forces during close encounters.
-// Small enough to not distort orbits at AU scale, large enough to keep integrator stable.
-export const SOFTENING = 0.05;
+// Softening length prevents singular forces during close encounters. Small enough to keep
+// the published periodic orbits (Šuvakov–Dmitrašinović catalog) close to their unsoftened
+// shape, large enough that even an exact-contact pass produces a bounded per-step kick.
+export const SOFTENING = 0.025;
 const SOFTENING_SQ = SOFTENING * SOFTENING;
 
 export const BASE_DT = 0.005;
