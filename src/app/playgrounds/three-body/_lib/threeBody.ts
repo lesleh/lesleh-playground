@@ -4,6 +4,51 @@ export interface Body {
   vx: number;
   vy: number;
   mass: number;
+  alive: boolean;
+}
+
+export interface MergeEvent {
+  x: number;
+  y: number;
+  mass: number;
+}
+
+// Stellar radius proxy in AU. Real stars are ~0.005 AU at 1 M☉ and scale as M^0.7, but
+// our softening floor is 0.025 AU and the chaotic presets rarely get that close. Using
+// a 10× larger fudged radius means mergers actually trigger during typical close passes.
+export function stellarRadiusAU(mass: number): number {
+  return 0.05 * Math.sqrt(mass);
+}
+
+// Detects pairs of alive bodies whose stellar discs overlap and merges them in place,
+// preserving total mass and momentum (KE drops; that energy went into radiation/heat).
+// The heavier body keeps its slot and identity; the lighter is marked dead.
+export function tryMerge(bodies: Body[]): MergeEvent[] {
+  const events: MergeEvent[] = [];
+  for (let i = 0; i < bodies.length; i++) {
+    if (!bodies[i].alive) continue;
+    for (let j = i + 1; j < bodies.length; j++) {
+      if (!bodies[j].alive) continue;
+      const dx = bodies[j].x - bodies[i].x;
+      const dy = bodies[j].y - bodies[i].y;
+      const merge = stellarRadiusAU(bodies[i].mass) + stellarRadiusAU(bodies[j].mass);
+      if (dx * dx + dy * dy < merge * merge) {
+        const heavy = bodies[i].mass >= bodies[j].mass ? i : j;
+        const light = heavy === i ? j : i;
+        const m1 = bodies[heavy].mass;
+        const m2 = bodies[light].mass;
+        const M = m1 + m2;
+        bodies[heavy].x = (m1 * bodies[heavy].x + m2 * bodies[light].x) / M;
+        bodies[heavy].y = (m1 * bodies[heavy].y + m2 * bodies[light].y) / M;
+        bodies[heavy].vx = (m1 * bodies[heavy].vx + m2 * bodies[light].vx) / M;
+        bodies[heavy].vy = (m1 * bodies[heavy].vy + m2 * bodies[light].vy) / M;
+        bodies[heavy].mass = M;
+        bodies[light].alive = false;
+        events.push({ x: bodies[heavy].x, y: bodies[heavy].y, mass: M });
+      }
+    }
+  }
+  return events;
 }
 
 export interface SimParams {
@@ -40,7 +85,9 @@ function computeAccel(bodies: Body[], ax: Float64Array, ay: Float64Array): void 
     ay[i] = 0;
   }
   for (let i = 0; i < n; i++) {
+    if (!bodies[i].alive) continue;
     for (let j = i + 1; j < n; j++) {
+      if (!bodies[j].alive) continue;
       const dx = bodies[j].x - bodies[i].x;
       const dy = bodies[j].y - bodies[i].y;
       const r2 = dx * dx + dy * dy + SOFTENING_SQ;
@@ -74,11 +121,13 @@ const D3 = W1;
 export function step(bodies: Body[], dt: number): void {
   const n = bodies.length;
   for (let i = 0; i < n; i++) {
+    if (!bodies[i].alive) continue;
     bodies[i].x += C1 * bodies[i].vx * dt;
     bodies[i].y += C1 * bodies[i].vy * dt;
   }
   computeAccel(bodies, _ax, _ay);
   for (let i = 0; i < n; i++) {
+    if (!bodies[i].alive) continue;
     bodies[i].vx += D1 * _ax[i] * dt;
     bodies[i].vy += D1 * _ay[i] * dt;
     bodies[i].x += C2 * bodies[i].vx * dt;
@@ -86,6 +135,7 @@ export function step(bodies: Body[], dt: number): void {
   }
   computeAccel(bodies, _ax, _ay);
   for (let i = 0; i < n; i++) {
+    if (!bodies[i].alive) continue;
     bodies[i].vx += D2 * _ax[i] * dt;
     bodies[i].vy += D2 * _ay[i] * dt;
     bodies[i].x += C3 * bodies[i].vx * dt;
@@ -93,6 +143,7 @@ export function step(bodies: Body[], dt: number): void {
   }
   computeAccel(bodies, _ax, _ay);
   for (let i = 0; i < n; i++) {
+    if (!bodies[i].alive) continue;
     bodies[i].vx += D3 * _ax[i] * dt;
     bodies[i].vy += D3 * _ay[i] * dt;
     bodies[i].x += C4 * bodies[i].vx * dt;
@@ -109,11 +160,14 @@ export interface EnergyReadout {
 export function totalEnergy(bodies: Body[]): EnergyReadout {
   let ke = 0;
   for (const b of bodies) {
+    if (!b.alive) continue;
     ke += 0.5 * b.mass * (b.vx * b.vx + b.vy * b.vy);
   }
   let pe = 0;
   for (let i = 0; i < bodies.length; i++) {
+    if (!bodies[i].alive) continue;
     for (let j = i + 1; j < bodies.length; j++) {
+      if (!bodies[j].alive) continue;
       const dx = bodies[j].x - bodies[i].x;
       const dy = bodies[j].y - bodies[i].y;
       const r = Math.sqrt(dx * dx + dy * dy + SOFTENING_SQ);
@@ -133,6 +187,7 @@ export function totalMomentum(bodies: Body[]): MomentumReadout {
   let px = 0;
   let py = 0;
   for (const b of bodies) {
+    if (!b.alive) continue;
     px += b.mass * b.vx;
     py += b.mass * b.vy;
   }
@@ -142,6 +197,7 @@ export function totalMomentum(bodies: Body[]): MomentumReadout {
 export function angularMomentum(bodies: Body[]): number {
   let l = 0;
   for (const b of bodies) {
+    if (!b.alive) continue;
     l += b.mass * (b.x * b.vy - b.y * b.vx);
   }
   return l;

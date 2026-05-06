@@ -37,7 +37,7 @@ describe("step", () => {
 
 describe("cloneBodies", () => {
   it("returns an independent copy", () => {
-    const original: Body[] = [{ x: 1, y: 2, vx: 3, vy: 4, mass: 5 }];
+    const original: Body[] = [{ x: 1, y: 2, vx: 3, vy: 4, mass: 5, alive: true }];
     const copy = cloneBodies(original);
     copy[0].x = 99;
     expect(original[0].x).toBe(1);

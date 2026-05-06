@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import {
   step,
+  tryMerge,
   BASE_DT,
   SUBSTEPS,
   type Body,
@@ -12,6 +13,9 @@ import { STAR_COLORS } from "../../_lib/colors";
 
 const MAX_TRAIL = 2000;
 const TRAIL_BINS = 10;
+// Frames a merger flash lasts. ~0.6 seconds at 60fps — long enough to see, short enough
+// to feel like a discrete event rather than persistent UI.
+const FLASH_FRAMES = 36;
 
 interface Props {
   liveBodiesRef: React.RefObject<Body[]>;
@@ -58,8 +62,9 @@ export function ThreeBodyCanvas({
     };
     fillBg();
 
-    // Ring-buffer trails: each body keeps the last MAX_TRAIL positions in AU. Trails are
-    // redrawn cleanly every frame, so there's no accumulated halo tint or persistence blur.
+    // Ring-buffer trails. Each body has its own head/count so that when a body dies
+    // (after a merger) we just stop advancing its head; its existing trail stays
+    // visible as-is, untouched, as a memorial.
     const bodyCount = liveBodiesRef.current.length;
     const trailX: Float64Array[] = Array.from(
       { length: bodyCount },
@@ -69,12 +74,21 @@ export function ThreeBodyCanvas({
       { length: bodyCount },
       () => new Float64Array(MAX_TRAIL)
     );
-    let trailHead = 0;
-    let trailCount = 0;
+    const trailHead = new Int32Array(bodyCount);
+    const trailCount = new Int32Array(bodyCount);
+
+    interface Flash {
+      x: number;
+      y: number;
+      mass: number;
+      age: number;
+    }
+    const flashes: Flash[] = [];
 
     const resetTrails = () => {
-      trailHead = 0;
-      trailCount = 0;
+      trailHead.fill(0);
+      trailCount.fill(0);
+      flashes.length = 0;
     };
 
     const ro = new ResizeObserver(() => {
@@ -96,10 +110,11 @@ export function ThreeBodyCanvas({
       const params = paramsRef.current;
       const bodies = liveBodiesRef.current;
 
-      // Auto-fit: widen if any body needs more room. Slider value is the minimum (floor).
+      // Auto-fit: widen if any alive body needs more room. Slider value is the minimum.
       let needed = params.zoom;
       const aspect = w / h;
       for (const b of bodies) {
+        if (!b.alive) continue;
         const fromX = Math.abs(b.x);
         const fromY = Math.abs(b.y) * aspect;
         const r = Math.max(fromX, fromY) * 1.1;
@@ -123,6 +138,7 @@ export function ThreeBodyCanvas({
           live[i].vx = init[i].vx;
           live[i].vy = init[i].vy;
           live[i].mass = init[i].mass;
+          live[i].alive = init[i].alive;
         }
         lastReset = resetSignalRef.current;
         resetTrails();
@@ -137,52 +153,60 @@ export function ThreeBodyCanvas({
 
       if (playingRef.current) {
         const dt = (BASE_DT * params.speed) / SUBSTEPS;
-        for (let s = 0; s < SUBSTEPS; s++) step(bodies, dt);
+        for (let s = 0; s < SUBSTEPS; s++) {
+          step(bodies, dt);
+          // Check for mergers between substeps so close passes can't tunnel through
+          // each other in a single frame. tryMerge mutates bodies in place.
+          const events = tryMerge(bodies);
+          for (const e of events) {
+            flashes.push({ x: e.x, y: e.y, mass: e.mass, age: 0 });
+          }
+        }
       }
 
-      // Append current positions to ring buffer.
+      // Append to per-body ring buffer. Dead bodies don't advance — their trail freezes
+      // wherever it was at the moment of merger.
       for (let i = 0; i < bodies.length; i++) {
-        trailX[i][trailHead] = bodies[i].x;
-        trailY[i][trailHead] = bodies[i].y;
+        if (!bodies[i].alive) continue;
+        trailX[i][trailHead[i]] = bodies[i].x;
+        trailY[i][trailHead[i]] = bodies[i].y;
+        trailHead[i] = (trailHead[i] + 1) % MAX_TRAIL;
+        if (trailCount[i] < MAX_TRAIL) trailCount[i]++;
       }
-      trailHead = (trailHead + 1) % MAX_TRAIL;
-      if (trailCount < MAX_TRAIL) trailCount++;
 
       // Clean slate every frame — crisp, no persistence blur.
       fillBg();
 
-      // Trails. Discrete N points per body, drawn as a polyline split into TRAIL_BINS
-      // age groups. Older bins use lower globalAlpha for the fade effect. Each bin is
-      // a single beginPath/stroke so we draw at most TRAIL_BINS × bodies strokes/frame.
-      const trailLen = Math.min(trailCount, params.trailLength);
-      if (trailLen > 1) {
-        ctx.lineWidth = 1.2;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        const start = (trailHead - trailLen + MAX_TRAIL) % MAX_TRAIL;
+      // Trails. Each body renders its own polyline split into TRAIL_BINS age groups.
+      // Older bins use lower globalAlpha for the fade effect.
+      ctx.lineWidth = 1.2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      for (let i = 0; i < bodies.length; i++) {
+        const len = Math.min(trailCount[i], params.trailLength);
+        if (len <= 1) continue;
+        const start = (trailHead[i] - len + MAX_TRAIL) % MAX_TRAIL;
+        ctx.strokeStyle = STAR_COLORS[i].trailSolid;
         for (let bin = 0; bin < TRAIL_BINS; bin++) {
-          const binStart = Math.floor((bin / TRAIL_BINS) * trailLen);
-          const binEnd = Math.floor(((bin + 1) / TRAIL_BINS) * trailLen);
+          const binStart = Math.floor((bin / TRAIL_BINS) * len);
+          const binEnd = Math.floor(((bin + 1) / TRAIL_BINS) * len);
           if (binEnd <= binStart) continue;
-          // Older bins (lower index) are dimmer.
           ctx.globalAlpha = ((bin + 1) / TRAIL_BINS) ** 1.4;
-          for (let i = 0; i < bodies.length; i++) {
-            ctx.strokeStyle = STAR_COLORS[i].trailSolid;
-            ctx.beginPath();
-            const seg0 = (start + binStart) % MAX_TRAIL;
-            ctx.moveTo(toPx(trailX[i][seg0]), toPy(trailY[i][seg0]));
-            for (let k = binStart + 1; k <= binEnd; k++) {
-              const idx = (start + k) % MAX_TRAIL;
-              ctx.lineTo(toPx(trailX[i][idx]), toPy(trailY[i][idx]));
-            }
-            ctx.stroke();
+          ctx.beginPath();
+          const seg0 = (start + binStart) % MAX_TRAIL;
+          ctx.moveTo(toPx(trailX[i][seg0]), toPy(trailY[i][seg0]));
+          for (let k = binStart + 1; k <= binEnd; k++) {
+            const idx = (start + k) % MAX_TRAIL;
+            ctx.lineTo(toPx(trailX[i][idx]), toPy(trailY[i][idx]));
           }
+          ctx.stroke();
         }
-        ctx.globalAlpha = 1;
       }
+      ctx.globalAlpha = 1;
 
       // Bodies. Tight glow + hard bright core for a sharp, star-like look.
       for (let i = 0; i < bodies.length; i++) {
+        if (!bodies[i].alive) continue;
         const px = toPx(bodies[i].x);
         const py = toPy(bodies[i].y);
         if (px < -50 || px > w + 50 || py < -50 || py > h + 50) continue;
@@ -213,6 +237,31 @@ export function ThreeBodyCanvas({
         ctx.beginPath();
         ctx.arc(px, py, radius * 0.45, 0, Math.PI * 2);
         ctx.fill();
+      }
+
+      // Merger flashes. Bright white burst that expands outward and fades over
+      // FLASH_FRAMES; mass scales the initial radius so bigger mergers look bigger.
+      for (let f = flashes.length - 1; f >= 0; f--) {
+        const flash = flashes[f];
+        const t = flash.age / FLASH_FRAMES;
+        if (t >= 1) {
+          flashes.splice(f, 1);
+          continue;
+        }
+        const baseR = Math.max(8, 20 * Math.sqrt(flash.mass));
+        const r = baseR * (1 + t * 3);
+        const alpha = (1 - t) ** 1.5;
+        const px = toPx(flash.x);
+        const py = toPy(flash.y);
+        const grad = ctx.createRadialGradient(px, py, 0, px, py, r);
+        grad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+        grad.addColorStop(0.4, `rgba(255, 240, 200, ${alpha * 0.6})`);
+        grad.addColorStop(1, "rgba(255, 200, 120, 0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.fill();
+        flash.age++;
       }
 
       animId = requestAnimationFrame(frame);

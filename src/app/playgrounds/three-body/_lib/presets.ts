@@ -94,6 +94,7 @@ function figureEight(): Body[] {
       vx: 0.466203685 * TAU,
       vy: 0.43236573 * TAU,
       mass: 1,
+      alive: true,
     },
     {
       x: -0.97000436,
@@ -101,6 +102,7 @@ function figureEight(): Body[] {
       vx: 0.466203685 * TAU,
       vy: 0.43236573 * TAU,
       mass: 1,
+      alive: true,
     },
     {
       x: 0,
@@ -108,6 +110,7 @@ function figureEight(): Body[] {
       vx: -0.93240737 * TAU,
       vy: -0.86473146 * TAU,
       mass: 1,
+      alive: true,
     },
   ];
 }
@@ -121,7 +124,7 @@ function lagrange(): Body[] {
     const a = (2 * Math.PI * k) / 3;
     const x = r * Math.cos(a);
     const y = r * Math.sin(a);
-    return { x, y, vx: -omega * y, vy: omega * x, mass: M };
+    return { x, y, vx: -omega * y, vy: omega * x, mass: M, alive: true };
   });
 }
 
@@ -132,9 +135,9 @@ function euler(): Body[] {
   const M = 1;
   const omega = Math.sqrt((5 * G * M) / 32);
   return [
-    { x: -2, y: 0, vx: 0, vy: -omega * 2, mass: M },
-    { x: 0, y: 0, vx: 0, vy: 0, mass: M },
-    { x: 2, y: 0, vx: 0, vy: omega * 2, mass: M },
+    { x: -2, y: 0, vx: 0, vy: -omega * 2, mass: M, alive: true },
+    { x: 0, y: 0, vx: 0, vy: 0, mass: M, alive: true },
+    { x: 2, y: 0, vx: 0, vy: omega * 2, mass: M, alive: true },
   ];
 }
 
@@ -145,9 +148,9 @@ function binaryPlanet(): Body[] {
   const v = omegaBinary * 0.5;
   const vp = Math.sqrt(G / 4);
   return [
-    { x: -0.5, y: 0, vx: 0, vy: -v, mass: m },
-    { x: 0.5, y: 0, vx: 0, vy: v, mass: m },
-    { x: 4, y: 0, vx: 0, vy: vp, mass: 0.001 },
+    { x: -0.5, y: 0, vx: 0, vy: -v, mass: m, alive: true },
+    { x: 0.5, y: 0, vx: 0, vy: v, mass: m, alive: true },
+    { x: 4, y: 0, vx: 0, vy: vp, mass: 0.001, alive: true },
   ];
 }
 
@@ -166,7 +169,7 @@ function trisolaran(): Body[] {
     const x = r * Math.cos(a);
     const y = r * Math.sin(a);
     const omega = omegaCircular * 0.7 * (0.8 + Math.random() * 0.4);
-    return { x, y, vx: -omega * y, vy: omega * x, mass: M };
+    return { x, y, vx: -omega * y, vy: omega * x, mass: M, alive: true };
   });
   zeroCOM(bodies);
   return bodies;
@@ -180,9 +183,9 @@ function pythagorean(): Body[] {
   // default playback speed).
   const s = 3;
   return [
-    { x: 1 * s, y: 3 * s, vx: 0, vy: 0, mass: 3 },
-    { x: -2 * s, y: -1 * s, vx: 0, vy: 0, mass: 4 },
-    { x: 1 * s, y: -1 * s, vx: 0, vy: 0, mass: 5 },
+    { x: 1 * s, y: 3 * s, vx: 0, vy: 0, mass: 3, alive: true },
+    { x: -2 * s, y: -1 * s, vx: 0, vy: 0, mass: 4, alive: true },
+    { x: 1 * s, y: -1 * s, vx: 0, vy: 0, mass: 5, alive: true },
   ];
 }
 
@@ -199,6 +202,7 @@ function freeFall(): Body[] {
       vx: 0,
       vy: 0,
       mass: 1,
+      alive: true,
     };
   });
 }
@@ -213,6 +217,7 @@ function boundChaotic(): Body[] {
       vx: (Math.random() - 0.5) * 2,
       vy: (Math.random() - 0.5) * 2,
       mass: 0.6 + Math.random() * 1.6,
+      alive: true,
     }));
     zeroCOM(bodies);
     if (energy(bodies) < -10) return bodies;
