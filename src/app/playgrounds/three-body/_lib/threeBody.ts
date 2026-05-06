@@ -32,8 +32,6 @@ export const DEFAULT_PARAMS: SimParams = {
 
 const _ax = new Float64Array(8);
 const _ay = new Float64Array(8);
-const _axNew = new Float64Array(8);
-const _ayNew = new Float64Array(8);
 
 function computeAccel(bodies: Body[], ax: Float64Array, ay: Float64Array): void {
   const n = bodies.length;
@@ -57,16 +55,48 @@ function computeAccel(bodies: Body[], ax: Float64Array, ay: Float64Array): void 
   }
 }
 
+// Yoshida 4th-order symplectic integrator. Error is O(dt⁴) per step (vs O(dt²) for
+// Velocity Verlet) at the cost of three force evaluations per step instead of one.
+// The step is x→v→x→v→x→v→x with these coefficients chosen so the leading error
+// terms cancel. Critical for keeping fragile periodic orbits (Šuvakov-Dmitrašinović
+// catalog) closed over many cycles.
+const CBRT2 = Math.cbrt(2);
+const W1 = 1 / (2 - CBRT2);
+const W0 = -CBRT2 * W1;
+const C1 = W1 / 2;
+const C2 = (W0 + W1) / 2;
+const C3 = C2;
+const C4 = C1;
+const D1 = W1;
+const D2 = W0;
+const D3 = W1;
+
 export function step(bodies: Body[], dt: number): void {
-  computeAccel(bodies, _ax, _ay);
-  for (let i = 0; i < bodies.length; i++) {
-    bodies[i].x += bodies[i].vx * dt + 0.5 * _ax[i] * dt * dt;
-    bodies[i].y += bodies[i].vy * dt + 0.5 * _ay[i] * dt * dt;
+  const n = bodies.length;
+  for (let i = 0; i < n; i++) {
+    bodies[i].x += C1 * bodies[i].vx * dt;
+    bodies[i].y += C1 * bodies[i].vy * dt;
   }
-  computeAccel(bodies, _axNew, _ayNew);
-  for (let i = 0; i < bodies.length; i++) {
-    bodies[i].vx += 0.5 * (_ax[i] + _axNew[i]) * dt;
-    bodies[i].vy += 0.5 * (_ay[i] + _ayNew[i]) * dt;
+  computeAccel(bodies, _ax, _ay);
+  for (let i = 0; i < n; i++) {
+    bodies[i].vx += D1 * _ax[i] * dt;
+    bodies[i].vy += D1 * _ay[i] * dt;
+    bodies[i].x += C2 * bodies[i].vx * dt;
+    bodies[i].y += C2 * bodies[i].vy * dt;
+  }
+  computeAccel(bodies, _ax, _ay);
+  for (let i = 0; i < n; i++) {
+    bodies[i].vx += D2 * _ax[i] * dt;
+    bodies[i].vy += D2 * _ay[i] * dt;
+    bodies[i].x += C3 * bodies[i].vx * dt;
+    bodies[i].y += C3 * bodies[i].vy * dt;
+  }
+  computeAccel(bodies, _ax, _ay);
+  for (let i = 0; i < n; i++) {
+    bodies[i].vx += D3 * _ax[i] * dt;
+    bodies[i].vy += D3 * _ay[i] * dt;
+    bodies[i].x += C4 * bodies[i].vx * dt;
+    bodies[i].y += C4 * bodies[i].vy * dt;
   }
 }
 
