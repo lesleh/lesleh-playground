@@ -15,12 +15,10 @@ export interface SimParams {
 // Solar units: AU, M☉, years. Kepler's 3rd law gives G = 4π² for these units.
 export const G = 4 * Math.PI * Math.PI;
 
-// Softening length prevents singular forces during close encounters. Has to be small
-// enough that the published periodic orbits (Šuvakov–Dmitrašinović catalog) match their
-// unsoftened shape — at 0.025 the force was still 6% off at typical close-approach
-// distances, which knocked Yin-Yang off its orbit. 0.01 is essentially a no-op for orbits
-// staying outside ~0.05 AU and still bounds the per-step kick at exact contact.
-export const SOFTENING = 0.01;
+// Softening length prevents singular forces during close encounters. 0.025 AU is small
+// enough to leave normal orbits essentially undistorted while bounding the per-step kick
+// during near-contact passes (which the chaotic presets occasionally produce).
+export const SOFTENING = 0.025;
 const SOFTENING_SQ = SOFTENING * SOFTENING;
 
 export const BASE_DT = 0.005;
