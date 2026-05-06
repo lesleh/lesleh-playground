@@ -2,6 +2,9 @@ import { G, type Body } from "./threeBody";
 
 export type PresetId =
   | "figure-eight"
+  | "butterfly"
+  | "yin-yang"
+  | "moth"
   | "lagrange"
   | "euler"
   | "binary-planet"
@@ -21,6 +24,21 @@ export const PRESETS: PresetOption[] = [
     id: "figure-eight",
     label: "Figure 8",
     description: "Three equal stars chase each other along a single curve.",
+  },
+  {
+    id: "butterfly",
+    label: "Butterfly",
+    description: "Šuvakov–Dmitrašinović 2013. Tight twin loops on either flank.",
+  },
+  {
+    id: "yin-yang",
+    label: "Yin-Yang",
+    description: "Šuvakov–Dmitrašinović 2013. Two stars weave a swirling tao.",
+  },
+  {
+    id: "moth",
+    label: "Moth",
+    description: "Šuvakov–Dmitrašinović 2013. Kite-shaped lobes either side of a central body.",
   },
   {
     id: "lagrange",
@@ -67,6 +85,12 @@ export function buildPreset(id: PresetId): Body[] {
   switch (id) {
     case "figure-eight":
       return figureEight();
+    case "butterfly":
+      return suvakovOrbit(0.30689, 0.12551);
+    case "yin-yang":
+      return suvakovOrbit(0.51394, 0.30474);
+    case "moth":
+      return suvakovOrbit(0.46444, 0.39606);
     case "lagrange":
       return lagrange();
     case "euler":
@@ -82,6 +106,19 @@ export function buildPreset(id: PresetId): Body[] {
     case "bound-chaotic":
       return boundChaotic();
   }
+}
+
+// Šuvakov–Dmitrašinović 2013 convention. Bodies 1 and 2 sit at (∓1, 0) with shared velocity
+// (vx, vy); body 3 sits at the origin with velocity (-2vx, -2vy) so total momentum is zero.
+// Equal unit masses. The published values use G=1; with G=4π² here, velocities scale by 2π.
+function suvakovOrbit(vx0: number, vy0: number): Body[] {
+  const vx = vx0 * 2 * Math.PI;
+  const vy = vy0 * 2 * Math.PI;
+  return [
+    { x: -1, y: 0, vx, vy, mass: 1 },
+    { x: 1, y: 0, vx, vy, mass: 1 },
+    { x: 0, y: 0, vx: -2 * vx, vy: -2 * vy, mass: 1 },
+  ];
 }
 
 // Chenciner & Montgomery 1993. Originally derived for G=1; with G=4π² here, velocities scale by 2π.
