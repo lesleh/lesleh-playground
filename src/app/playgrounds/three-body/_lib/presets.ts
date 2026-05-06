@@ -90,7 +90,7 @@ export function buildPreset(id: PresetId): Body[] {
     case "yin-yang":
       return suvakovOrbit(0.513938, 0.304736);
     case "moth":
-      return suvakovOrbit(0.464445, 0.396060);
+      return suvakovOrbit(0.464476, 0.396060);
     case "lagrange":
       return lagrange();
     case "euler":
