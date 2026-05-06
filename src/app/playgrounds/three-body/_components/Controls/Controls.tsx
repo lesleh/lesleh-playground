@@ -9,14 +9,16 @@ interface Props {
   params: SimParams;
   presetId: PresetId;
   playing: boolean;
-  onBodyChange: (i: number, key: keyof Body, value: number) => void;
+  onBodyChange: (i: number, key: BodyNumericKey, value: number) => void;
   onParamChange: (key: keyof SimParams, value: number) => void;
   onPresetChange: (id: PresetId) => void;
   onPlayPauseToggle: () => void;
   onReset: () => void;
 }
 
-const BODY_SLIDERS: { key: keyof Body; label: string; min: number; max: number; step: number }[] = [
+type BodyNumericKey = "mass" | "x" | "y" | "vx" | "vy";
+
+const BODY_SLIDERS: { key: BodyNumericKey; label: string; min: number; max: number; step: number }[] = [
   { key: "mass", label: "Mass (M☉)", min: 0.1, max: 5, step: 0.05 },
   { key: "x",    label: "X (AU)",     min: -5, max: 5, step: 0.05 },
   { key: "y",    label: "Y (AU)",     min: -5, max: 5, step: 0.05 },

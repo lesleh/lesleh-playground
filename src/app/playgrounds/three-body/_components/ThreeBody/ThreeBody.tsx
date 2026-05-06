@@ -35,7 +35,7 @@ export function ThreeBody({ initialPreset }: Props) {
   }, []);
 
   const handleBodyChange = useCallback(
-    (i: number, key: keyof Body, value: number) => {
+    (i: number, key: "mass" | "x" | "y" | "vx" | "vy", value: number) => {
       const next = bodies.map((b, idx) =>
         idx === i ? { ...b, [key]: value } : b
       );
