@@ -148,7 +148,7 @@ export function Lottery() {
       className={`${display.variable} ${mono.variable} h-full overflow-y-auto text-[#f3e9d2]`}
       style={{ backgroundColor: "#08060d", backgroundImage: STAGE_BG }}
     >
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:py-14">
         {/* Masthead */}
         <header className="text-center">
           <div className="mb-5 flex items-center justify-center gap-3">
@@ -158,7 +158,7 @@ export function Lottery() {
             </span>
             <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#e9c66a]/50" />
           </div>
-          <h1 className="font-marquee text-[clamp(2.8rem,9vw,6rem)] font-black italic leading-[0.88]">
+          <h1 className="font-marquee text-[clamp(2.1rem,8.5vw,6rem)] font-black italic leading-[0.9]">
             The{" "}
             <span className="gold-foil animate-[foil-shimmer_7s_linear_infinite]">
               Midnight
@@ -169,11 +169,11 @@ export function Lottery() {
             six numbers · one in 45,057,474 · {money(TICKET_PRICE)} a line
           </p>
 
-          <div className="mt-9">
+          <div className="mt-7 sm:mt-9">
             <div className="font-ticker text-[10px] uppercase tracking-[0.42em] text-[#f3e9d2]/40">
               tonight&rsquo;s top prize
             </div>
-            <div className="gold-foil animate-[foil-shimmer_6s_linear_infinite] font-marquee mt-1 text-[clamp(3rem,11vw,7rem)] font-black leading-none">
+            <div className="gold-foil animate-[foil-shimmer_6s_linear_infinite] font-marquee mt-1 text-[clamp(2.4rem,10vw,7rem)] font-black leading-none">
               {money(6_700_000)}
             </div>
           </div>
@@ -181,7 +181,7 @@ export function Lottery() {
 
         {/* Draw chamber */}
         <section
-          className="relative mt-12 overflow-hidden rounded-2xl border border-[#e9c66a]/25 px-6 py-9"
+          className="relative mt-8 overflow-hidden rounded-2xl border border-[#e9c66a]/25 px-4 py-7 sm:mt-12 sm:px-6 sm:py-9"
           style={{
             backgroundImage:
               "radial-gradient(120% 120% at 50% 0%, rgba(44,30,54,0.6), rgba(10,8,16,0.82))",

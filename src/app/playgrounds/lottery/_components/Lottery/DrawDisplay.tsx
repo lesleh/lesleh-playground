@@ -35,7 +35,7 @@ export function DrawDisplay({ draw, ticket, drawKey }: DrawDisplayProps) {
 
   return (
     <div className="flex flex-col items-center gap-5" key={drawKey}>
-      <div className="flex flex-wrap items-center justify-center gap-2.5">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5">
         {draw.main.map((n, i) => {
           const hit = ticketSet.has(n);
           return (

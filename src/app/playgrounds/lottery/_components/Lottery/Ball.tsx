@@ -18,7 +18,7 @@ interface BallProps {
 
 const sizeMap: Record<BallSize, { box: string; text: string }> = {
   sm: { box: "w-8 h-8", text: "text-[11px]" },
-  md: { box: "w-12 h-12", text: "text-base" },
+  md: { box: "w-10 h-10 sm:w-12 sm:h-12", text: "text-sm sm:text-base" },
   lg: { box: "w-16 h-16", text: "text-2xl" },
 };
 
