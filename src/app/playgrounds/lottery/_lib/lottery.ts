@@ -123,14 +123,26 @@ export interface BatchResult {
   tierCounts: TierCounts;
   /** Largest single payout seen in this batch, 0 if no wins. */
   biggestWin: number;
+  /** True if a 6-ball jackpot landed (and the run stopped, when requested). */
+  hitJackpot: boolean;
+  /** The bonus ball of the jackpot draw; -1 if no jackpot landed. */
+  jackpotBonus: number;
 }
 
-// Runs `count` draws against a fixed ticket as fast as possible: a reused pool,
-// a lookup table for ticket membership, and no per-draw allocations.
+export interface BatchOptions {
+  /** Stop the moment a 6-ball jackpot lands, instead of running the full count. */
+  stopOnJackpot?: boolean;
+}
+
+// Runs up to `count` draws against a fixed ticket as fast as possible: a reused
+// pool, a lookup table for ticket membership, and no per-draw allocations.
+// With `stopOnJackpot`, it returns early on the first jackpot — `draws` then
+// reflects how many were actually played, so spend stays accurate.
 export function runBatch(
   ticket: number[],
   count: number,
-  rng: Rng = Math.random
+  rng: Rng = Math.random,
+  opts: BatchOptions = {}
 ): BatchResult {
   const inTicket = new Uint8Array(POOL_SIZE + 1);
   for (const n of ticket) inTicket[n] = 1;
@@ -139,6 +151,9 @@ export function runBatch(
   const tierCounts = emptyTierCounts();
   let won = 0;
   let biggestWin = 0;
+  let drawsPlayed = count;
+  let hitJackpot = false;
+  let jackpotBonus = -1;
 
   for (let d = 0; d < count; d++) {
     shuffleDraw(pool, rng);
@@ -150,10 +165,26 @@ export function runBatch(
       const payout = TIER_BY_ID[tier].payout;
       won += payout;
       if (payout > biggestWin) biggestWin = payout;
+      if (tier === "match6") {
+        hitJackpot = true;
+        jackpotBonus = pool[PICK];
+        if (opts.stopOnJackpot) {
+          drawsPlayed = d + 1;
+          break;
+        }
+      }
     }
   }
 
-  return { draws: count, spent: count * TICKET_PRICE, won, tierCounts, biggestWin };
+  return {
+    draws: drawsPlayed,
+    spent: drawsPlayed * TICKET_PRICE,
+    won,
+    tierCounts,
+    biggestWin,
+    hitJackpot,
+    jackpotBonus,
+  };
 }
 
 /** Picks 6 distinct numbers at random, sorted ascending. */

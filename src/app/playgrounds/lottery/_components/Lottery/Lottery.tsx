@@ -6,6 +6,7 @@ import {
   runBatch,
   luckyDip,
   emptyTierCounts,
+  payoutFor,
   PICK,
   TICKET_PRICE,
   type DrawResult,
@@ -30,6 +31,10 @@ const STAGE_BG = [
 
 const ZERO_STATS: StatsData = { draws: 0, spent: 0, won: 0, biggestWin: 0 };
 const CHUNK_SIZE = 50_000;
+// Bigger chunks for the open-ended jackpot chase — fewer rAF hops over the
+// ~45M draws it averages. Capped so a freak dry run can't loop forever.
+const JACKPOT_CHUNK = 200_000;
+const JACKPOT_MAX = 2_000_000_000;
 
 // A fixed starter ticket keeps SSR and client markup identical; Lucky Dip
 // randomises it after mount.
@@ -40,6 +45,11 @@ const BATCHES = [
   { label: "×10k", n: 10_000 },
   { label: "×1M", n: 1_000_000 },
 ];
+
+type RunState =
+  | { kind: "count"; done: number; total: number }
+  | { kind: "jackpot"; done: number }
+  | null;
 
 function mergeTierCounts(a: TierCounts, b: TierCounts): TierCounts {
   const out = { ...a };
@@ -55,14 +65,15 @@ export function Lottery() {
   const [drawKey, setDrawKey] = useState(0);
   const [stats, setStats] = useState<StatsData>(ZERO_STATS);
   const [tierCounts, setTierCounts] = useState<TierCounts>(emptyTierCounts);
-  const [batch, setBatch] = useState<{ done: number; total: number } | null>(null);
+  const [run, setRun] = useState<RunState>(null);
 
   const rafRef = useRef<number>(0);
+  const abortRef = useRef(false);
 
   useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
   const ready = ticket.length === PICK;
-  const running = batch !== null;
+  const running = run !== null;
 
   const toggleNumber = useCallback(
     (n: number) => {
@@ -103,34 +114,83 @@ export function Lottery() {
     }
   }, [ready, running, ticket]);
 
+  const applyBatch = useCallback((res: ReturnType<typeof runBatch>) => {
+    setStats((s) => ({
+      draws: s.draws + res.draws,
+      spent: s.spent + res.spent,
+      won: s.won + res.won,
+      biggestWin: Math.max(s.biggestWin, res.biggestWin),
+    }));
+    setTierCounts((tc) => mergeTierCounts(tc, res.tierCounts));
+  }, []);
+
   const runMany = useCallback(
     (total: number) => {
       if (!ready || running) return;
-      setBatch({ done: 0, total });
+      abortRef.current = false;
+      setRun({ kind: "count", done: 0, total });
       let remaining = total;
 
       const tick = () => {
+        if (abortRef.current) return;
         const n = Math.min(CHUNK_SIZE, remaining);
-        const res = runBatch(ticket, n);
-        setStats((s) => ({
-          draws: s.draws + res.draws,
-          spent: s.spent + res.spent,
-          won: s.won + res.won,
-          biggestWin: Math.max(s.biggestWin, res.biggestWin),
-        }));
-        setTierCounts((tc) => mergeTierCounts(tc, res.tierCounts));
+        applyBatch(runBatch(ticket, n));
         remaining -= n;
-        setBatch({ done: total - remaining, total });
+        setRun({ kind: "count", done: total - remaining, total });
         if (remaining > 0) {
           rafRef.current = requestAnimationFrame(tick);
         } else {
-          setBatch(null);
+          setRun(null);
         }
       };
       rafRef.current = requestAnimationFrame(tick);
     },
-    [ready, running, ticket]
+    [ready, running, ticket, applyBatch]
   );
+
+  const chaseJackpot = useCallback(() => {
+    if (!ready || running) return;
+    abortRef.current = false;
+    setRun({ kind: "jackpot", done: 0 });
+    let total = 0;
+
+    const tick = () => {
+      if (abortRef.current) return;
+      const res = runBatch(ticket, JACKPOT_CHUNK, undefined, {
+        stopOnJackpot: true,
+      });
+      applyBatch(res);
+      total += res.draws;
+      setRun({ kind: "jackpot", done: total });
+
+      if (res.hitJackpot) {
+        // The winning line is, by definition, the ticket itself.
+        setLastDraw({
+          main: [...ticket].sort((a, b) => a - b),
+          bonus: res.jackpotBonus,
+          matchCount: PICK,
+          bonusMatched: false,
+          tier: "match6",
+          payout: payoutFor("match6"),
+        });
+        setDrawKey((k) => k + 1);
+        setRun(null);
+        return;
+      }
+      if (total >= JACKPOT_MAX) {
+        setRun(null);
+        return;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, [ready, running, ticket, applyBatch]);
+
+  const stopRun = useCallback(() => {
+    abortRef.current = true;
+    cancelAnimationFrame(rafRef.current);
+    setRun(null);
+  }, []);
 
   const reset = useCallback(() => {
     if (running) return;
@@ -139,7 +199,11 @@ export function Lottery() {
     setLastDraw(null);
   }, [running]);
 
-  const batchPct = batch ? Math.round((batch.done / batch.total) * 100) : 0;
+  const countRun = run?.kind === "count" ? run : null;
+  const jackpotRun = run?.kind === "jackpot" ? run : null;
+  const batchPct = countRun
+    ? Math.round((countRun.done / countRun.total) * 100)
+    : 0;
 
   const remaining = PICK - ticket.length;
 
@@ -279,12 +343,26 @@ export function Lottery() {
               </div>
             </div>
 
-            {batch && (
+            <div className="mt-3 border-t border-[#f3e9d2]/10 pt-3">
+              <button
+                type="button"
+                onClick={chaseJackpot}
+                disabled={!ready || running}
+                className="font-ticker w-full rounded-md border border-[#e0556a]/45 bg-[#e0556a]/10 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-[#ff8a9c] transition-colors hover:border-[#e0556a]/70 hover:bg-[#e0556a]/20 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-[#e0556a]/10"
+              >
+                Chase the jackpot
+              </button>
+              <p className="mt-1.5 font-ticker text-[9px] uppercase tracking-[0.18em] text-[#f3e9d2]/30">
+                draws until 6 balls hit — could cost you millions
+              </p>
+            </div>
+
+            {countRun && (
               <div className="mt-5">
                 <div className="mb-1.5 flex justify-between font-ticker text-[10px] uppercase tracking-[0.2em] text-[#f3e9d2]/45">
                   <span>drawing…</span>
                   <span className="tabular-nums">
-                    {count(batch.done)} / {count(batch.total)}
+                    {count(countRun.done)} / {count(countRun.total)}
                   </span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-[#f3e9d2]/10">
@@ -294,6 +372,32 @@ export function Lottery() {
                   />
                 </div>
               </div>
+            )}
+
+            {jackpotRun && (
+              <div className="mt-5">
+                <div className="mb-1.5 flex justify-between font-ticker text-[10px] uppercase tracking-[0.2em]">
+                  <span className="animate-pulse text-[#ff8a9c]">
+                    chasing the jackpot…
+                  </span>
+                  <span className="tabular-nums text-[#f3e9d2]/55">
+                    {count(jackpotRun.done)} draws
+                  </span>
+                </div>
+                <div className="relative h-1.5 overflow-hidden rounded-full bg-[#f3e9d2]/10">
+                  <div className="absolute inset-y-0 w-1/4 animate-[chase-bar_1.1s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-transparent via-[#e0556a] to-transparent" />
+                </div>
+              </div>
+            )}
+
+            {running && (
+              <button
+                type="button"
+                onClick={stopRun}
+                className="font-ticker mt-3 self-start rounded-md border border-[#f3e9d2]/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f3e9d2]/60 transition-colors hover:border-[#f3e9d2]/50 hover:text-[#f3e9d2]"
+              >
+                Stop
+              </button>
             )}
 
             {!ready && !running && (

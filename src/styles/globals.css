@@ -69,6 +69,12 @@
   50% { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55), 0 0 26px 4px var(--ball-glow); }
 }
 
+/* Indeterminate progress sweep for the open-ended jackpot chase. */
+@keyframes chase-bar {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(520%); }
+}
+
 /* The verdict stamp slamming down. */
 @keyframes stamp-in {
   0% { opacity: 0; transform: rotate(-13deg) scale(2.4); }

@@ -110,6 +110,28 @@ describe("runBatch", () => {
     expect(Object.values(result.tierCounts).every((c) => c === 0)).toBe(true);
   });
 
+  it("stops on the first jackpot when asked, reporting the winning bonus", () => {
+    // zeroRng draws main [1..6] bonus 7 every time, so a [1..6] ticket jackpots
+    // immediately — the run must stop after a single draw.
+    const result = runBatch([1, 2, 3, 4, 5, 6], 1000, zeroRng, {
+      stopOnJackpot: true,
+    });
+    expect(result.draws).toBe(1);
+    expect(result.spent).toBe(2);
+    expect(result.hitJackpot).toBe(true);
+    expect(result.jackpotBonus).toBe(7);
+    expect(result.tierCounts.match6).toBe(1);
+  });
+
+  it("reports no jackpot when none lands within the count", () => {
+    const result = runBatch([10, 11, 12, 13, 14, 15], 5, zeroRng, {
+      stopOnJackpot: true,
+    });
+    expect(result.draws).toBe(5);
+    expect(result.hitJackpot).toBe(false);
+    expect(result.jackpotBonus).toBe(-1);
+  });
+
   it("roughly recovers the published 3-ball odds over many draws", () => {
     // Statistical smoke test: with real randomness, ~1 in 96.2 tickets should
     // hit 3 balls. Allow a generous band so the test is not flaky.
