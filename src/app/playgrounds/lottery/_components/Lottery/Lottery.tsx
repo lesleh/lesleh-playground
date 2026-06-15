@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { twMerge } from "tailwind-merge";
 import {
   singleDraw,
   runBatch,
@@ -13,11 +12,21 @@ import {
   type TierCounts,
 } from "../../_lib/lottery";
 import { money, count } from "../../_lib/format";
+import { display, mono } from "../../_lib/fonts";
 import { Ball } from "./Ball";
 import { NumberPicker } from "./NumberPicker";
 import { DrawDisplay } from "./DrawDisplay";
 import { OddsTable } from "./OddsTable";
 import { Stats, type StatsData } from "./Stats";
+
+const GRAIN =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")";
+
+const STAGE_BG = [
+  GRAIN,
+  "radial-gradient(115% 75% at 50% -8%, rgba(150,110,55,0.38), rgba(60,30,45,0.14) 38%, rgba(8,6,12,0) 68%)",
+  "radial-gradient(80% 50% at 50% 115%, rgba(120,40,55,0.16), rgba(8,6,12,0) 70%)",
+].join(", ");
 
 const ZERO_STATS: StatsData = { draws: 0, spent: 0, won: 0, biggestWin: 0 };
 const CHUNK_SIZE = 50_000;
@@ -132,172 +141,197 @@ export function Lottery() {
 
   const batchPct = batch ? Math.round((batch.done / batch.total) * 100) : 0;
 
+  const remaining = PICK - ticket.length;
+
   return (
     <div
-      className="h-full overflow-y-auto"
-      style={{
-        backgroundColor: "#fffef5",
-        backgroundImage: `
-          linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px)
-        `,
-        backgroundSize: "32px 32px",
-      }}
+      className={`${display.variable} ${mono.variable} h-full overflow-y-auto text-[#f3e9d2]`}
+      style={{ backgroundColor: "#08060d", backgroundImage: STAGE_BG }}
     >
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <header className="mb-8">
-          <div className="mb-4 h-1 bg-black" />
-          <p className="mb-1 font-mono text-xs uppercase tracking-widest text-black/50">
-            UK Lotto · {money(TICKET_PRICE)} a ticket
-          </p>
-          <h1 className="font-roboto-slab text-[clamp(2.5rem,8vw,4.5rem)] font-black leading-none tracking-tight text-black">
-            Lottery Simulator
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
+        {/* Masthead */}
+        <header className="text-center">
+          <div className="mb-5 flex items-center justify-center gap-3">
+            <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#e9c66a]/50" />
+            <span className="font-ticker text-[10px] uppercase tracking-[0.42em] text-[#e9c66a]/65">
+              the national draw
+            </span>
+            <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#e9c66a]/50" />
+          </div>
+          <h1 className="font-marquee text-[clamp(2.8rem,9vw,6rem)] font-black italic leading-[0.88]">
+            The{" "}
+            <span className="gold-foil animate-[foil-shimmer_7s_linear_infinite]">
+              Midnight
+            </span>{" "}
+            Draw
           </h1>
-          <p className="mt-3 max-w-lg font-mono text-sm text-black/50">
-            Pick 6 from 59. Match the 6 drawn balls to win. Play one ticket or
-            burn through a million — and watch the house take its cut.
+          <p className="mx-auto mt-4 max-w-md font-ticker text-[11px] uppercase tracking-[0.2em] text-[#f3e9d2]/45">
+            six numbers · one in 45,057,474 · {money(TICKET_PRICE)} a line
           </p>
+
+          <div className="mt-9">
+            <div className="font-ticker text-[10px] uppercase tracking-[0.42em] text-[#f3e9d2]/40">
+              tonight&rsquo;s top prize
+            </div>
+            <div className="gold-foil animate-[foil-shimmer_6s_linear_infinite] font-marquee mt-1 text-[clamp(3rem,11vw,7rem)] font-black leading-none">
+              {money(6_700_000)}
+            </div>
+          </div>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Ticket picker */}
-          <section className="border-2 border-black bg-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-roboto-slab text-lg font-black">Your ticket</h2>
-              <span className="font-mono text-xs text-black/50">
-                {ticket.length}/{PICK} picked
+        {/* Draw chamber */}
+        <section
+          className="relative mt-12 overflow-hidden rounded-2xl border border-[#e9c66a]/25 px-6 py-9"
+          style={{
+            backgroundImage:
+              "radial-gradient(120% 120% at 50% 0%, rgba(44,30,54,0.6), rgba(10,8,16,0.82))",
+            boxShadow:
+              "inset 0 1px 0 rgba(255,255,255,0.06), inset 0 28px 56px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.45)",
+          }}
+        >
+          <div className="mb-6 flex items-center justify-center gap-2">
+            <span className="h-1.5 w-1.5 animate-[blink_1.5s_ease-in-out_infinite] rounded-full bg-[#e0556a]" />
+            <span className="font-ticker text-[10px] uppercase tracking-[0.38em] text-[#f3e9d2]/45">
+              latest draw
+            </span>
+          </div>
+          <DrawDisplay draw={lastDraw} ticket={ticket} drawKey={drawKey} />
+        </section>
+
+        {/* Betting floor */}
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          {/* Your line */}
+          <section className="rounded-xl border border-[#f3e9d2]/12 bg-[#0f0b14]/60 p-5 backdrop-blur-sm">
+            <div className="mb-4 flex items-baseline justify-between">
+              <h2 className="font-marquee text-xl italic">Your line</h2>
+              <span className="font-ticker text-[11px] uppercase tracking-[0.2em] text-[#f3e9d2]/40">
+                {ticket.length}/{PICK} marked
               </span>
             </div>
 
-            <div className="mb-4 flex min-h-[44px] flex-wrap items-center gap-2">
+            <div className="mb-5 flex min-h-[48px] flex-wrap items-center gap-2.5">
               {ticket.length > 0 ? (
-                ticket.map((n) => <Ball key={n} value={n} variant="ticket" />)
+                ticket.map((n) => <Ball key={n} value={n} />)
               ) : (
-                <span className="font-mono text-sm text-black/40">
-                  Pick 6 numbers, or hit Lucky Dip.
+                <span className="font-ticker text-[11px] uppercase tracking-[0.2em] text-[#f3e9d2]/35">
+                  mark six numbers below
                 </span>
               )}
             </div>
 
-            <NumberPicker
-              ticket={ticket}
-              onToggle={toggleNumber}
-              disabled={running}
-            />
+            <NumberPicker ticket={ticket} onToggle={toggleNumber} disabled={running} />
 
-            <div className="mt-4 flex gap-2">
+            <div className="mt-5 flex gap-2.5">
               <button
                 type="button"
                 onClick={handleLuckyDip}
                 disabled={running}
-                className="flex-1 border-2 border-black bg-amber-300 px-3 py-2 font-mono text-sm font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0"
+                className="font-ticker flex-1 rounded-md border border-[#e9c66a]/50 bg-[#e9c66a]/10 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#f6e3a1] transition-colors hover:bg-[#e9c66a]/20 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-[#e9c66a]/10"
               >
-                🎲 Lucky Dip
+                Quick pick
               </button>
               <button
                 type="button"
                 onClick={handleClearTicket}
                 disabled={running || ticket.length === 0}
-                className="border-2 border-black bg-white px-3 py-2 font-mono text-sm font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0"
+                className="font-ticker rounded-md border border-[#f3e9d2]/15 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-[#f3e9d2]/60 transition-colors hover:border-[#f3e9d2]/40 hover:text-[#f3e9d2] disabled:cursor-not-allowed disabled:opacity-30"
               >
                 Clear
               </button>
             </div>
           </section>
 
-          {/* Draw + controls */}
-          <section className="flex flex-col gap-4">
-            <div className="border-2 border-black bg-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <h2 className="mb-3 font-roboto-slab text-lg font-black">
-                Latest draw
-              </h2>
-              <DrawDisplay draw={lastDraw} ticket={ticket} drawKey={drawKey} />
-            </div>
+          {/* Place your bet */}
+          <section className="flex flex-col rounded-xl border border-[#f3e9d2]/12 bg-[#0f0b14]/60 p-5 backdrop-blur-sm">
+            <h2 className="font-marquee mb-4 text-xl italic">Place your bet</h2>
 
-            <div className="border-2 border-black bg-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <button
-                type="button"
-                onClick={play}
-                disabled={!ready || running}
-                className="mb-3 w-full border-2 border-black bg-lime-400 px-4 py-3 font-roboto-slab text-lg font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0"
-              >
-                Play ({money(TICKET_PRICE)})
-              </button>
+            <button
+              type="button"
+              onClick={play}
+              disabled={!ready || running}
+              className="font-marquee rounded-lg px-6 py-4 text-lg font-black italic text-[#1b1208] transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+              style={{
+                backgroundImage:
+                  "linear-gradient(100deg,#f7e7ad,#d8b24a 45%,#c69a2f)",
+                boxShadow:
+                  "0 10px 24px rgba(216,178,74,0.25), inset 0 1px 0 rgba(255,255,255,0.5)",
+              }}
+            >
+              Play this line — {money(TICKET_PRICE)}
+            </button>
 
-              <div className="flex gap-2">
+            <div className="mt-5">
+              <div className="mb-2 font-ticker text-[10px] uppercase tracking-[0.3em] text-[#f3e9d2]/40">
+                or auto-play
+              </div>
+              <div className="grid grid-cols-3 gap-2">
                 {BATCHES.map((b) => (
                   <button
                     key={b.n}
                     type="button"
                     onClick={() => runMany(b.n)}
                     disabled={!ready || running}
-                    className="flex-1 border-2 border-black bg-white px-2 py-2 font-mono text-sm font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0"
+                    className="font-ticker rounded-md border border-[#f3e9d2]/15 px-2 py-2.5 text-sm font-bold tabular-nums text-[#f3e9d2]/70 transition-colors hover:border-[#e9c66a]/50 hover:text-[#f6e3a1] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#f3e9d2]/15 disabled:hover:text-[#f3e9d2]/70"
                   >
                     {b.label}
                   </button>
                 ))}
               </div>
-
-              {batch && (
-                <div className="mt-3">
-                  <div className="mb-1 flex justify-between font-mono text-xs text-black/50">
-                    <span>Drawing…</span>
-                    <span>
-                      {count(batch.done)} / {count(batch.total)}
-                    </span>
-                  </div>
-                  <div className="h-3 border-2 border-black bg-white">
-                    <div
-                      className="h-full bg-lime-400 transition-all"
-                      style={{ width: `${batchPct}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {!ready && !running && (
-                <p className="mt-3 font-mono text-xs text-red-600">
-                  Pick {PICK - ticket.length} more number
-                  {PICK - ticket.length === 1 ? "" : "s"} to play.
-                </p>
-              )}
             </div>
+
+            {batch && (
+              <div className="mt-5">
+                <div className="mb-1.5 flex justify-between font-ticker text-[10px] uppercase tracking-[0.2em] text-[#f3e9d2]/45">
+                  <span>drawing…</span>
+                  <span className="tabular-nums">
+                    {count(batch.done)} / {count(batch.total)}
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-[#f3e9d2]/10">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#d8b24a] to-[#f7e7ad] transition-[width] duration-150"
+                    style={{ width: `${batchPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {!ready && !running && (
+              <p className="mt-4 font-ticker text-[11px] uppercase tracking-[0.15em] text-[#e0556a]/80">
+                mark {remaining} more number{remaining === 1 ? "" : "s"} to play
+              </p>
+            )}
+
+            <p className="mt-auto pt-5 font-ticker text-[10px] leading-relaxed text-[#f3e9d2]/30">
+              Every line costs {money(TICKET_PRICE)}, win or lose. Watch the
+              ledger.
+            </p>
           </section>
         </div>
 
-        {/* Stats */}
+        {/* The ledger */}
         <section className="mt-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-roboto-slab text-lg font-black">Your run</h2>
+          <div className="mb-3 flex items-center justify-end">
             <button
               type="button"
               onClick={reset}
               disabled={running || stats.draws === 0}
-              className="border-2 border-black bg-white px-3 py-1.5 font-mono text-xs font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:hover:translate-y-0"
+              className="font-ticker rounded-md border border-[#f3e9d2]/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f3e9d2]/55 transition-colors hover:border-[#f3e9d2]/40 hover:text-[#f3e9d2] disabled:cursor-not-allowed disabled:opacity-25"
             >
-              Reset
+              Reset run
             </button>
           </div>
           <Stats {...stats} />
         </section>
 
-        {/* Odds + breakdown */}
+        {/* Prize structure */}
         <section className="mt-6">
-          <h2 className="mb-3 font-roboto-slab text-lg font-black">
-            Odds &amp; prizes
-          </h2>
           <OddsTable tierCounts={tierCounts} />
-          <p
-            className={twMerge(
-              "mt-3 font-mono text-xs text-black/40",
-              stats.draws === 0 && "opacity-60"
-            )}
-          >
-            Odds shown as published &quot;x to 1&quot;. Your wins are the real
-            results of {count(stats.draws)} simulated draw
-            {stats.draws === 1 ? "" : "s"}.
-          </p>
         </section>
+
+        <p className="mt-10 text-center font-ticker text-[10px] uppercase tracking-[0.28em] text-[#f3e9d2]/25">
+          simulated · no money changes hands · the only winning move is not to play
+        </p>
       </div>
     </div>
   );

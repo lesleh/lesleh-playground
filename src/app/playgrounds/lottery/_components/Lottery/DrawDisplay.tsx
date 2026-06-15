@@ -6,15 +6,25 @@ import { TIER_BY_ID, type DrawResult } from "../../_lib/lottery";
 interface DrawDisplayProps {
   draw: DrawResult | null;
   ticket: number[];
-  /** Bumped on every new single draw to retrigger the pop-in animation. */
+  /** Bumped on every new single draw to retrigger the drop animation. */
   drawKey: number;
 }
 
 export function DrawDisplay({ draw, ticket, drawKey }: DrawDisplayProps) {
   if (!draw) {
     return (
-      <div className="flex h-28 items-center justify-center border-2 border-dashed border-black/30">
-        <p className="font-mono text-sm text-black/40">No draw yet — press Play.</p>
+      <div className="flex h-[120px] flex-col items-center justify-center gap-2">
+        <div className="flex gap-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <span
+              key={i}
+              className="h-12 w-12 rounded-full border border-dashed border-[#f3e9d2]/20"
+            />
+          ))}
+        </div>
+        <p className="font-ticker text-xs uppercase tracking-[0.3em] text-[#f3e9d2]/35">
+          awaiting the draw
+        </p>
       </div>
     );
   }
@@ -24,39 +34,46 @@ export function DrawDisplay({ draw, ticket, drawKey }: DrawDisplayProps) {
   const tierLabel = draw.tier ? TIER_BY_ID[draw.tier].label : null;
 
   return (
-    <div className="space-y-3" key={drawKey}>
-      <div className="flex flex-wrap items-center gap-2">
-        {draw.main.map((n, i) => (
-          <Ball
-            key={n}
-            value={n}
-            variant={ticketSet.has(n) ? "matched" : "default"}
-            popIndex={i}
-          />
-        ))}
-        <span className="px-1 font-mono text-xs text-black/40">+</span>
+    <div className="flex flex-col items-center gap-5" key={drawKey}>
+      <div className="flex flex-wrap items-center justify-center gap-2.5">
+        {draw.main.map((n, i) => {
+          const hit = ticketSet.has(n);
+          return (
+            <Ball
+              key={n}
+              value={n}
+              matched={hit}
+              faded={!hit}
+              dropIndex={i}
+            />
+          );
+        })}
+        <span
+          aria-hidden
+          className="mx-1 h-12 w-px bg-gradient-to-b from-transparent via-[#e9c66a]/60 to-transparent"
+        />
         <Ball
           value={draw.bonus}
-          variant={ticketSet.has(draw.bonus) ? "bonusMatched" : "bonus"}
-          popIndex={draw.main.length}
+          bonus
+          matched={ticketSet.has(draw.bonus)}
+          faded={!ticketSet.has(draw.bonus)}
+          dropIndex={draw.main.length}
         />
       </div>
 
       <div
         className={twMerge(
-          "border-2 border-black px-3 py-2 font-mono text-sm font-bold",
-          won ? "bg-lime-300" : "bg-white"
+          "font-ticker text-center text-sm uppercase tracking-[0.18em]",
+          won ? "text-[#f6e3a1]" : "text-[#f3e9d2]/45"
         )}
       >
         {won ? (
           <span>
-            {tierLabel} matched — won {money(draw.payout)}!
+            {tierLabel} — <span className="gold-foil font-bold">{money(draw.payout)}</span>
           </span>
         ) : (
-          <span className="text-black/60">
-            {draw.matchCount === 1
-              ? "1 ball matched. No prize."
-              : `${draw.matchCount} balls matched. No prize.`}
+          <span>
+            {draw.matchCount === 1 ? "one ball" : `${draw.matchCount} balls`} · no prize
           </span>
         )}
       </div>
