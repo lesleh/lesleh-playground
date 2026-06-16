@@ -17,3 +17,67 @@
   0%, 100% { opacity: 0; }
   50% { opacity: 1; }
 }
+
+@keyframes ball-pop {
+  0% { opacity: 0; transform: scale(0.3) translateY(-8px); }
+  70% { transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* --- Lottery: "The Midnight Draw" --- */
+
+@utility font-marquee {
+  font-family: var(--font-display), "Times New Roman", Georgia, serif;
+}
+
+@utility font-ticker {
+  font-family: var(--font-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* Animated gold-leaf text fill. */
+@utility gold-foil {
+  background-image: linear-gradient(
+    100deg,
+    #f7e7ad 0%,
+    #d8b24a 24%,
+    #fff6d8 46%,
+    #c69a2f 64%,
+    #f7e7ad 100%
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+@keyframes foil-shimmer {
+  to { background-position: 220% center; }
+}
+
+/* A drawn ball tumbling onto the tray, with an overshoot bounce. */
+@keyframes ball-drop {
+  0% { opacity: 0; transform: translateY(-180%) scale(0.7) rotate(-10deg); }
+  55% { opacity: 1; transform: translateY(12%) scale(1.07) rotate(3deg); }
+  78% { transform: translateY(-5%) scale(0.98) rotate(-1deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+/* Pulsing halo on a matched ball; --ball-glow set inline per colour. */
+@keyframes ball-glow {
+  0%, 100% { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55), 0 0 0 0 transparent; }
+  50% { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55), 0 0 26px 4px var(--ball-glow); }
+}
+
+/* Indeterminate progress sweep for the open-ended jackpot chase. */
+@keyframes chase-bar {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(520%); }
+}
+
+/* The verdict stamp slamming down. */
+@keyframes stamp-in {
+  0% { opacity: 0; transform: rotate(-13deg) scale(2.4); }
+  60% { opacity: 0.95; transform: rotate(-13deg) scale(0.92); }
+  100% { opacity: 0.92; transform: rotate(-13deg) scale(1); }
+}

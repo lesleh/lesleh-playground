@@ -18,6 +18,7 @@ import { ConnectFourPreview } from "./playgrounds/connect-four/Preview";
 import { TetrisAIPreview } from "./playgrounds/tetris-ai/Preview";
 import { BoidsPreview } from "./playgrounds/boids/Preview";
 import { ThreeBodyPreview } from "./playgrounds/three-body/Preview";
+import { LotteryPreview } from "./playgrounds/lottery/Preview";
 
 const playgrounds = [
   {
@@ -149,6 +150,14 @@ const playgrounds = [
     description: "Three gravitating stars. Stable dances or chaos, depending where you start.",
     href: "/playgrounds/three-body",
     preview: ThreeBodyPreview,
+  },
+  {
+    id: "lottery",
+    title: "Lottery Simulator",
+    description:
+      "Play the UK Lotto at £2 a ticket. Run a million draws and watch the house always win.",
+    href: "/playgrounds/lottery",
+    preview: LotteryPreview,
   },
 ];
 
