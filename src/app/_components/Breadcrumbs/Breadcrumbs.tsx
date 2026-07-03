@@ -9,7 +9,11 @@ export function Breadcrumbs() {
   const pathArray = pathname.split("/").filter((path) => path);
 
   return (
-    <nav aria-label="breadcrumb">
+    <nav
+      aria-label="breadcrumb"
+      className="select-none"
+      style={{ WebkitTouchCallout: "none", WebkitTapHighlightColor: "transparent" }}
+    >
       <ol>
         <li className="inline-block">
           {pathArray.length === 0 ? (

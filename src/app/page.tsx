@@ -20,8 +20,17 @@ import { BoidsPreview } from "./playgrounds/boids/Preview";
 import { ThreeBodyPreview } from "./playgrounds/three-body/Preview";
 import { LotteryPreview } from "./playgrounds/lottery/Preview";
 import { MemoryPreview } from "./playgrounds/memory/Preview";
+import { SimonPreview } from "./playgrounds/simon/Preview";
 
 const playgrounds = [
+  {
+    id: "simon",
+    title: "Echo",
+    description:
+      "A Simon memory game. Watch the pattern of colours and tones, then tap it back. It grows every round.",
+    href: "/playgrounds/simon",
+    preview: SimonPreview,
+  },
   {
     id: "spirograph",
     title: "Spirograph",
