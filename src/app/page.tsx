@@ -19,6 +19,7 @@ import { TetrisAIPreview } from "./playgrounds/tetris-ai/Preview";
 import { BoidsPreview } from "./playgrounds/boids/Preview";
 import { ThreeBodyPreview } from "./playgrounds/three-body/Preview";
 import { LotteryPreview } from "./playgrounds/lottery/Preview";
+import { MemoryPreview } from "./playgrounds/memory/Preview";
 
 const playgrounds = [
   {
@@ -158,6 +159,14 @@ const playgrounds = [
       "Play the UK Lotto at £2 a ticket. Run a million draws and watch the house always win.",
     href: "/playgrounds/lottery",
     preview: LotteryPreview,
+  },
+  {
+    id: "memory",
+    title: "Recall",
+    description:
+      "A memory matching game. Flip cards, find the pairs, beat your best across three difficulties.",
+    href: "/playgrounds/memory",
+    preview: MemoryPreview,
   },
 ];
 
