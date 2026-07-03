@@ -21,6 +21,7 @@ import { ThreeBodyPreview } from "./playgrounds/three-body/Preview";
 import { LotteryPreview } from "./playgrounds/lottery/Preview";
 import { MemoryPreview } from "./playgrounds/memory/Preview";
 import { SimonPreview } from "./playgrounds/simon/Preview";
+import { ChickenCrossingPreview } from "./playgrounds/chicken-crossing/Preview";
 
 const playgrounds = [
   {
@@ -30,6 +31,14 @@ const playgrounds = [
       "A Simon memory game. Watch the pattern of colours and tones, then tap it back. It grows every round.",
     href: "/playgrounds/simon",
     preview: SimonPreview,
+  },
+  {
+    id: "chicken-crossing",
+    title: "Fowl Play",
+    description:
+      "Get the chicken across the road, dodge the bikes and beat the clock. Each level gets faster.",
+    href: "/playgrounds/chicken-crossing",
+    preview: ChickenCrossingPreview,
   },
   {
     id: "spirograph",
