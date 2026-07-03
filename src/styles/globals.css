@@ -24,6 +24,21 @@
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* --- Memory: "Recall" --- */
+
+/* A matched icon giving a little celebratory kick. */
+@keyframes matchpop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.28) rotate(-4deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* Staggered entrance for cards on a new deal. */
+@keyframes deal-in {
+  0% { opacity: 0; transform: translateY(14px) scale(0.9); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* --- Lottery: "The Midnight Draw" --- */
 
 @utility font-marquee {
