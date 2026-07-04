@@ -40,20 +40,30 @@ function HomerPage() {
   useEffect(() => {
     if (!leftEyeRef.current || !rightEyeRef.current) return;
 
-    const leftAngle = Math.atan2(y - leftEyePosition.y, x - leftEyePosition.x);
-    const leftOffset = {
-      x: Math.cos(leftAngle) * LEFT_EYE.radius,
-      y: Math.sin(leftAngle) * LEFT_EYE.radius,
+    // Clamp the pupil's distance from the eye centre to the cursor's actual
+    // distance, so when the cursor is over the eye the pupil sits under it
+    // rather than orbiting the rim at the full radius.
+    const eyeOffset = (radius: number, eyeX: number, eyeY: number) => {
+      const dx = x - eyeX;
+      const dy = y - eyeY;
+      const distance = Math.min(Math.hypot(dx, dy), radius);
+      const angle = Math.atan2(dy, dx);
+      return {
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+      };
     };
 
-    const rightAngle = Math.atan2(
-      y - rightEyePosition.y,
-      x - rightEyePosition.x,
+    const leftOffset = eyeOffset(
+      LEFT_EYE.radius,
+      leftEyePosition.x,
+      leftEyePosition.y,
     );
-    const rightOffset = {
-      x: Math.cos(rightAngle) * RIGHT_EYE.radius,
-      y: Math.sin(rightAngle) * RIGHT_EYE.radius,
-    };
+    const rightOffset = eyeOffset(
+      RIGHT_EYE.radius,
+      rightEyePosition.x,
+      rightEyePosition.y,
+    );
 
     leftEyeRef.current.style.left = `${LEFT_EYE.x + leftOffset.x}px`;
     leftEyeRef.current.style.top = `${LEFT_EYE.y + leftOffset.y}px`;
