@@ -5,7 +5,13 @@ import Image from "next/image";
 import { useClientBoundingRect } from "./_hooks/useClientBoundingRect";
 import homer from "./_assets/homer.png";
 import eyedot from "./_assets/eyedot.png";
-import { useMousePosition } from "./_hooks/useMousePosition";
+import { usePointerPosition } from "./_hooks/usePointerPosition";
+
+// Eye geometry is expressed in the image's natural pixel space. The rendered
+// image scales to fit the viewport (especially on mobile), so everything is
+// scaled by renderedWidth / NATURAL_WIDTH before being applied.
+const NATURAL_WIDTH = 800;
+const NATURAL_HEIGHT = 533;
 
 const LEFT_EYE = {
   x: 288,
@@ -19,34 +25,46 @@ const RIGHT_EYE = {
   radius: 25,
 };
 
+// Pupil size as a fraction of the image width (eyedot is 13px on the 800px
+// image) so it scales with Homer rather than staying a fixed size.
+const PUPIL_WIDTH = `${(13 / NATURAL_WIDTH) * 100}%`;
+
 function HomerPage() {
   const pRef = useRef<HTMLDivElement | null>(null);
   const leftEyeRef = useRef<HTMLImageElement | null>(null);
   const rightEyeRef = useRef<HTMLImageElement | null>(null);
-  const { x, y } = useMousePosition();
+  const pointer = usePointerPosition();
   // @ts-expect-error
   const pRect = useClientBoundingRect(pRef);
 
-  const leftEyePosition = {
-    x: LEFT_EYE.x + (pRect?.left || 0),
-    y: LEFT_EYE.y + (pRect?.top || 0),
-  };
-
-  const rightEyePosition = {
-    x: RIGHT_EYE.x + (pRect?.left || 0),
-    y: RIGHT_EYE.y + (pRect?.top || 0),
-  };
+  // Disable scrolling while the demo is mounted (desktop and mobile) so a
+  // touch drag moves the eyes instead of panning the page.
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
 
   useEffect(() => {
-    if (!leftEyeRef.current || !rightEyeRef.current) return;
+    if (!leftEyeRef.current || !rightEyeRef.current || !pRect) return;
 
-    // Clamp the pupil's distance from the eye centre to the cursor's actual
-    // distance, so when the cursor is over the eye the pupil sits under it
-    // rather than orbiting the rim at the full radius.
-    const eyeOffset = (radius: number, eyeX: number, eyeY: number) => {
-      const dx = x - eyeX;
-      const dy = y - eyeY;
-      const distance = Math.min(Math.hypot(dx, dy), radius);
+    // How much the rendered image is scaled down from its natural size.
+    const scale = pRect.width / NATURAL_WIDTH;
+
+    // Until the first pointer input, keep the pupils centred (looking ahead).
+    // Otherwise clamp each pupil's distance from the eye centre to the
+    // pointer's actual distance, so when the pointer is over the eye the pupil
+    // sits under it rather than orbiting the rim at the full radius. All eye
+    // geometry is scaled into rendered (page) pixels first.
+    const eyeOffset = (eye: { x: number; y: number; radius: number }) => {
+      if (!pointer) return { x: 0, y: 0 };
+      const centreX = pRect.left + eye.x * scale;
+      const centreY = pRect.top + eye.y * scale;
+      const dx = pointer.x - centreX;
+      const dy = pointer.y - centreY;
+      const distance = Math.min(Math.hypot(dx, dy), eye.radius * scale);
       const angle = Math.atan2(dy, dx);
       return {
         x: Math.cos(angle) * distance,
@@ -54,31 +72,14 @@ function HomerPage() {
       };
     };
 
-    const leftOffset = eyeOffset(
-      LEFT_EYE.radius,
-      leftEyePosition.x,
-      leftEyePosition.y,
-    );
-    const rightOffset = eyeOffset(
-      RIGHT_EYE.radius,
-      rightEyePosition.x,
-      rightEyePosition.y,
-    );
+    const leftOffset = eyeOffset(LEFT_EYE);
+    const rightOffset = eyeOffset(RIGHT_EYE);
 
-    leftEyeRef.current.style.left = `${LEFT_EYE.x + leftOffset.x}px`;
-    leftEyeRef.current.style.top = `${LEFT_EYE.y + leftOffset.y}px`;
-    rightEyeRef.current.style.left = `${RIGHT_EYE.x + rightOffset.x}px`;
-    rightEyeRef.current.style.top = `${RIGHT_EYE.y + rightOffset.y}px`;
-  }, [
-    leftEyePosition.x,
-    leftEyePosition.y,
-    pRect?.x,
-    pRect?.y,
-    rightEyePosition.x,
-    rightEyePosition.y,
-    x,
-    y,
-  ]);
+    leftEyeRef.current.style.left = `${LEFT_EYE.x * scale + leftOffset.x}px`;
+    leftEyeRef.current.style.top = `${LEFT_EYE.y * scale + leftOffset.y}px`;
+    rightEyeRef.current.style.left = `${RIGHT_EYE.x * scale + rightOffset.x}px`;
+    rightEyeRef.current.style.top = `${RIGHT_EYE.y * scale + rightOffset.y}px`;
+  }, [pRect, pointer]);
 
   return (
     <div className="select-none">
@@ -87,21 +88,23 @@ function HomerPage() {
           <Image
             alt=""
             src={eyedot}
-            className="absolute -z-10 drag-none select-none"
+            className="absolute -z-10 h-auto drag-none select-none"
             ref={leftEyeRef}
             style={{
-              top: LEFT_EYE.y,
-              left: LEFT_EYE.x,
+              top: `${(LEFT_EYE.y / NATURAL_HEIGHT) * 100}%`,
+              left: `${(LEFT_EYE.x / NATURAL_WIDTH) * 100}%`,
+              width: PUPIL_WIDTH,
             }}
           />
           <Image
             alt=""
             src={eyedot}
-            className="absolute -z-10 drag-none select-none"
+            className="absolute -z-10 h-auto drag-none select-none"
             ref={rightEyeRef}
             style={{
-              top: RIGHT_EYE.y,
-              left: RIGHT_EYE.x,
+              top: `${(RIGHT_EYE.y / NATURAL_HEIGHT) * 100}%`,
+              left: `${(RIGHT_EYE.x / NATURAL_WIDTH) * 100}%`,
+              width: PUPIL_WIDTH,
             }}
           />
           <Image className="drag-none select-none" src={homer} alt="" />
