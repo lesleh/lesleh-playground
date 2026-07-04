@@ -94,6 +94,7 @@ function HomerPage() {
               top: `${(LEFT_EYE.y / NATURAL_HEIGHT) * 100}%`,
               left: `${(LEFT_EYE.x / NATURAL_WIDTH) * 100}%`,
               width: PUPIL_WIDTH,
+              transform: "translate(-50%, -50%)",
             }}
           />
           <Image
@@ -105,6 +106,7 @@ function HomerPage() {
               top: `${(RIGHT_EYE.y / NATURAL_HEIGHT) * 100}%`,
               left: `${(RIGHT_EYE.x / NATURAL_WIDTH) * 100}%`,
               width: PUPIL_WIDTH,
+              transform: "translate(-50%, -50%)",
             }}
           />
           <Image className="drag-none select-none" src={homer} alt="" />
