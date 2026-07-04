@@ -157,7 +157,7 @@ export function Memory() {
             </div>
 
             {/* Difficulty selector */}
-            <div className="flex overflow-hidden rounded-md border-[3px] border-black">
+            <div className="flex w-full overflow-hidden rounded-md border-[3px] border-black sm:w-auto">
               {ORDER.map((d) => {
                 const active = difficulty === d;
                 return (
@@ -165,7 +165,7 @@ export function Memory() {
                     key={d}
                     type="button"
                     onClick={() => newGame(d)}
-                    className={`px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors sm:px-4 ${
+                    className={`flex-1 px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors sm:flex-none sm:px-4 ${
                       active
                         ? "bg-black text-[#fffef5]"
                         : "bg-transparent text-black hover:bg-black/10"
