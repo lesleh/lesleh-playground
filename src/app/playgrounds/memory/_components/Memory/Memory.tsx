@@ -186,20 +186,25 @@ export function Memory() {
           <Stat label="Pairs" value={`${state.matched} / ${pairs}`} />
         </div>
 
-        {/* Preview countdown: shown while the board is revealed to memorise. */}
-        {preview && (
-          <div
-            className="mb-6 flex items-center justify-between gap-3 rounded-md border-[3px] border-black bg-black px-4 py-3 text-[#fffef5]"
-            style={{ animation: "matchpop 0.35s ease-out" }}
-          >
-            <p className="font-mono text-[11px] uppercase tracking-[0.3em]">
-              memorise the board
-            </p>
-            <p className="font-roboto-slab text-2xl font-black leading-none tabular-nums">
-              {countdown}s
-            </p>
-          </div>
-        )}
+        {/* Status strip: always present so the board never jumps between
+            phases. Bold black bar while memorising, a calm hint during play. */}
+        <div
+          className={`mb-6 flex items-center justify-between gap-3 rounded-md border-[3px] border-black px-4 py-3 transition-colors ${
+            preview ? "bg-black text-[#fffef5]" : "bg-[#fffef5] text-black"
+          }`}
+          style={preview ? { animation: "matchpop 0.35s ease-out" } : undefined}
+        >
+          <p className="font-mono text-[11px] uppercase tracking-[0.3em]">
+            {preview
+              ? "memorise the board"
+              : won
+                ? "board cleared"
+                : "find the pairs"}
+          </p>
+          <p className="font-roboto-slab text-2xl font-black leading-none tabular-nums">
+            {preview ? `${countdown}s` : won ? "done" : `${pairs - state.matched} left`}
+          </p>
+        </div>
 
         {/* Board */}
         <div className="relative">
