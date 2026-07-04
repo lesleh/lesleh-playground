@@ -6,19 +6,15 @@ import { useIntersectionObserver } from "../../_hooks";
 export function LightsOutPreview() {
   const containerRef = useRef<HTMLDivElement>(null);
   const isVisible = useIntersectionObserver(containerRef);
-  const [grid, setGrid] = useState<boolean[][]>([]);
+  const [grid, setGrid] = useState<boolean[][]>(() =>
+    Array(3)
+      .fill(null)
+      .map(() => Array(3).fill(false))
+  );
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
-    // Initialize 3x3 grid
-    const initialGrid = Array(3)
-      .fill(null)
-      .map(() => Array(3).fill(false));
-    setGrid(initialGrid);
-  }, []);
-
-  useEffect(() => {
-    if (!isVisible || grid.length === 0) {
+    if (!isVisible) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
@@ -48,7 +44,7 @@ export function LightsOutPreview() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isVisible, grid.length]);
+  }, [isVisible]);
 
   return (
     <div

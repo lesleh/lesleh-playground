@@ -95,7 +95,10 @@ export function ConnectFour() {
 
   useEffect(() => {
     if (!loading && isLoaded() && game.currentPlayer !== humanPlayer && !result && !thinking) {
-      aiMove(game);
+      // Defer a tick so the AI turn's state updates don't fire synchronously
+      // inside the effect (and so a fast reset can cancel a queued move).
+      const id = setTimeout(() => aiMove(game), 0);
+      return () => clearTimeout(id);
     }
   }, [loading, game, humanPlayer, result, thinking, aiMove]);
 

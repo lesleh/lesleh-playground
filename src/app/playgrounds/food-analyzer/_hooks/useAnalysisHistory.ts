@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useCallback, useSyncExternalStore } from "react";
 import type { FoodAnalysis } from "../types";
 
 const STORAGE_KEY = "food-analyzer-history";
@@ -11,60 +13,86 @@ export interface HistoryItem {
   analysis: FoodAnalysis;
 }
 
-export function useAnalysisHistory() {
-  const [history, setHistory] = useState<HistoryItem[]>([]);
+// Same-tab change notifications: the native `storage` event only fires in
+// other tabs, so we keep our own listener set and emit on write.
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    // Load history from localStorage on mount
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+function emit() {
+  listeners.forEach((l) => l());
+}
+
+// getSnapshot must return a stable reference between renders or React loops,
+// so we memoise the parsed value against the raw string.
+let cache: { raw: string | null; value: HistoryItem[] } = {
+  raw: null,
+  value: [],
+};
+
+// Stable empty reference for the server (and storage-unavailable) snapshot.
+const EMPTY: HistoryItem[] = [];
+
+function getSnapshot(): HistoryItem[] {
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    raw = null;
+  }
+  if (cache.raw !== raw) {
+    let value: HistoryItem[] = [];
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setHistory(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error("Failed to load history:", error);
+      value = raw ? (JSON.parse(raw) as HistoryItem[]) : [];
+    } catch {
+      value = [];
     }
-  }, []);
+    cache = { raw, value };
+  }
+  return cache.value;
+}
 
-  const addToHistory = (input: string, analysis: FoodAnalysis) => {
+function write(items: HistoryItem[]) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch (error) {
+    console.error("Failed to save history:", error);
+  }
+  emit();
+}
+
+export function useAnalysisHistory() {
+  const history = useSyncExternalStore(subscribe, getSnapshot, () => EMPTY);
+
+  const addToHistory = useCallback((input: string, analysis: FoodAnalysis) => {
     const newItem: HistoryItem = {
       id: Date.now().toString(),
       timestamp: Date.now(),
       input: input.substring(0, 100), // Truncate long inputs
       analysis,
     };
+    write([newItem, ...getSnapshot()].slice(0, MAX_HISTORY));
+  }, []);
 
-    setHistory((prev) => {
-      const updated = [newItem, ...prev].slice(0, MAX_HISTORY);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      } catch (error) {
-        console.error("Failed to save history:", error);
-      }
-      return updated;
-    });
-  };
+  const removeFromHistory = useCallback((id: string) => {
+    write(getSnapshot().filter((item) => item.id !== id));
+  }, []);
 
-  const removeFromHistory = (id: string) => {
-    setHistory((prev) => {
-      const updated = prev.filter((item) => item.id !== id);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      } catch (error) {
-        console.error("Failed to save history:", error);
-      }
-      return updated;
-    });
-  };
-
-  const clearHistory = () => {
-    setHistory([]);
+  const clearHistory = useCallback(() => {
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error("Failed to clear history:", error);
     }
-  };
+    emit();
+  }, []);
 
   return {
     history,
