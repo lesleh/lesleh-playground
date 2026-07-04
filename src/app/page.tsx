@@ -1,4 +1,5 @@
 import type { NextPage } from "next";
+import type { ComponentType } from "react";
 import { PlaygroundCard } from "./_components/PlaygroundCard";
 import { SpirographPreview } from "./playgrounds/spirograph/Preview";
 import { NumberGuesserPreview } from "./playgrounds/number-guesser/Preview";
@@ -23,6 +24,13 @@ import { MemoryPreview } from "./playgrounds/memory/Preview";
 import { SimonPreview } from "./playgrounds/simon/Preview";
 import { ChickenCrossingPreview } from "./playgrounds/chicken-crossing/Preview";
 
+type Category =
+  | "Games"
+  | "AI"
+  | "Simulations"
+  | "Generative & Graphics"
+  | "Interface & Motion";
+
 const playgrounds = [
   {
     id: "simon",
@@ -31,6 +39,7 @@ const playgrounds = [
       "A Simon memory game. Watch the pattern of colours and tones, then tap it back. It grows every round.",
     href: "/playgrounds/simon",
     preview: SimonPreview,
+    category: "Games",
   },
   {
     id: "chicken-crossing",
@@ -39,6 +48,7 @@ const playgrounds = [
       "Get the chicken across the road, dodge the bikes and beat the clock. Each level gets faster.",
     href: "/playgrounds/chicken-crossing",
     preview: ChickenCrossingPreview,
+    category: "Games",
   },
   {
     id: "spirograph",
@@ -47,6 +57,7 @@ const playgrounds = [
       "Draw mesmerizing spirograph patterns by rolling circles within circles.",
     href: "/playgrounds/spirograph",
     preview: SpirographPreview,
+    category: "Generative & Graphics",
   },
   {
     id: "number-guesser",
@@ -55,6 +66,7 @@ const playgrounds = [
       "Classic number guessing game with hints. How few guesses does it take?",
     href: "/playgrounds/number-guesser",
     preview: NumberGuesserPreview,
+    category: "Games",
   },
   {
     id: "rock-paper-scissors",
@@ -62,6 +74,7 @@ const playgrounds = [
     description: "Play the timeless game against the computer. Best of three!",
     href: "/playgrounds/rock-paper-scissors",
     preview: RockPaperScissorsPreview,
+    category: "Games",
   },
   {
     id: "homer",
@@ -69,6 +82,7 @@ const playgrounds = [
     description: "Homer's eyes follow your cursor around the screen.",
     href: "/playgrounds/homer",
     preview: HomerPreview,
+    category: "Interface & Motion",
   },
   {
     id: "lights-out",
@@ -76,6 +90,7 @@ const playgrounds = [
     description: "Toggle lights to clear the grid. Or let the auto-solver handle it.",
     href: "/playgrounds/lights-out",
     preview: LightsOutPreview,
+    category: "Games",
   },
   {
     id: "unit-price",
@@ -84,6 +99,7 @@ const playgrounds = [
       "Compare products by unit price. Never overpay at the grocery store again.",
     href: "/playgrounds/unit-price",
     preview: UnitPricePreview,
+    category: "Interface & Motion",
   },
   {
     id: "subgrid-cards",
@@ -91,6 +107,7 @@ const playgrounds = [
     description: "Explore CSS subgrid with responsive card layouts.",
     href: "/playgrounds/subgrid-cards",
     preview: SubgridCardsPreview,
+    category: "Interface & Motion",
   },
   {
     id: "gradients",
@@ -98,6 +115,7 @@ const playgrounds = [
     description: "Experiment with colour gradients and transitions.",
     href: "/playgrounds/gradients",
     preview: GradientsPreview,
+    category: "Generative & Graphics",
   },
   {
     id: "graphs",
@@ -105,6 +123,7 @@ const playgrounds = [
     description: "Interactive graph visualizations using D3.js.",
     href: "/playgrounds/graphs",
     preview: GraphsPreview,
+    category: "Generative & Graphics",
   },
   {
     id: "planets",
@@ -112,6 +131,7 @@ const playgrounds = [
     description: "Watch planets orbit in smooth animations using the Motion library.",
     href: "/playgrounds/planets",
     preview: PlanetsPreview,
+    category: "Simulations",
   },
   {
     id: "food-analyzer",
@@ -120,6 +140,7 @@ const playgrounds = [
       "AI-powered food analysis. Upload a photo and get instant nutritional insights.",
     href: "/playgrounds/food-analyzer",
     preview: FoodAnalyzerPreview,
+    category: "AI",
   },
   {
     id: "animate",
@@ -127,6 +148,7 @@ const playgrounds = [
     description: "React Markdown animation experiments with smooth transitions.",
     href: "/playgrounds/animate",
     preview: AnimatePreview,
+    category: "Interface & Motion",
   },
   {
     id: "motion",
@@ -134,6 +156,7 @@ const playgrounds = [
     description: "Motion library playground. Spring physics and animation primitives.",
     href: "/playgrounds/motion",
     preview: MotionPreview,
+    category: "Interface & Motion",
   },
   {
     id: "trees",
@@ -141,6 +164,7 @@ const playgrounds = [
     description: "Recursive fractal tree generation and visualization.",
     href: "/playgrounds/trees",
     preview: TreesPreview,
+    category: "Generative & Graphics",
   },
   {
     id: "connect-four",
@@ -148,6 +172,7 @@ const playgrounds = [
     description: "Play Connect 4 against an AlphaZero-style AI trained via self-play.",
     href: "/playgrounds/connect-four",
     preview: ConnectFourPreview,
+    category: "AI",
   },
   {
     id: "tetris-ai",
@@ -155,6 +180,7 @@ const playgrounds = [
     description: "Watch a neural network play Tetris. Trained with deep reinforcement learning.",
     href: "/playgrounds/tetris-ai",
     preview: TetrisAIPreview,
+    category: "AI",
   },
   {
     id: "boids",
@@ -162,6 +188,7 @@ const playgrounds = [
     description: "3000 agents follow three simple rules and emergent murmurations appear.",
     href: "/playgrounds/boids",
     preview: BoidsPreview,
+    category: "Simulations",
   },
   {
     id: "three-body",
@@ -169,6 +196,7 @@ const playgrounds = [
     description: "Three gravitating stars. Stable dances or chaos, depending where you start.",
     href: "/playgrounds/three-body",
     preview: ThreeBodyPreview,
+    category: "Simulations",
   },
   {
     id: "lottery",
@@ -177,6 +205,7 @@ const playgrounds = [
       "Play the UK Lotto at £2 a ticket. Run a million draws and watch the house always win.",
     href: "/playgrounds/lottery",
     preview: LotteryPreview,
+    category: "Games",
   },
   {
     id: "memory",
@@ -185,7 +214,23 @@ const playgrounds = [
       "A memory matching game. Flip cards, find the pairs, beat your best across three difficulties.",
     href: "/playgrounds/memory",
     preview: MemoryPreview,
+    category: "Games",
   },
+] satisfies ReadonlyArray<{
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  preview: ComponentType;
+  category: Category;
+}>;
+
+const categoryOrder: Category[] = [
+  "Games",
+  "AI",
+  "Simulations",
+  "Generative & Graphics",
+  "Interface & Motion",
 ];
 
 const Home: NextPage = () => {
@@ -242,19 +287,44 @@ const Home: NextPage = () => {
           </p>
         </header>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
-          {playgrounds.map((playground, i) => (
-            <PlaygroundCard
-              key={playground.id}
-              title={playground.title}
-              description={playground.description}
-              href={playground.href}
-              preview={playground.preview}
-              index={i}
-            />
-          ))}
-        </div>
+        {/* Grouped sections */}
+        {(() => {
+          let runningIndex = 0;
+          return categoryOrder.map((category) => {
+            const items = playgrounds.filter((p) => p.category === category);
+            if (items.length === 0) return null;
+
+            return (
+              <section key={category} className="mb-16 last:mb-0">
+                <div className="flex items-baseline gap-4 mb-8">
+                  <h2 className="font-roboto-slab font-black text-2xl sm:text-3xl text-black tracking-tight uppercase">
+                    {category}
+                  </h2>
+                  <span className="font-mono text-xs text-black/40 tracking-widest">
+                    {String(items.length).padStart(2, "0")}
+                  </span>
+                  <div className="h-0.5 bg-black flex-1 self-center" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+                  {items.map((playground) => {
+                    const index = runningIndex++;
+                    return (
+                      <PlaygroundCard
+                        key={playground.id}
+                        title={playground.title}
+                        description={playground.description}
+                        href={playground.href}
+                        preview={playground.preview}
+                        index={index}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          });
+        })()}
 
         {/* Footer rule */}
         <div className="mt-20 flex gap-1">
