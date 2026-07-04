@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   DIFFICULTIES,
+  PREVIEW_SECONDS,
   buildDeck,
   createInitialState,
   gameReducer,
@@ -40,6 +41,7 @@ export function Memory() {
   );
 
   const [elapsed, setElapsed] = useState(0);
+  const [countdown, setCountdown] = useState(PREVIEW_SECONDS);
   const [newBest, setNewBest] = useState(false);
   const { best, saveIfBest } = useBestScore(difficulty);
   const startRef = useRef<number | null>(null);
@@ -52,10 +54,30 @@ export function Memory() {
     startRef.current = null;
     savedRef.current = false;
     setElapsed(0);
+    setCountdown(PREVIEW_SECONDS);
     setNewBest(false);
     setDifficulty(d);
     dispatch({ type: "NEW_GAME", difficulty: d, cards: buildDeck(d) });
   }, []);
+
+  // Preview: reveal the whole board, count down, then hide it and start play.
+  // Re-runs per deal (cards identity changes) so a new game restarts the peek.
+  // The countdown itself is reset in newGame (and via initial state on mount).
+  useEffect(() => {
+    if (state.status !== "preview") return;
+    const tick = window.setInterval(
+      () => setCountdown((c) => Math.max(0, c - 1)),
+      1000,
+    );
+    const done = window.setTimeout(
+      () => dispatch({ type: "START_PLAY" }),
+      PREVIEW_SECONDS * 1000,
+    );
+    return () => {
+      window.clearInterval(tick);
+      window.clearTimeout(done);
+    };
+  }, [state.status, state.cards]);
 
   // Clock: ticks from the first flip until the board is won.
   useEffect(() => {
@@ -106,6 +128,7 @@ export function Memory() {
   }, [state.status, state.moves, elapsed, saveIfBest]);
 
   const won = state.status === "won";
+  const preview = state.status === "preview";
 
   return (
     <div
@@ -163,6 +186,21 @@ export function Memory() {
           <Stat label="Pairs" value={`${state.matched} / ${pairs}`} />
         </div>
 
+        {/* Preview countdown: shown while the board is revealed to memorise. */}
+        {preview && (
+          <div
+            className="mb-6 flex items-center justify-between gap-3 rounded-md border-[3px] border-black bg-black px-4 py-3 text-[#fffef5]"
+            style={{ animation: "matchpop 0.35s ease-out" }}
+          >
+            <p className="font-mono text-[11px] uppercase tracking-[0.3em]">
+              memorise the board
+            </p>
+            <p className="font-roboto-slab text-2xl font-black leading-none tabular-nums">
+              {countdown}s
+            </p>
+          </div>
+        )}
+
         {/* Board */}
         <div className="relative">
           <div
@@ -178,7 +216,12 @@ export function Memory() {
                   animationDelay: `${Math.min(i * 25, 500)}ms`,
                 }}
               >
-                <Card card={card} disabled={state.locked} onFlip={(id) => dispatch({ type: "FLIP", id })} />
+                <Card
+                  card={card}
+                  disabled={state.locked}
+                  preview={preview}
+                  onFlip={(id) => dispatch({ type: "FLIP", id })}
+                />
               </div>
             ))}
           </div>

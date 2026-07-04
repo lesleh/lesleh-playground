@@ -18,6 +18,9 @@ export const DIFFICULTIES: Record<Difficulty, DifficultyConfig> = {
   hard: { label: "Hard", pairs: 15, columns: 6 },
 };
 
+// Seconds the whole board is revealed before it hides and play begins.
+export const PREVIEW_SECONDS = 5;
+
 export interface Card {
   id: number;
   shape: ShapeKey;
@@ -32,13 +35,16 @@ export interface GameState {
   secondPick: number | null;
   moves: number;
   matched: number;
-  status: "playing" | "won";
-  // Locked while a mismatched pair is showing, so further clicks are ignored.
+  // "preview": whole board is revealed for memorising, no picks allowed yet.
+  status: "preview" | "playing" | "won";
+  // Locked while a mismatched pair is showing (or during preview), so further
+  // clicks are ignored.
   locked: boolean;
 }
 
 export type GameAction =
   | { type: "NEW_GAME"; difficulty: Difficulty; cards: Card[] }
+  | { type: "START_PLAY" }
   | { type: "FLIP"; id: number }
   | { type: "CLEAR_MISMATCH" };
 
@@ -79,8 +85,8 @@ export function createInitialState(
     secondPick: null,
     moves: 0,
     matched: 0,
-    status: "playing",
-    locked: false,
+    status: "preview",
+    locked: true,
   };
 }
 
@@ -94,12 +100,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         secondPick: null,
         moves: 0,
         matched: 0,
-        status: "playing",
-        locked: false,
+        status: "preview",
+        locked: true,
       };
 
+    case "START_PLAY":
+      if (state.status !== "preview") return state;
+      return { ...state, status: "playing", locked: false };
+
     case "FLIP": {
-      if (state.locked || state.status === "won") return state;
+      if (state.locked || state.status !== "playing") return state;
 
       const card = state.cards.find((c) => c.id === action.id);
       if (!card || card.isMatched || card.isFlipped) return state;

@@ -6,11 +6,13 @@ import type { Card as CardType } from "../../_lib/game";
 interface CardProps {
   card: CardType;
   disabled: boolean;
+  // Whole board revealed during the memorise phase; overrides per-card state.
+  preview: boolean;
   onFlip: (id: number) => void;
 }
 
-export function Card({ card, disabled, onFlip }: CardProps) {
-  const faceUp = card.isFlipped || card.isMatched;
+export function Card({ card, disabled, preview, onFlip }: CardProps) {
+  const faceUp = preview || card.isFlipped || card.isMatched;
 
   return (
     <button
