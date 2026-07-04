@@ -5,10 +5,12 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Trees | Playground",
-  description: "Recursive fractal tree generation and visualization.",
+  description:
+    "A tree of nested server and client components, demonstrating App Router composition.",
   openGraph: {
     title: "Trees",
-    description: "Recursive fractal tree generation and visualization.",
+    description:
+    "A tree of nested server and client components, demonstrating App Router composition.",
   },
 };
 

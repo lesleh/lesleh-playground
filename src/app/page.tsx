@@ -161,10 +161,11 @@ const playgrounds = [
   {
     id: "trees",
     title: "Trees",
-    description: "Recursive fractal tree generation and visualization.",
+    description:
+      "A tree of nested server and client components. See how the App Router composes the two.",
     href: "/playgrounds/trees",
     preview: TreesPreview,
-    category: "Generative & Graphics",
+    category: "Interface & Motion",
   },
   {
     id: "connect-four",
