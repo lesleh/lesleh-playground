@@ -1,0 +1,1 @@
+export { WhackAMole } from "./WhackAMole";
