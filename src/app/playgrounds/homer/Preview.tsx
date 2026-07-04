@@ -11,7 +11,9 @@ import eyedot from "./_assets/eyedot.png";
 export function HomerPreview() {
   return (
     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-100 to-yellow-200">
-      <div className="relative h-full" style={{ aspectRatio: "800/533" }}>
+      {/* isolate keeps the eyedots' negative z-index within this box so they
+          sit behind Homer but above the background, not lost behind it. */}
+      <div className="relative h-full isolate" style={{ aspectRatio: "800/533" }}>
         <Image
           src={eyedot}
           alt=""
