@@ -156,6 +156,36 @@ describe("gameReducer", () => {
     expect(next.cards).toBe(deck);
     expect(next.moves).toBe(0);
     expect(next.firstPick).toBeNull();
-    expect(next.status).toBe("playing");
+    expect(next.status).toBe("preview");
+    expect(next.locked).toBe(true);
+  });
+
+  it("starts a new game in the locked preview phase", () => {
+    const state = createInitialState("easy", seededRng(1));
+    expect(state.status).toBe("preview");
+    expect(state.locked).toBe(true);
+  });
+
+  it("ignores flips during the preview phase", () => {
+    const state = createInitialState("easy", seededRng(1));
+    expect(gameReducer(state, { type: "FLIP", id: 0 })).toBe(state);
+  });
+
+  it("unlocks the board on START_PLAY", () => {
+    let state = createInitialState("easy", seededRng(1));
+    state = gameReducer(state, { type: "START_PLAY" });
+    expect(state.status).toBe("playing");
+    expect(state.locked).toBe(false);
+
+    // First pick now registers.
+    state = gameReducer(state, { type: "FLIP", id: 0 });
+    expect(state.firstPick).toBe(0);
+  });
+
+  it("ignores START_PLAY once play has begun", () => {
+    const state = gameReducer(createInitialState("easy", seededRng(1)), {
+      type: "START_PLAY",
+    });
+    expect(gameReducer(state, { type: "START_PLAY" })).toBe(state);
   });
 });
