@@ -39,6 +39,29 @@
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* --- Whack-a-Mole --- */
+
+/* A whacked mole squashing down and dropping back into its hole. */
+@keyframes mole-bonk {
+  0% { transform: translateY(0) scaleY(1); }
+  30% { transform: translateY(8%) scale(1.18, 0.72); }
+  100% { transform: translateY(135%) scale(0.85); }
+}
+
+/* The points earned on a hit, drifting up and fading. */
+@keyframes score-float {
+  0% { opacity: 0; transform: translateY(8px) scale(0.7); }
+  25% { opacity: 1; transform: translateY(-6px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-44px) scale(1); }
+}
+
+/* The streak badge giving a kick each time it climbs. */
+@keyframes combo-pop {
+  0% { transform: scale(0.6) rotate(-6deg); }
+  60% { transform: scale(1.18) rotate(4deg); }
+  100% { transform: scale(1) rotate(-3deg); }
+}
+
 /* --- Lottery: "The Midnight Draw" --- */
 
 @utility font-marquee {

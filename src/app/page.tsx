@@ -23,6 +23,7 @@ import { LotteryPreview } from "./playgrounds/lottery/Preview";
 import { MemoryPreview } from "./playgrounds/memory/Preview";
 import { SimonPreview } from "./playgrounds/simon/Preview";
 import { ChickenCrossingPreview } from "./playgrounds/chicken-crossing/Preview";
+import { WhackAMolePreview } from "./playgrounds/whack-a-mole/Preview";
 
 type Category =
   | "Games"
@@ -39,6 +40,15 @@ const playgrounds = [
       "A Simon memory game. Watch the pattern of colours and tones, then tap it back. It grows every round.",
     href: "/playgrounds/simon",
     preview: SimonPreview,
+    category: "Games",
+  },
+  {
+    id: "whack-a-mole",
+    title: "Whack-a-Mole",
+    description:
+      "Bonk the moles before they duck away. They speed up as the round runs down. Beat your high score.",
+    href: "/playgrounds/whack-a-mole",
+    preview: WhackAMolePreview,
     category: "Games",
   },
   {
