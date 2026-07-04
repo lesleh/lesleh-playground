@@ -83,6 +83,23 @@ function HomerPage() {
 
   return (
     <div className="select-none">
+      {/* Hint fades out on the first pointer input. Wording depends on the
+          pointer type so touch devices are told to drag. */}
+      <div
+        aria-hidden={pointer !== null}
+        className={`pointer-events-none fixed inset-x-0 top-8 flex justify-center px-4 transition-opacity duration-500 ${
+          pointer ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <span className="rounded-full border border-black/10 bg-black/5 px-4 py-2 text-center font-mono text-xs uppercase tracking-widest text-black/50">
+          <span className="[@media(pointer:coarse)]:hidden">
+            Move your mouse, the eyes follow
+          </span>
+          <span className="hidden [@media(pointer:coarse)]:inline">
+            Drag anywhere, the eyes follow
+          </span>
+        </span>
+      </div>
       <div className="fixed bottom-0 left-0 right-0 grid justify-center">
         <div className="relative" ref={pRef}>
           <Image
