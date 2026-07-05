@@ -63,6 +63,9 @@ interface Stats {
   soloLaps: number;
   soloRunTicks: number;
   soloBestTicks: number;
+  // Most recently finished/crashed run (persists after the next one starts).
+  soloLastTicks: number;
+  soloLastDone: boolean;
 }
 
 const EMPTY_STATS: Stats = {
@@ -79,6 +82,8 @@ const EMPTY_STATS: Stats = {
   soloLaps: 0,
   soloRunTicks: 0,
   soloBestTicks: 0,
+  soloLastTicks: 0,
+  soloLastDone: false,
 };
 
 // The generalist "finishes all N" worst-case time, or 0 if it can't yet clear
@@ -110,6 +115,7 @@ export function Neuroevolution() {
   const championKindRef = useRef<Champion>("track");
   const soloCarRef = useRef<Car | null>(null);
   const soloBestRef = useRef(0);
+  const soloLastRef = useRef({ ticks: 0, done: false });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
@@ -137,6 +143,8 @@ export function Neuroevolution() {
         soloLaps: car ? Math.min(LAPS_TO_FINISH, Math.floor(car.gatesPassed / gateCount)) : 0,
         soloRunTicks: car ? car.ticks : 0,
         soloBestTicks: soloBestRef.current,
+        soloLastTicks: soloLastRef.current.ticks,
+        soloLastDone: soloLastRef.current.done,
       }));
       return;
     }
@@ -209,6 +217,7 @@ export function Neuroevolution() {
       // A new track invalidates the solo run (times are track-specific).
       soloCarRef.current = null;
       soloBestRef.current = 0;
+      soloLastRef.current = { ticks: 0, done: false };
       saveWorld(world);
       flush();
     },
@@ -265,6 +274,7 @@ export function Neuroevolution() {
               if (!car) break;
               stepCar(car, w.track);
               if (!car.alive || car.done) {
+                soloLastRef.current = { ticks: car.ticks, done: car.done };
                 if (
                   car.done &&
                   (soloBestRef.current === 0 || car.finishTicks < soloBestRef.current)
@@ -335,6 +345,7 @@ export function Neuroevolution() {
       championRef.current = brain;
       soloCarRef.current = null;
       soloBestRef.current = 0;
+      soloLastRef.current = { ticks: 0, done: false };
       modeRef.current = "solo";
       setMode("solo");
       flush();
@@ -570,7 +581,6 @@ export function Neuroevolution() {
               <div className="grid grid-cols-2">
                 {solo ? (
                   <>
-                    <Readout label="Mode" value="Solo" accent="var(--amber)" />
                     <Readout
                       label="Laps"
                       value={`${stats.soloLaps}/${LAPS_TO_FINISH}`}
@@ -579,6 +589,22 @@ export function Neuroevolution() {
                       label="This run"
                       value={secs(stats.soloRunTicks)}
                       unit={stats.soloRunTicks > 0 ? "s" : ""}
+                    />
+                    <Readout
+                      label="Last run"
+                      value={
+                        stats.soloLastTicks === 0
+                          ? "—"
+                          : stats.soloLastDone
+                            ? secs(stats.soloLastTicks)
+                            : "DNF"
+                      }
+                      unit={stats.soloLastTicks > 0 && stats.soloLastDone ? "s" : ""}
+                      accent={
+                        stats.soloLastTicks > 0 && !stats.soloLastDone
+                          ? "var(--red)"
+                          : "var(--text)"
+                      }
                     />
                     <Readout
                       label="Best run"

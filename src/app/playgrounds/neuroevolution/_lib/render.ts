@@ -16,7 +16,8 @@ const START = "#35d6a0";
 const PACK = "rgba(69, 200, 216, 0.5)";
 const LEADER = "#f7c948";
 const DONE = "#35d6a0";
-const SENSOR = "rgba(247, 201, 72, 0.22)";
+const SENSOR_GLOW = "rgba(247, 201, 72, 0.25)";
+const SENSOR_CORE = "rgba(247, 201, 72, 0.92)";
 
 export function drawWorld(
   ctx: CanvasRenderingContext2D,
@@ -181,20 +182,41 @@ function drawTrail(ctx: CanvasRenderingContext2D, car: Car, color: string) {
 }
 
 function drawSensors(ctx: CanvasRenderingContext2D, car: Car) {
-  ctx.strokeStyle = SENSOR;
-  ctx.fillStyle = SENSOR;
-  ctx.lineWidth = 1;
+  // Endpoints of each whisker.
+  const ex: number[] = [];
+  const ey: number[] = [];
   for (let s = 0; s < SENSOR_ANGLES.length; s++) {
     const a = car.angle + SENSOR_ANGLES[s];
     const d = car.sensors[s];
-    const ex = car.x + Math.cos(a) * d;
-    const ey = car.y + Math.sin(a) * d;
+    ex[s] = car.x + Math.cos(a) * d;
+    ey[s] = car.y + Math.sin(a) * d;
+  }
+
+  const traceAll = () => {
     ctx.beginPath();
-    ctx.moveTo(car.x, car.y);
-    ctx.lineTo(ex, ey);
-    ctx.stroke();
+    for (let s = 0; s < ex.length; s++) {
+      ctx.moveTo(car.x, car.y);
+      ctx.lineTo(ex[s], ey[s]);
+    }
+  };
+
+  ctx.lineCap = "round";
+  // Soft wide glow underlay so the beams read against the road...
+  ctx.strokeStyle = SENSOR_GLOW;
+  ctx.lineWidth = 4;
+  traceAll();
+  ctx.stroke();
+  // ...then a crisp bright core on top.
+  ctx.strokeStyle = SENSOR_CORE;
+  ctx.lineWidth = 1.25;
+  traceAll();
+  ctx.stroke();
+
+  // Contact dots where each whisker meets a wall.
+  ctx.fillStyle = SENSOR_CORE;
+  for (let s = 0; s < ex.length; s++) {
     ctx.beginPath();
-    ctx.arc(ex, ey, 2, 0, Math.PI * 2);
+    ctx.arc(ex[s], ey[s], 2.5, 0, Math.PI * 2);
     ctx.fill();
   }
 }
