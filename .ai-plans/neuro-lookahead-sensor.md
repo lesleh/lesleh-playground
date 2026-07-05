@@ -1,5 +1,29 @@
 # Neuroevolution: look-ahead sensor
 
+## Status: PARKED (grilled and rejected as written, 2026-07-05)
+
+A `/grill-me` session killed this. It's a solution in search of a validated
+problem: it proposes a new sensor, a genome change, and obsoleting the bundled
+generalist, all before establishing the failure it's meant to fix. Also muddled
+"faster" vs "not crashing" (different mechanisms), and never resolved the
+oracle-vs-marking fork (exact fed curvature is privileged info; a real
+"marking" would be a coarse, range-limited, *sensed* bend-warning).
+
+Real step zero (do this before any sensor plan): diagnose the failures. Replay
+the generalist on the ~2/50 tracks it crashes and watch *how* it dies:
+
+- entered a corner too fast and couldn't steer around it → braking (which
+  look-ahead could enable) might help;
+- corner physically un-makeable at any speed (radius tighter than the car can
+  turn even slowed) → look-ahead is useless, this plan is moot;
+- a cheaper fix elsewhere (sensor blind spot, physics tuning).
+
+Only if diagnosis shows "too-fast entry, needs to brake for a corner it can't
+yet see" does a look-ahead sensor earn the right to exist. The design below is
+kept for reference only.
+
+---
+
 Goal: give the car a sense of the track's upcoming shape so it can plan (brake early for a corner it isn't next to yet). Directly targets the "floors it, never brakes" behaviour found by probing.
 
 ## Key constraint
