@@ -4,7 +4,24 @@
 
 import { rayHit, segmentsIntersect } from "./geometry";
 import { forward, type Network } from "./nn";
-import type { Track } from "./track";
+import type { Track, Wall } from "./track";
+import { WallGrid } from "./wallGrid";
+
+// One spatial grid per track, built lazily and cached. Tracks are immutable
+// once built, so a WeakMap keyed by the track object is safe and self-cleaning.
+const gridCache = new WeakMap<Track, WallGrid>();
+
+function wallGridFor(track: Track): WallGrid {
+  let grid = gridCache.get(track);
+  if (!grid) {
+    grid = new WallGrid(track.walls, track.width, track.height);
+    gridCache.set(track, grid);
+  }
+  return grid;
+}
+
+// Reused scratch array for near-car wall candidates (single-threaded).
+const candidates: Wall[] = [];
 
 // Sensor whiskers, relative to the car's heading: wide side coverage plus fine
 // forward resolution so the car can read a corner before it arrives.
@@ -90,15 +107,18 @@ export function createCar(net: Network, track: Track): Car {
   };
 }
 
-// Cast every whisker and return the nearest wall distance for each.
-function readSensors(car: Car, track: Track): number[] {
+// Cast every whisker against the near-car candidate walls and return the
+// nearest wall distance for each. Candidates are a superset of every wall
+// within SENSOR_RANGE, so the result is identical to testing all walls.
+function readSensors(car: Car, walls: Wall[], count: number): number[] {
   const out = new Array(SENSOR_ANGLES.length);
   for (let s = 0; s < SENSOR_ANGLES.length; s++) {
     const a = car.angle + SENSOR_ANGLES[s];
     const dx = Math.cos(a);
     const dy = Math.sin(a);
     let nearest = SENSOR_RANGE;
-    for (const w of track.walls) {
+    for (let i = 0; i < count; i++) {
+      const w = walls[i];
       const t = rayHit(car.x, car.y, dx, dy, w.ax, w.ay, w.bx, w.by);
       if (t < nearest) nearest = t;
     }
@@ -112,7 +132,11 @@ export function stepCar(car: Car, track: Track): void {
   if (!car.alive || car.done) return;
   car.ticks += 1;
 
-  const sensors = readSensors(car, track);
+  // Near-car walls: a single broad-phase query serves both the sensors and the
+  // collision check (the move step is far shorter than SENSOR_RANGE).
+  const nearby = wallGridFor(track).query(car.x, car.y, SENSOR_RANGE, candidates);
+
+  const sensors = readSensors(car, candidates, nearby);
   car.sensors = sensors;
 
   const inputs = new Array(SENSOR_ANGLES.length + 1);
@@ -136,7 +160,8 @@ export function stepCar(car: Car, track: Track): void {
   const nx = px + Math.cos(car.angle) * car.speed;
   const ny = py + Math.sin(car.angle) * car.speed;
 
-  for (const w of track.walls) {
+  for (let i = 0; i < nearby; i++) {
+    const w = candidates[i];
     if (segmentsIntersect(px, py, nx, ny, w.ax, w.ay, w.bx, w.by)) {
       car.alive = false;
       return;

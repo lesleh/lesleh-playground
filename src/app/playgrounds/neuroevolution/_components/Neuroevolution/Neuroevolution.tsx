@@ -32,6 +32,11 @@ import { Sparkline } from "./Sparkline";
 
 const VIEWPORT = { width: 900, height: 600 };
 const SPEEDS = [1, 2, 4, 8];
+// "Max" runs as many steps as fit in a per-frame time budget (self-scaling to
+// the machine), capped so a fast machine can't spin forever in one frame.
+const MAX_BUDGET_MS = 12;
+const MAX_STEP_CAP = 4000;
+type Speed = number | "max";
 // Flush HUD state ~10x/second rather than every frame.
 const HUD_EVERY = 6;
 // Nominal ticks per second, for turning finish-tick counts into a time.
@@ -95,7 +100,7 @@ export function Neuroevolution() {
   const configRef = useRef<SimConfig>({ ...DEFAULT_CONFIG });
 
   const pausedRef = useRef(false);
-  const speedRef = useRef(2);
+  const speedRef = useRef<Speed>(2);
   const sensorsRef = useRef(true);
   const savedGenRef = useRef(0);
 
@@ -109,7 +114,7 @@ export function Neuroevolution() {
 
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [paused, setPaused] = useState(false);
-  const [speed, setSpeed] = useState(2);
+  const [speed, setSpeed] = useState<Speed>(2);
   const [sensors, setSensors] = useState(true);
   const [mutationRate, setMutationRate] = useState(DEFAULT_CONFIG.mutationRate);
   const [varyTrack, setVaryTrack] = useState(DEFAULT_CONFIG.varyTrack);
@@ -251,8 +256,13 @@ export function Neuroevolution() {
         if (brain) {
           if (!soloCarRef.current) soloCarRef.current = createCar(brain, w.track);
           if (!pausedRef.current) {
-            for (let s = 0; s < speedRef.current; s++) {
+            const sp = speedRef.current;
+            const maxMode = sp === "max";
+            const end = maxMode ? performance.now() + MAX_BUDGET_MS : 0;
+            const cap = sp === "max" ? MAX_STEP_CAP : sp;
+            for (let s = 0; s < cap; s++) {
               const car = soloCarRef.current;
+              if (!car) break;
               stepCar(car, w.track);
               if (!car.alive || car.done) {
                 if (
@@ -262,8 +272,8 @@ export function Neuroevolution() {
                   soloBestRef.current = car.finishTicks;
                 }
                 soloCarRef.current = createCar(brain, w.track); // loop the run
-                break;
               }
+              if (maxMode && performance.now() >= end) break;
             }
           }
           const solo = soloCarRef.current;
@@ -272,8 +282,13 @@ export function Neuroevolution() {
         if (frame % HUD_EVERY === 0) flush();
       } else if (w) {
         if (!pausedRef.current) {
-          for (let s = 0; s < speedRef.current; s++) {
+          const sp = speedRef.current;
+          const maxMode = sp === "max";
+          const end = maxMode ? performance.now() + MAX_BUDGET_MS : 0;
+          const cap = sp === "max" ? MAX_STEP_CAP : sp;
+          for (let s = 0; s < cap; s++) {
             stepWorld(w, configRef.current, randRef.current);
+            if (maxMode && performance.now() >= end) break;
           }
         }
         drawWorld(ctx, w, sensorsRef.current);
@@ -295,7 +310,7 @@ export function Neuroevolution() {
     pausedRef.current = !pausedRef.current;
     setPaused(pausedRef.current);
   };
-  const pickSpeed = (s: number) => {
+  const pickSpeed = (s: Speed) => {
     speedRef.current = s;
     setSpeed(s);
   };
@@ -697,6 +712,18 @@ export function Neuroevolution() {
                     {s}×
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => pickSpeed("max")}
+                  title="Run as fast as this machine allows (fits as many steps as possible into each frame)"
+                  className={`px-2.5 py-1.5 font-readout text-[11px] uppercase tracking-[0.15em] transition-colors ${
+                    speed === "max"
+                      ? "bg-[var(--cyan)]/20 text-[var(--cyan)]"
+                      : "text-[var(--muted)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  Max
+                </button>
               </div>
             </div>
 
