@@ -466,14 +466,45 @@ export function Neuroevolution() {
               Neuro<span className="text-[var(--cyan)]">evolution</span>
             </h1>
           </div>
-          <div className="flex items-stretch gap-4">
+          <div className="flex items-end gap-4">
             <HeaderStat label="Gen" value={solo ? "—" : String(stats.generation)} />
-            <div className="w-px bg-[var(--line)]" />
-            <HeaderStat
-              label="Mode"
-              value={solo ? "Solo" : "Evolve"}
-              accent={solo ? "var(--amber)" : "var(--cyan)"}
-            />
+            <div className="w-px self-stretch bg-[var(--line)]" />
+            <div>
+              <div className="mb-1 text-right font-readout text-[9px] uppercase tracking-[0.3em] text-[var(--muted)]">
+                Mode
+              </div>
+              <div className="flex overflow-hidden rounded-sm border border-[var(--line-2)]">
+                {(
+                  [
+                    ["evolve", "Evolve"],
+                    ["solo", "Solo"],
+                  ] as const
+                ).map(([m, label]) => {
+                  const active = solo ? m === "solo" : m === "evolve";
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => {
+                        if ((m === "solo") !== solo) toggleSolo();
+                      }}
+                      title={
+                        m === "solo"
+                          ? "Race the spotlighted champion on its own"
+                          : "Evolve the population"
+                      }
+                      className={`px-3 py-1.5 font-readout text-[11px] uppercase tracking-[0.18em] transition-colors ${
+                        active
+                          ? "bg-[var(--cyan)]/20 text-[var(--cyan)]"
+                          : "text-[var(--muted)] hover:text-[var(--text)]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </header>
 
@@ -760,14 +791,6 @@ export function Neuroevolution() {
                 </button>
               ))}
             </div>
-            <div className="mx-1 h-5 w-px bg-[var(--line)]" />
-            <DeckButton
-              onClick={toggleSolo}
-              tone={solo ? "amber" : "line"}
-              title="Race the spotlighted champion on its own, looping"
-            >
-              {solo ? "Back to evolving" : "Race solo"}
-            </DeckButton>
             <div className="mx-1 h-5 w-px bg-[var(--line)]" />
             <DeckButton onClick={downloadBrain} title="Save the best brain to a file">
               ↓ Export

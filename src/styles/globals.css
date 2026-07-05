@@ -67,14 +67,16 @@
 .neuro-console {
   --ink: #07090c;
   --panel: #0d1016;
-  --line: rgba(150, 180, 205, 0.14);
-  --line-2: rgba(150, 180, 205, 0.28);
-  --text: #e9eff3;
-  --muted: rgba(233, 239, 243, 0.44);
+  /* Structural lines nudged up for visible edges; text tokens raised to clear
+     WCAG AA on the dark panels. */
+  --line: rgba(150, 180, 205, 0.2);
+  --line-2: rgba(150, 180, 205, 0.42);
+  --text: #eef3f7;
+  --muted: rgba(226, 234, 240, 0.72);
   --amber: #f7c948;
-  --cyan: #45c8d8;
-  --red: #ff5140;
-  --mint: #35d6a0;
+  --cyan: #5ad3e2;
+  --red: #ff6a5c;
+  --mint: #46e0ad;
 }
 
 @utility font-telemetry {

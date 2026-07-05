@@ -26,7 +26,7 @@ export function NetworkView({ net }: { net: Network | null }) {
 
   if (!layout) {
     return (
-      <div className="flex h-[200px] items-center justify-center font-mono text-[11px] uppercase tracking-widest text-white/30">
+      <div className="flex h-[200px] items-center justify-center font-readout text-[11px] uppercase tracking-widest text-[var(--muted)]">
         no leader yet
       </div>
     );
@@ -54,7 +54,7 @@ export function NetworkView({ net }: { net: Network | null }) {
               x={n.labelRight ? n.x + 9 : n.x - 9}
               y={n.y + 3}
               textAnchor={n.labelRight ? "start" : "end"}
-              className="fill-white/45 font-readout"
+              className="fill-white/75 font-readout"
               fontSize={7}
             >
               {n.label}
