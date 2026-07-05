@@ -18,7 +18,7 @@ Make track generation a pure function of a single integer seed, and record that 
 
 - Show the current track's seed in the telemetry/header.
 - A seed input: type a number → rebuild that exact track (fixed mode). Enables sharing ("try seed 4271").
-- Brain export meta already has room; include the track seed so a specialist file carries its home track. On import, offer to load that track too.
+- **Track seed in brain exports is specialist-only and optional.** A generalist is track-independent, so a home-track seed is meaningless for it, only offer to embed the seed when exporting a specialist (Spotlight = Track), and make it a choice (opt-in), not automatic. A generalist export carries no seed. On importing a brain that has a seed, offer to load that track too.
 
 ## Verify
 
@@ -33,6 +33,5 @@ Make track generation a pure function of a single integer seed, and record that 
 ## Unresolved
 
 - Seed representation in the UI: raw number, or a short shareable code?
-- Embed the track seed in every brain export, or only when spotlighting a specialist?
 - Vary-track rotates tracks each generation; expose those seeds or ignore (the generalist is track-independent, so it doesn't need one)?
 - New-track seed choice: incrementing counter vs random int.
