@@ -45,6 +45,19 @@ describe("stepWorld", () => {
     expect(activeCount(w)).toBe(12); // fresh population
   });
 
+  it("keeps the record-holder's brain when a new best time is set", () => {
+    const w = createWorld(config, viewport, mulberry32(11));
+    // One finisher, everyone else out, so the generation ends this step.
+    w.cars.forEach((c) => (c.alive = false));
+    w.cars[0].done = true;
+    w.cars[0].finishTicks = 500;
+    const recordNet = w.cars[0].net;
+    stepWorld(w, config, mulberry32(12));
+    expect(w.bestTicks).toBe(500);
+    expect(w.bestNet).toEqual(recordNet); // captured...
+    expect(w.bestNet).not.toBe(recordNet); // ...as a clone
+  });
+
   it("ends the generation early once every car has crashed", () => {
     const w = createWorld(config, viewport, mulberry32(6));
     const rand = mulberry32(7);

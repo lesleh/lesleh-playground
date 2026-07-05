@@ -134,13 +134,14 @@ export function Neuroevolution() {
     }));
   }, []);
 
-  // The brain currently in the spotlight: the champion in solo, else the
-  // fittest of the population.
+  // The brain to spotlight/export: the champion being raced in solo, else the
+  // record-holder (best finish so far), falling back to the current leader
+  // before anyone has finished.
   const spotlightNet = useCallback((): Network | null => {
     if (championRef.current && modeRef.current === "solo") return championRef.current;
     const w = worldRef.current;
     if (!w) return null;
-    return leader(w)?.net ?? w.cars[0]?.net ?? null;
+    return w.bestNet ?? leader(w)?.net ?? w.cars[0]?.net ?? null;
   }, []);
 
   // Start a new track. keepBrains carries the current population over (watch
@@ -161,6 +162,7 @@ export function Neuroevolution() {
           step: 0,
           bestEver: 0,
           bestTicks: 0,
+          bestNet: null,
           history: [],
           timeHistory: [],
         };
@@ -196,6 +198,7 @@ export function Neuroevolution() {
         step: 0,
         bestEver: saved.bestEver,
         bestTicks: saved.bestTicks,
+        bestNet: saved.bestNet ?? null,
         history: saved.history,
         timeHistory: saved.timeHistory ?? [],
       };
@@ -354,6 +357,7 @@ export function Neuroevolution() {
       step: 0,
       bestEver: 0,
       bestTicks: 0,
+      bestNet: null,
       history: [],
       timeHistory: [],
     };

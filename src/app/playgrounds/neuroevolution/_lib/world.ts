@@ -14,7 +14,7 @@ import {
   type EvolveConfig,
   type Scored,
 } from "./genetic";
-import { createNetwork } from "./nn";
+import { cloneNetwork, createNetwork, type Network } from "./nn";
 import { buildTrack, type Track } from "./track";
 
 export interface SimConfig extends EvolveConfig {
@@ -50,6 +50,8 @@ export interface World {
   bestEver: number;
   // Fewest ticks any car has ever taken to finish (0 = nobody has yet).
   bestTicks: number;
+  // The brain that set bestTicks — the record-holder, raced in solo / exported.
+  bestNet: Network | null;
   // Best fitness of each completed generation.
   history: number[];
   // Best finish time (ticks) of each generation, 0 if none finished. Drives the
@@ -74,6 +76,7 @@ export function createWorld(
     step: 0,
     bestEver: 0,
     bestTicks: 0,
+    bestNet: null,
     history: [],
     timeHistory: [],
   };
@@ -148,10 +151,19 @@ function endGeneration(
   world.history.push(stats.best);
   if (stats.best > world.bestEver) world.bestEver = stats.best;
 
-  const genTicks = bestFinishTicks(world);
+  // Fastest finisher this generation; keep its brain if it's an all-time record
+  // so solo/export always race the actual record-holder.
+  let recordCar: Car | null = null;
+  for (const c of world.cars) {
+    if (c.done && (!recordCar || c.finishTicks < recordCar.finishTicks)) {
+      recordCar = c;
+    }
+  }
+  const genTicks = recordCar ? recordCar.finishTicks : 0;
   world.timeHistory.push(genTicks);
-  if (genTicks > 0 && (world.bestTicks === 0 || genTicks < world.bestTicks)) {
+  if (recordCar && (world.bestTicks === 0 || genTicks < world.bestTicks)) {
     world.bestTicks = genTicks;
+    world.bestNet = cloneNetwork(recordCar.net);
   }
 
   const nets = evolve(scored, config, rand);
@@ -163,6 +175,7 @@ function endGeneration(
       rand,
     );
     world.bestTicks = 0;
+    world.bestNet = null;
   }
   world.cars = nets.map((net) => createCar(net, world.track));
   world.generation += 1;
