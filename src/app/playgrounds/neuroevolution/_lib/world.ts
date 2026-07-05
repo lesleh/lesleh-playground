@@ -32,6 +32,10 @@ export interface SimConfig extends EvolveConfig {
   // exploration (0 rounds disables it).
   stallRounds: number;
   immigrants: number;
+  // Under vary-track, how many fresh random tracks each brain is scored on per
+  // generation (worst-case-ish lexicographic selection). Higher = more general,
+  // more compute.
+  evalTracks: number;
 }
 
 export const DEFAULT_CONFIG: SimConfig = {
@@ -44,6 +48,7 @@ export const DEFAULT_CONFIG: SimConfig = {
   varyTrack: false,
   stallRounds: 12,
   immigrants: 6,
+  evalTracks: 4,
 };
 
 export interface Viewport {
@@ -137,6 +142,30 @@ export function evaluateGenerality(net: Network, battery: Track[]): number {
   return worst;
 }
 
+// Per-finish base, large enough that one more finish always outranks any
+// speed/progress gain elsewhere (speed bonus <= FINISH_TIME_BUDGET, progress
+// small), so the sum below behaves lexicographically: finish first, then speed.
+const FINISH_BASE = 1_000_000;
+
+// Lexicographic fitness over a set of tracks (higher = better): each finished
+// track is worth a big base plus a speed bonus (faster = higher); each DNF is
+// worth only the distance it reached. More finishes always wins; among equal
+// finishes, faster wins; a DNF still climbs by getting further. This is the
+// "never crash, then go fast" objective for vary-track selection.
+export function lexiFitness(net: Network, tracks: Track[]): number {
+  let total = 0;
+  for (const track of tracks) {
+    const car = createCar(net, track);
+    for (let i = 0; i < FINISH_TIME_BUDGET && car.alive && !car.done; i++) {
+      stepCar(car, track);
+    }
+    total += car.done
+      ? FINISH_BASE + (FINISH_TIME_BUDGET - car.finishTicks)
+      : car.gatesPassed;
+  }
+  return total;
+}
+
 // A car still driving: alive and not yet finished.
 function isActive(c: Car): boolean {
   return c.alive && !c.done;
@@ -198,10 +227,24 @@ function endGeneration(
   config: SimConfig,
   rand: () => number,
 ): void {
-  const scored: Scored[] = world.cars.map((c) => ({
-    net: c.net,
-    fitness: c.fitness,
-  }));
+  const dims = { width: world.track.width, height: world.track.height };
+
+  // Selection fitness. Under vary-track, score each brain on K fresh random
+  // tracks with the lexicographic (finish-then-speed) sum, so the population is
+  // bred to finish anything, not just this generation's lucky track. Otherwise
+  // use the live-race fitness. (The held-out battery is never used here.)
+  let scored: Scored[];
+  if (config.varyTrack) {
+    const evalTracks = Array.from({ length: config.evalTracks }, () =>
+      buildTrack(dims, rand),
+    );
+    scored = world.cars.map((c) => ({
+      net: c.net,
+      fitness: lexiFitness(c.net, evalTracks),
+    }));
+  } else {
+    scored = world.cars.map((c) => ({ net: c.net, fitness: c.fitness }));
+  }
   const stats = computeStats(scored);
   world.history.push(stats.best);
   if (stats.best > world.bestEver) world.bestEver = stats.best;
@@ -243,10 +286,7 @@ function endGeneration(
   // Domain randomization reshuffles the course each generation; the fastest-run
   // record only means something on a fixed track, so reset it when varying.
   if (config.varyTrack) {
-    world.track = buildTrack(
-      { width: world.track.width, height: world.track.height },
-      rand,
-    );
+    world.track = buildTrack(dims, rand);
     world.bestTicks = 0;
     world.bestNet = null;
     world.stall = 0;

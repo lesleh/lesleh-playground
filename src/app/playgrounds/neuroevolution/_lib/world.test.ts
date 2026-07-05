@@ -1,9 +1,13 @@
 import { mulberry32 } from "./geometry";
+import { BRAIN_SHAPE } from "./car";
+import { createNetwork } from "./nn";
+import { buildTrack } from "./track";
 import {
   DEFAULT_CONFIG,
   activeCount,
   createWorld,
   leader,
+  lexiFitness,
   stepWorld,
 } from "./world";
 
@@ -56,6 +60,17 @@ describe("stepWorld", () => {
     expect(w.bestTicks).toBe(500);
     expect(w.bestNet).toEqual(recordNet); // captured...
     expect(w.bestNet).not.toBe(recordNet); // ...as a clone
+  });
+
+  it("lexiFitness is deterministic and non-negative", () => {
+    const tracks = [
+      buildTrack(viewport, mulberry32(40)),
+      buildTrack(viewport, mulberry32(41)),
+    ];
+    const brain = createNetwork(BRAIN_SHAPE, mulberry32(42));
+    const a = lexiFitness(brain, tracks);
+    expect(a).toBe(lexiFitness(brain, tracks)); // deterministic
+    expect(a).toBeGreaterThanOrEqual(0);
   });
 
   it("crowns a generalist from the held-out battery each generation", () => {
