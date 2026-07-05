@@ -79,7 +79,8 @@ describe("stepWorld", () => {
     w.cars.forEach((c) => (c.alive = false)); // end the generation this step
     stepWorld(w, config, mulberry32(31));
     expect(w.generalNet).not.toBeNull();
-    expect(w.generalScore).toBeGreaterThan(0);
+    expect(w.generalScore).toBeGreaterThanOrEqual(0);
+    expect(w.generalFinishes).toBeGreaterThanOrEqual(0);
   });
 
   describe("immigrant diversity rescue", () => {

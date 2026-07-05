@@ -4,7 +4,6 @@
 import {
   BRAIN_SHAPE,
   FINISH_TIME_BUDGET,
-  LAPS_TO_FINISH,
   createCar,
   stepCar,
   type Car,
@@ -68,10 +67,13 @@ export interface World {
   // The brain that set bestTicks — the track record-holder.
   bestNet: Network | null;
   // --- Generalist champion: best across ALL tracks (a robust all-rounder) ---
-  // Worst-case cost over a fixed held-out battery for the best generaliser seen
-  // (0 = none yet; lower is better). Track-independent, so it persists.
+  // Best generaliser seen, selected on a fixed held-out battery by the
+  // lexicographic score (higher = better; worst-case is too flat to rank
+  // generalists). Track-independent, so it persists.
   generalScore: number;
   generalNet: Network | null;
+  // How many battery tracks the crowned generalist finishes (for display).
+  generalFinishes: number;
   // Generations since the last record, for the immigrant diversity rescue.
   stall: number;
   // Best fitness of each completed generation.
@@ -101,6 +103,7 @@ export function createWorld(
     bestNet: null,
     generalScore: 0,
     generalNet: null,
+    generalFinishes: 0,
     stall: 0,
     history: [],
     timeHistory: [],
@@ -110,6 +113,7 @@ export function createWorld(
 // A fixed, seeded set of held-out tracks the population never trains on — a
 // validation set for measuring how well a brain generalises.
 const BATTERY_SEEDS = [9001, 9002, 9003, 9004, 9005];
+export const BATTERY_SIZE = BATTERY_SEEDS.length;
 let batteryCache: { key: string; tracks: Track[] } | null = null;
 
 function validationBattery(width: number, height: number): Track[] {
@@ -123,47 +127,43 @@ function validationBattery(width: number, height: number): Track[] {
   return batteryCache.tracks;
 }
 
-// Worst-case cost of a brain over the battery (lower = more general): its
-// slowest finish, or a heavy penalty plus distance shortfall for any track it
-// fails to finish. Worst-case selection favours "never crashes on the unknown".
-export function evaluateGenerality(net: Network, battery: Track[]): number {
-  let worst = 0;
-  for (const track of battery) {
-    const car = createCar(net, track);
-    for (let i = 0; i < FINISH_TIME_BUDGET && car.alive && !car.done; i++) {
-      stepCar(car, track);
-    }
-    const target = LAPS_TO_FINISH * track.gates.length;
-    const cost = car.done
-      ? car.finishTicks
-      : FINISH_TIME_BUDGET + (target - car.gatesPassed);
-    if (cost > worst) worst = cost;
-  }
-  return worst;
-}
-
 // Per-finish base, large enough that one more finish always outranks any
 // speed/progress gain elsewhere (speed bonus <= FINISH_TIME_BUDGET, progress
 // small), so the sum below behaves lexicographically: finish first, then speed.
 const FINISH_BASE = 1_000_000;
 
-// Lexicographic fitness over a set of tracks (higher = better): each finished
-// track is worth a big base plus a speed bonus (faster = higher); each DNF is
-// worth only the distance it reached. More finishes always wins; among equal
-// finishes, faster wins; a DNF still climbs by getting further. This is the
-// "never crash, then go fast" objective for vary-track selection.
-export function lexiFitness(net: Network, tracks: Track[]): number {
-  let total = 0;
+export interface TrackScore {
+  // Lexicographic fitness (higher = better): each finished track is worth a big
+  // base plus a speed bonus (faster = higher); each DNF is worth only the
+  // distance reached. More finishes always wins; among equal finishes, faster
+  // wins; a DNF still climbs by getting further.
+  lexi: number;
+  // How many of the tracks were finished.
+  finishes: number;
+}
+
+export function scoreTracks(net: Network, tracks: Track[]): TrackScore {
+  let lexi = 0;
+  let finishes = 0;
   for (const track of tracks) {
     const car = createCar(net, track);
     for (let i = 0; i < FINISH_TIME_BUDGET && car.alive && !car.done; i++) {
       stepCar(car, track);
     }
-    total += car.done
-      ? FINISH_BASE + (FINISH_TIME_BUDGET - car.finishTicks)
-      : car.gatesPassed;
+    if (car.done) {
+      finishes++;
+      lexi += FINISH_BASE + (FINISH_TIME_BUDGET - car.finishTicks);
+    } else {
+      lexi += car.gatesPassed;
+    }
   }
-  return total;
+  return { lexi, finishes };
+}
+
+// The "never crash, then go fast" objective, as one number, for vary-track
+// selection.
+export function lexiFitness(net: Network, tracks: Track[]): number {
+  return scoreTracks(net, tracks).lexi;
 }
 
 // A car still driving: alive and not yet finished.
@@ -271,16 +271,26 @@ function endGeneration(
 
   const nets = evolve(scored, config, rand);
 
-  // Generalist champion (separate from the track record): score this
-  // generation's best on the held-out battery and keep whichever brain
-  // generalises best. Track-independent, so it survives track changes.
-  const score = evaluateGenerality(
-    nets[0],
-    validationBattery(world.track.width, world.track.height),
-  );
-  if (world.generalScore === 0 || score < world.generalScore) {
-    world.generalScore = score;
-    world.generalNet = cloneNetwork(nets[0]);
+  // Generalist champion (separate from the track record): pick the best of this
+  // generation's elites on the held-out battery by the lexicographic score
+  // (worst-case is too flat to tell a 4/5 generalist from a 0/5 one), and keep
+  // the best ever. Selecting the champion on held-out data doesn't leak into
+  // breeding, which uses fresh tracks.
+  const battery = validationBattery(dims.width, dims.height);
+  let bestIdx = -1;
+  let bestScore = -Infinity;
+  for (let i = 0; i < config.eliteCount && i < nets.length; i++) {
+    const s = scoreTracks(nets[i], battery);
+    if (s.lexi > bestScore) {
+      bestScore = s.lexi;
+      bestIdx = i;
+    }
+  }
+  if (bestIdx >= 0 && (world.generalNet === null || bestScore > world.generalScore)) {
+    const s = scoreTracks(nets[bestIdx], battery);
+    world.generalScore = s.lexi;
+    world.generalFinishes = s.finishes;
+    world.generalNet = cloneNetwork(nets[bestIdx]);
   }
 
   // Domain randomization reshuffles the course each generation; the fastest-run

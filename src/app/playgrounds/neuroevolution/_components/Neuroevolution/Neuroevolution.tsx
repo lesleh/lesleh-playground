@@ -5,7 +5,6 @@ import { mulberry32 } from "../../_lib/geometry";
 import type { Network } from "../../_lib/nn";
 import { clearWorld, loadWorld, saveWorld } from "../../_lib/persistence";
 import {
-  FINISH_TIME_BUDGET,
   LAPS_TO_FINISH,
   createCar,
   stepCar,
@@ -18,6 +17,7 @@ import { populationFrom } from "../../_lib/genetic";
 import { parseBrain, serializeBrain } from "../../_lib/brainIO";
 import { display, mono } from "../../_lib/fonts";
 import {
+  BATTERY_SIZE,
   DEFAULT_CONFIG,
   activeCount,
   bestFinishTicks,
@@ -54,9 +54,8 @@ interface Stats {
   genTicks: number;
   bestTicks: number;
   idealTicks: number;
-  // Generalist champion's worst-case time over the held-out battery (0 until it
-  // finishes all of them).
-  generalTicks: number;
+  // How many of the held-out battery tracks the crowned generalist finishes.
+  generalFinishes: number;
   runTimes: number[];
   leaderNet: Network | null;
   // Solo-mode fields.
@@ -76,7 +75,7 @@ const EMPTY_STATS: Stats = {
   genTicks: 0,
   bestTicks: 0,
   idealTicks: 0,
-  generalTicks: 0,
+  generalFinishes: 0,
   runTimes: [],
   leaderNet: null,
   soloLaps: 0,
@@ -85,12 +84,6 @@ const EMPTY_STATS: Stats = {
   soloLastTicks: 0,
   soloLastDone: false,
 };
-
-// The generalist "finishes all N" worst-case time, or 0 if it can't yet clear
-// every battery track.
-function generalistTicks(score: number): number {
-  return score > 0 && score < FINISH_TIME_BUDGET ? score : 0;
-}
 
 // Seconds string for a tick count ("—" when there's nothing yet).
 function secs(ticks: number): string {
@@ -142,7 +135,7 @@ export function Neuroevolution() {
         ...prev,
         mode: "solo",
         idealTicks: idealRunTicks(track),
-        generalTicks: generalistTicks(w.generalScore),
+        generalFinishes: w.generalFinishes,
         leaderNet: championRef.current,
         soloLaps: car ? Math.min(LAPS_TO_FINISH, Math.floor(car.gatesPassed / gateCount)) : 0,
         soloRunTicks: car ? car.ticks : 0,
@@ -167,7 +160,7 @@ export function Neuroevolution() {
       genTicks,
       bestTicks,
       idealTicks: idealRunTicks(w.track),
-      generalTicks: generalistTicks(w.generalScore),
+      generalFinishes: w.generalFinishes,
       runTimes: w.timeHistory.map((t) => t / 60),
       leaderNet: lead ? lead.net : null,
     }));
@@ -208,6 +201,7 @@ export function Neuroevolution() {
           // Track record is track-specific and resets; the generalist carries
           // over (it's track-independent).
           generalScore: prev.generalScore,
+          generalFinishes: prev.generalFinishes,
           generalNet: prev.generalNet,
           stall: 0,
           history: [],
@@ -249,6 +243,7 @@ export function Neuroevolution() {
         bestTicks: saved.bestTicks,
         bestNet: saved.bestNet ?? null,
         generalScore: saved.generalScore ?? 0,
+        generalFinishes: saved.generalFinishes ?? 0,
         generalNet: saved.generalNet ?? null,
         stall: 0,
         history: saved.history,
@@ -447,6 +442,7 @@ export function Neuroevolution() {
       bestTicks: 0,
       bestNet: null,
       generalScore: 0,
+      generalFinishes: 0,
       generalNet: null,
       stall: 0,
       history: [],
@@ -663,23 +659,19 @@ export function Neuroevolution() {
                   {deltaS !== null && <DeltaChip delta={deltaS} />}
                 </div>
               </div>
-              {/* Generalist: best across the held-out battery (all tracks). */}
+              {/* Generalist: finishes across the held-out battery (all tracks). */}
               <div className="flex items-center justify-between border-t border-[var(--line)] px-3 py-2.5">
                 <span
                   className="font-readout text-[9px] uppercase tracking-[0.25em] text-[var(--muted)]"
-                  title="Best worst-case time across 5 held-out tracks the population never trains on — turn on Vary track to grow this"
+                  title={`How many of ${BATTERY_SIZE} held-out tracks the crowned generalist finishes — tracks the population never trains on. Turn on Vary track to grow this`}
                 >
-                  Generalist · worst of 5
+                  Generalist · finishes
                 </span>
                 <span className="font-telemetry text-lg font-semibold tabular-nums text-[var(--cyan)]">
-                  {stats.generalTicks > 0 ? (
-                    <>
-                      {(stats.generalTicks / TICKS_PER_SEC).toFixed(1)}
-                      <span className="ml-0.5 text-[10px] text-[var(--muted)]">s</span>
-                    </>
-                  ) : (
-                    <span className="text-[var(--muted)]">—</span>
-                  )}
+                  {stats.generalFinishes}
+                  <span className="ml-0.5 text-[10px] text-[var(--muted)]">
+                    /{BATTERY_SIZE}
+                  </span>
                 </span>
               </div>
             </Panel>
