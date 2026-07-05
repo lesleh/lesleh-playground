@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { mulberry32 } from "../../_lib/geometry";
 import type { Network } from "../../_lib/nn";
 import { clearWorld, loadWorld, saveWorld } from "../../_lib/persistence";
+import { mutate } from "../../_lib/nn";
 import {
   FINISH_TIME_BUDGET,
   LAPS_TO_FINISH,
@@ -11,7 +12,7 @@ import {
   stepCar,
   type Car,
 } from "../../_lib/car";
-import { buildTrack } from "../../_lib/track";
+import { buildTrack, type Track } from "../../_lib/track";
 import { drawWorld } from "../../_lib/render";
 import { idealRunTicks } from "../../_lib/optimum";
 import { populationFrom } from "../../_lib/genetic";
@@ -37,7 +38,14 @@ const HUD_EVERY = 6;
 // Nominal ticks per second, for turning finish-tick counts into a time.
 const TICKS_PER_SEC = 60;
 
-type Mode = "evolve" | "solo";
+// Exam: three attempts on one unseen track, keep the best. Attempt 1 is the
+// champion's honest run; the rest are light variations, so best-of-three
+// actually differs run to run.
+const EXAM_ATTEMPTS = 3;
+const EXAM_MUT_RATE = 0.12;
+const EXAM_MUT_STRENGTH = 0.18;
+
+type Mode = "evolve" | "solo" | "exam";
 // Which champion the spotlight (solo / export / breed) acts on.
 type Champion = "track" | "general";
 
@@ -58,7 +66,26 @@ interface Stats {
   soloLaps: number;
   soloRunTicks: number;
   soloBestTicks: number;
+  // Exam-mode fields.
+  exam: ExamStats;
 }
+
+interface ExamStats {
+  attempt: number; // 0..EXAM_ATTEMPTS (== EXAM_ATTEMPTS means finished)
+  runTicks: number; // live time of the current attempt
+  // Per-attempt result: finish ticks, or 0 if it didn't finish (crashed).
+  results: number[];
+  bestTicks: number; // best finisher across attempts (0 if none finished)
+  idealTicks: number; // optimum for the exam track
+}
+
+const EMPTY_EXAM: ExamStats = {
+  attempt: 0,
+  runTicks: 0,
+  results: [],
+  bestTicks: 0,
+  idealTicks: 0,
+};
 
 const EMPTY_STATS: Stats = {
   mode: "evolve",
@@ -74,7 +101,17 @@ const EMPTY_STATS: Stats = {
   soloLaps: 0,
   soloRunTicks: 0,
   soloBestTicks: 0,
+  exam: EMPTY_EXAM,
 };
+
+// Best finisher time across exam attempts (0 if nobody finished).
+function examBest(results: number[]): number {
+  let best = 0;
+  for (const t of results) {
+    if (t > 0 && (best === 0 || t < best)) best = t;
+  }
+  return best;
+}
 
 // The generalist "finishes all N" worst-case time, or 0 if it can't yet clear
 // every battery track.
@@ -107,6 +144,15 @@ export function Neuroevolution() {
   const soloBestRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Exam mode: one unseen track, three attempts, keep the best.
+  const examTrackRef = useRef<Track | null>(null);
+  const examNetRef = useRef<Network | null>(null);
+  const examCarRef = useRef<Car | null>(null);
+  const examAttemptRef = useRef(0);
+  const examResultsRef = useRef<number[]>([]);
+  const examSeedRef = useRef(5000);
+  const examRandRef = useRef<() => number>(mulberry32(5000));
+
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(2);
@@ -120,6 +166,23 @@ export function Neuroevolution() {
   const flush = useCallback(() => {
     const w = worldRef.current;
     if (!w) return;
+    if (modeRef.current === "exam") {
+      const track = examTrackRef.current;
+      const car = examCarRef.current;
+      setStats((prev) => ({
+        ...prev,
+        mode: "exam",
+        leaderNet: examNetRef.current,
+        exam: {
+          attempt: examAttemptRef.current,
+          runTicks: car ? car.ticks : 0,
+          results: examResultsRef.current.slice(),
+          bestTicks: examBest(examResultsRef.current),
+          idealTicks: track ? idealRunTicks(track) : 0,
+        },
+      }));
+      return;
+    }
     if (modeRef.current === "solo") {
       const car = soloCarRef.current;
       const gateCount = w.track.gates.length;
@@ -246,7 +309,38 @@ export function Neuroevolution() {
 
     const loop = () => {
       const w = worldRef.current;
-      if (w && modeRef.current === "solo") {
+      if (w && modeRef.current === "exam") {
+        const track = examTrackRef.current;
+        const net = examNetRef.current;
+        if (track && net) {
+          if (examAttemptRef.current < EXAM_ATTEMPTS && !examCarRef.current) {
+            // Attempt 1 is the champion as-is; later attempts are variations.
+            const brain =
+              examAttemptRef.current === 0
+                ? net
+                : mutate(net, EXAM_MUT_RATE, EXAM_MUT_STRENGTH, examRandRef.current);
+            examCarRef.current = createCar(brain, track);
+          }
+          if (!pausedRef.current && examAttemptRef.current < EXAM_ATTEMPTS) {
+            for (let s = 0; s < speedRef.current; s++) {
+              const car = examCarRef.current;
+              if (!car) break;
+              stepCar(car, track);
+              if (!car.alive || car.done) {
+                examResultsRef.current[examAttemptRef.current] = car.done
+                  ? car.finishTicks
+                  : 0;
+                examAttemptRef.current += 1;
+                examCarRef.current = null; // next attempt spawns next frame
+                break;
+              }
+            }
+          }
+          const car = examCarRef.current;
+          drawWorld(ctx, { ...w, track, cars: car ? [car] : [] }, sensorsRef.current);
+        }
+        if (frame % HUD_EVERY === 0) flush();
+      } else if (w && modeRef.current === "solo") {
         const brain = championRef.current;
         if (brain) {
           if (!soloCarRef.current) soloCarRef.current = createCar(brain, w.track);
@@ -350,6 +444,47 @@ export function Neuroevolution() {
     }
   };
 
+  // Build a fresh unseen exam track; its variation RNG is a separate stream so
+  // retries produce new variations.
+  const buildExamTrack = () => {
+    examSeedRef.current += 1;
+    const s = examSeedRef.current;
+    examTrackRef.current = buildTrack(VIEWPORT, mulberry32(s));
+    examRandRef.current = mulberry32(s * 31 + 1);
+  };
+  const resetExamAttempts = () => {
+    examCarRef.current = null;
+    examAttemptRef.current = 0;
+    examResultsRef.current = [];
+  };
+
+  const enterExam = () => {
+    const net = spotlightNet();
+    if (!net) return;
+    examNetRef.current = net;
+    if (!examTrackRef.current) buildExamTrack();
+    resetExamAttempts();
+    modeRef.current = "exam";
+    setMode("exam");
+    flush();
+  };
+  const newExamTrack = () => {
+    examNetRef.current = spotlightNet();
+    buildExamTrack();
+    resetExamAttempts();
+    flush();
+  };
+  const retryExam = () => {
+    examNetRef.current = spotlightNet();
+    resetExamAttempts();
+    flush();
+  };
+  const exitExam = () => {
+    modeRef.current = "evolve";
+    setMode("evolve");
+    flush();
+  };
+
   const downloadBrain = () => {
     const net = spotlightNet();
     const w = worldRef.current;
@@ -420,10 +555,22 @@ export function Neuroevolution() {
   };
 
   const solo = mode === "solo";
+  const exam = mode === "exam";
+  const modeLabel = exam ? "Exam" : solo ? "Solo" : "Evolve";
+  const modeAccent = exam
+    ? "var(--red)"
+    : solo
+      ? "var(--amber)"
+      : "var(--cyan)";
   const shownBest = solo ? stats.soloBestTicks : stats.bestTicks;
   const deltaS =
     shownBest > 0 && stats.idealTicks > 0
       ? (shownBest - stats.idealTicks) / TICKS_PER_SEC
+      : null;
+  // Exam best vs the exam track optimum.
+  const examDelta =
+    stats.exam.bestTicks > 0 && stats.exam.idealTicks > 0
+      ? (stats.exam.bestTicks - stats.exam.idealTicks) / TICKS_PER_SEC
       : null;
 
   return (
@@ -467,13 +614,12 @@ export function Neuroevolution() {
             </h1>
           </div>
           <div className="flex items-stretch gap-4">
-            <HeaderStat label="Gen" value={solo ? "—" : String(stats.generation)} />
-            <div className="w-px bg-[var(--line)]" />
             <HeaderStat
-              label="Mode"
-              value={solo ? "Solo" : "Evolve"}
-              accent={solo ? "var(--amber)" : "var(--cyan)"}
+              label="Gen"
+              value={solo || exam ? "—" : String(stats.generation)}
             />
+            <div className="w-px bg-[var(--line)]" />
+            <HeaderStat label="Mode" value={modeLabel} accent={modeAccent} />
           </div>
         </header>
 
@@ -487,7 +633,13 @@ export function Neuroevolution() {
           {/* Track viewport */}
           <Panel
             index="01"
-            title={solo ? "Solo run" : "Track"}
+            title={
+              exam
+                ? `Exam · attempt ${Math.min(stats.exam.attempt + 1, EXAM_ATTEMPTS)}/${EXAM_ATTEMPTS}`
+                : solo
+                  ? "Solo run"
+                  : "Track"
+            }
             right={<Tag on>Live</Tag>}
             bodyClass="p-0"
             className="neuro-boot"
@@ -521,6 +673,10 @@ export function Neuroevolution() {
               bodyClass="p-0"
               style={{ animationDelay: "140ms" }}
             >
+              {exam ? (
+                <ExamTelemetry stats={stats} examDelta={examDelta} />
+              ) : (
+                <>
               <div className="grid grid-cols-2">
                 {solo ? (
                   <>
@@ -593,6 +749,8 @@ export function Neuroevolution() {
                   )}
                 </span>
               </div>
+                </>
+              )}
             </Panel>
 
             <Panel
@@ -732,6 +890,28 @@ export function Neuroevolution() {
           className="neuro-boot relative z-10 mt-4"
           style={{ animationDelay: "380ms" }}
         >
+          {exam ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <FieldLabel>Exam · unseen track · best of {EXAM_ATTEMPTS}</FieldLabel>
+              <div className="mx-1 h-5 w-px bg-[var(--line)]" />
+              <DeckButton
+                onClick={newExamTrack}
+                title="Fresh unseen track, three new attempts"
+              >
+                New track
+              </DeckButton>
+              <DeckButton onClick={retryExam} title="Same track, three fresh attempts">
+                Retry
+              </DeckButton>
+              <DeckButton
+                onClick={exitExam}
+                tone="amber"
+                title="Leave the exam, back to evolving"
+              >
+                Exit exam
+              </DeckButton>
+            </div>
+          ) : (
           <div className="flex flex-wrap items-center gap-2">
             <FieldLabel>Spotlight</FieldLabel>
             <div className="flex overflow-hidden rounded-sm border border-[var(--line-2)]">
@@ -768,6 +948,12 @@ export function Neuroevolution() {
             >
               {solo ? "Back to evolving" : "Race solo"}
             </DeckButton>
+            <DeckButton
+              onClick={enterExam}
+              title="Exam: the spotlighted champion gets three attempts on a fresh unseen track, best of three (the generalist is the one to test here)"
+            >
+              ◎ Exam
+            </DeckButton>
             <div className="mx-1 h-5 w-px bg-[var(--line)]" />
             <DeckButton onClick={downloadBrain} title="Save the best brain to a file">
               ↓ Export
@@ -792,6 +978,7 @@ export function Neuroevolution() {
               className="hidden"
             />
           </div>
+          )}
         </Panel>
       </div>
     </div>
@@ -799,6 +986,77 @@ export function Neuroevolution() {
 }
 
 /* ---------- instrument sub-components ---------- */
+
+function ExamTelemetry({
+  stats,
+  examDelta,
+}: {
+  stats: Stats;
+  examDelta: number | null;
+}) {
+  const e = stats.exam;
+  return (
+    <>
+      <div className="grid grid-cols-2">
+        <Readout label="Mode" value="Exam" accent="var(--red)" />
+        <Readout
+          label="Attempt"
+          value={e.attempt >= EXAM_ATTEMPTS ? "done" : `${e.attempt + 1}/${EXAM_ATTEMPTS}`}
+        />
+        <Readout
+          label="This run"
+          value={secs(e.runTicks)}
+          unit={e.runTicks > 0 ? "s" : ""}
+        />
+        <Readout
+          label="Best of 3"
+          value={secs(e.bestTicks)}
+          unit={e.bestTicks > 0 ? "s" : ""}
+          accent="var(--red)"
+          live={e.bestTicks > 0}
+        />
+      </div>
+      <div className="flex items-center justify-between gap-2 border-t border-[var(--line)] px-3 py-2.5">
+        <span className="font-readout text-[9px] uppercase tracking-[0.25em] text-[var(--muted)]">
+          Attempts
+        </span>
+        <div className="flex gap-1.5">
+          {Array.from({ length: EXAM_ATTEMPTS }).map((_, i) => {
+            const done = i < e.results.length;
+            const t = e.results[i];
+            const label = !done ? "—" : t > 0 ? `${(t / TICKS_PER_SEC).toFixed(1)}s` : "DNF";
+            const color = !done
+              ? "var(--muted)"
+              : t > 0
+                ? "var(--text)"
+                : "var(--red)";
+            return (
+              <span
+                key={i}
+                className="rounded-sm border px-1.5 py-0.5 font-readout text-[10px] tabular-nums"
+                style={{ borderColor: "var(--line-2)", color }}
+              >
+                {i + 1}:&nbsp;{label}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+      <div className="flex items-center justify-between border-t border-[var(--line)] px-3 py-2.5">
+        <span className="font-readout text-[9px] uppercase tracking-[0.25em] text-[var(--muted)]">
+          Track optimum
+        </span>
+        <div className="flex items-baseline gap-3">
+          <span className="font-telemetry text-lg font-semibold tabular-nums text-[var(--mint)]">
+            ≈ {secs(e.idealTicks)}
+            <span className="ml-0.5 text-[10px] text-[var(--muted)]">s</span>
+          </span>
+          {examDelta !== null && <DeltaChip delta={examDelta} />}
+        </div>
+      </div>
+    </>
+  );
+}
 
 function Corners() {
   const base = "pointer-events-none absolute h-1.5 w-1.5 border-[var(--line-2)]";
