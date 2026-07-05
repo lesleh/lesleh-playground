@@ -6,13 +6,25 @@ import { rayHit, segmentsIntersect } from "./geometry";
 import { forward, type Network } from "./nn";
 import type { Track } from "./track";
 
-// Sensor whiskers, relative to the car's heading.
-export const SENSOR_ANGLES = [-Math.PI / 3, -Math.PI / 6, 0, Math.PI / 6, Math.PI / 3];
-export const SENSOR_RANGE = 170;
+// Sensor whiskers, relative to the car's heading: wide side coverage plus fine
+// forward resolution so the car can read a corner before it arrives.
+const DEG = Math.PI / 180;
+export const SENSOR_ANGLES = [
+  -90 * DEG,
+  -45 * DEG,
+  -20 * DEG,
+  0,
+  20 * DEG,
+  45 * DEG,
+  90 * DEG,
+];
+// Longer range gives genuine look-ahead: the forward whiskers spot walls sooner,
+// so a brain can learn to brake early for a corner it can't yet be next to.
+export const SENSOR_RANGE = 260;
 
 // Network shape: one input per sensor plus current speed, two hidden layers,
 // then steering + throttle.
-export const BRAIN_SHAPE = [SENSOR_ANGLES.length + 1, 10, 8, 2];
+export const BRAIN_SHAPE = [SENSOR_ANGLES.length + 1, 12, 8, 2];
 
 // The car is deliberately overpowered for the track: top speed is high and
 // grip (turn rate) is modest, so the full-speed turn radius R* = MAX_SPEED /

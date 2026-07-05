@@ -2,13 +2,21 @@
 
 import { useMemo } from "react";
 import type { Network } from "../../_lib/nn";
+import { SENSOR_ANGLES } from "../../_lib/car";
 
 const W = 240;
 const H = 200;
 const PAD_X = 34;
 const PAD_Y = 18;
 
-const INPUT_LABELS = ["L60", "L30", "fwd", "R30", "R60", "spd"];
+// Labels track the sensor angles (L/R + degrees), then the speed input.
+const INPUT_LABELS = [
+  ...SENSOR_ANGLES.map((a) => {
+    const d = Math.round((a * 180) / Math.PI);
+    return d === 0 ? "fwd" : d < 0 ? `L${-d}` : `R${d}`;
+  }),
+  "spd",
+];
 const OUTPUT_LABELS = ["steer", "gas"];
 
 // Draws the leader's brain: nodes in columns, edges tinted by weight sign and

@@ -8,7 +8,7 @@ import type { World } from "./world";
 const KEY = "neuroevolution-world";
 // Bump when the saved shape (track/network layout/scoring/physics) changes, to
 // drop stale saves.
-const VERSION = 5;
+const VERSION = 6;
 
 interface Saved {
   version: number;
