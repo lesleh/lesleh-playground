@@ -15,6 +15,7 @@ import { drawWorld } from "../../_lib/render";
 import { idealRunTicks } from "../../_lib/optimum";
 import { populationFrom } from "../../_lib/genetic";
 import { parseBrain, serializeBrain } from "../../_lib/brainIO";
+import bundledGeneralist from "../../_brains/generalist.json";
 import { display, mono } from "../../_lib/fonts";
 import {
   BATTERY_SIZE,
@@ -410,6 +411,18 @@ export function Neuroevolution() {
     a.click();
     URL.revokeObjectURL(url);
     setIoMsg(bundleTrack ? "Brain + track exported" : "Brain exported");
+  };
+
+  // Load the pre-trained generalist that ships with the playground, so it isn't
+  // hidden behind knowing to download-then-import the file.
+  const loadBundled = () => {
+    try {
+      const { net } = parseBrain(JSON.stringify(bundledGeneralist));
+      enterSolo(net);
+      setIoMsg("Pre-trained generalist loaded — racing solo");
+    } catch (err) {
+      setIoMsg(err instanceof Error ? err.message : "Could not load brain");
+    }
   };
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -889,6 +902,12 @@ export function Neuroevolution() {
               title="Load a brain from a file and race it solo"
             >
               ↑ Import
+            </DeckButton>
+            <DeckButton
+              onClick={loadBundled}
+              title="Load the bundled pre-trained generalist and race it solo"
+            >
+              ★ Pre-trained
             </DeckButton>
             <DeckButton
               onClick={breedFromChampion}
