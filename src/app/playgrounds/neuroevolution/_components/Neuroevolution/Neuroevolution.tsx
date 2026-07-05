@@ -56,6 +56,8 @@ interface Stats {
   idealTicks: number;
   // How many of the held-out battery tracks the crowned generalist finishes.
   generalFinishes: number;
+  // Mean finish time (ticks) of the crowned generalist over the battery.
+  generalMeanTicks: number;
   runTimes: number[];
   leaderNet: Network | null;
   // Solo-mode fields.
@@ -76,6 +78,7 @@ const EMPTY_STATS: Stats = {
   bestTicks: 0,
   idealTicks: 0,
   generalFinishes: 0,
+  generalMeanTicks: 0,
   runTimes: [],
   leaderNet: null,
   soloLaps: 0,
@@ -136,6 +139,7 @@ export function Neuroevolution() {
         mode: "solo",
         idealTicks: idealRunTicks(track),
         generalFinishes: w.generalFinishes,
+        generalMeanTicks: w.generalMeanTicks,
         leaderNet: championRef.current,
         soloLaps: car ? Math.min(LAPS_TO_FINISH, Math.floor(car.gatesPassed / gateCount)) : 0,
         soloRunTicks: car ? car.ticks : 0,
@@ -161,6 +165,7 @@ export function Neuroevolution() {
       bestTicks,
       idealTicks: idealRunTicks(w.track),
       generalFinishes: w.generalFinishes,
+      generalMeanTicks: w.generalMeanTicks,
       runTimes: w.timeHistory.map((t) => t / 60),
       leaderNet: lead ? lead.net : null,
     }));
@@ -202,6 +207,7 @@ export function Neuroevolution() {
           // over (it's track-independent).
           generalScore: prev.generalScore,
           generalFinishes: prev.generalFinishes,
+          generalMeanTicks: prev.generalMeanTicks,
           generalNet: prev.generalNet,
           stall: 0,
           history: [],
@@ -244,6 +250,7 @@ export function Neuroevolution() {
         bestNet: saved.bestNet ?? null,
         generalScore: saved.generalScore ?? 0,
         generalFinishes: saved.generalFinishes ?? 0,
+        generalMeanTicks: saved.generalMeanTicks ?? 0,
         generalNet: saved.generalNet ?? null,
         stall: 0,
         history: saved.history,
@@ -443,6 +450,7 @@ export function Neuroevolution() {
       bestNet: null,
       generalScore: 0,
       generalFinishes: 0,
+      generalMeanTicks: 0,
       generalNet: null,
       stall: 0,
       history: [],
@@ -659,20 +667,28 @@ export function Neuroevolution() {
                   {deltaS !== null && <DeltaChip delta={deltaS} />}
                 </div>
               </div>
-              {/* Generalist: finishes across the held-out battery (all tracks). */}
+              {/* Generalist: finishes and avg speed across the held-out battery. */}
               <div className="flex items-center justify-between border-t border-[var(--line)] px-3 py-2.5">
                 <span
                   className="font-readout text-[9px] uppercase tracking-[0.25em] text-[var(--muted)]"
-                  title={`How many of ${BATTERY_SIZE} held-out tracks the crowned generalist finishes — tracks the population never trains on. Turn on Vary track to grow this`}
+                  title={`Across ${BATTERY_SIZE} held-out tracks the population never trains on: how many the crowned generalist finishes, and its average finish time on those. After finishes maxes out, watch the time keep dropping. Turn on Vary track to grow this`}
                 >
-                  Generalist · finishes
+                  Generalist
                 </span>
-                <span className="font-telemetry text-lg font-semibold tabular-nums text-[var(--cyan)]">
-                  {stats.generalFinishes}
-                  <span className="ml-0.5 text-[10px] text-[var(--muted)]">
-                    /{BATTERY_SIZE}
+                <div className="flex items-baseline gap-3">
+                  <span className="font-telemetry text-lg font-semibold tabular-nums text-[var(--cyan)]">
+                    {stats.generalFinishes}
+                    <span className="ml-0.5 text-[10px] text-[var(--muted)]">
+                      /{BATTERY_SIZE}
+                    </span>
                   </span>
-                </span>
+                  <span className="font-telemetry text-lg font-semibold tabular-nums text-[var(--cyan)]">
+                    {secs(stats.generalMeanTicks)}
+                    <span className="ml-0.5 text-[10px] text-[var(--muted)]">
+                      s avg
+                    </span>
+                  </span>
+                </div>
               </div>
             </Panel>
 

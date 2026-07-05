@@ -74,6 +74,9 @@ export interface World {
   generalNet: Network | null;
   // How many battery tracks the crowned generalist finishes (for display).
   generalFinishes: number;
+  // Mean finish time (ticks) of the crowned generalist over the battery tracks
+  // it finishes, 0 if none — lets speed be watched after finishes saturate.
+  generalMeanTicks: number;
   // Generations since the last record, for the immigrant diversity rescue.
   stall: number;
   // Best fitness of each completed generation.
@@ -104,6 +107,7 @@ export function createWorld(
     generalScore: 0,
     generalNet: null,
     generalFinishes: 0,
+    generalMeanTicks: 0,
     stall: 0,
     history: [],
     timeHistory: [],
@@ -111,8 +115,14 @@ export function createWorld(
 }
 
 // A fixed, seeded set of held-out tracks the population never trains on — a
-// validation set for measuring how well a brain generalises.
-const BATTERY_SEEDS = [9001, 9002, 9003, 9004, 9005];
+// validation set for measuring how well a brain generalises. Kept large enough
+// that finish-count doesn't saturate (a 5-track set hits 5/5 early and gives a
+// noisy speed signal), so crowning keeps picking the brain that's fastest across
+// many tracks, not just the one lucky on a handful.
+const BATTERY_SEEDS = [
+  9001, 9002, 9003, 9004, 9005, 9006, 9007, 9008, 9009, 9010, 9011, 9012, 9013,
+  9014, 9015, 9016, 9017, 9018, 9019, 9020,
+];
 export const BATTERY_SIZE = BATTERY_SEEDS.length;
 let batteryCache: { key: string; tracks: Track[] } | null = null;
 
@@ -140,11 +150,15 @@ export interface TrackScore {
   lexi: number;
   // How many of the tracks were finished.
   finishes: number;
+  // Mean finish time (ticks) over the finished tracks, 0 if none — the "how
+  // fast" half of the objective, for display.
+  meanTicks: number;
 }
 
 export function scoreTracks(net: Network, tracks: Track[]): TrackScore {
   let lexi = 0;
   let finishes = 0;
+  let tickSum = 0;
   for (const track of tracks) {
     const car = createCar(net, track);
     for (let i = 0; i < FINISH_TIME_BUDGET && car.alive && !car.done; i++) {
@@ -152,12 +166,13 @@ export function scoreTracks(net: Network, tracks: Track[]): TrackScore {
     }
     if (car.done) {
       finishes++;
+      tickSum += car.finishTicks;
       lexi += FINISH_BASE + (FINISH_TIME_BUDGET - car.finishTicks);
     } else {
       lexi += car.gatesPassed;
     }
   }
-  return { lexi, finishes };
+  return { lexi, finishes, meanTicks: finishes ? tickSum / finishes : 0 };
 }
 
 // The "never crash, then go fast" objective, as one number, for vary-track
@@ -290,6 +305,7 @@ function endGeneration(
     const s = scoreTracks(nets[bestIdx], battery);
     world.generalScore = s.lexi;
     world.generalFinishes = s.finishes;
+    world.generalMeanTicks = s.meanTicks;
     world.generalNet = cloneNetwork(nets[bestIdx]);
   }
 
