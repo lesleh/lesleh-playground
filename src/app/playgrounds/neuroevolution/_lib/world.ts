@@ -4,10 +4,12 @@
 import {
   BRAIN_SHAPE,
   FINISH_TIME_BUDGET,
+  LAPS_TO_FINISH,
   createCar,
   stepCar,
   type Car,
 } from "./car";
+import { mulberry32 } from "./geometry";
 import {
   computeStats,
   evolve,
@@ -55,10 +57,16 @@ export interface World {
   generation: number;
   step: number;
   bestEver: number;
-  // Fewest ticks any car has ever taken to finish (0 = nobody has yet).
+  // --- Track champion: fastest on THIS track (a specialist) ---
+  // Fewest ticks any car has taken to finish the current track (0 = none yet).
   bestTicks: number;
-  // The brain that set bestTicks — the record-holder, raced in solo / exported.
+  // The brain that set bestTicks — the track record-holder.
   bestNet: Network | null;
+  // --- Generalist champion: best across ALL tracks (a robust all-rounder) ---
+  // Worst-case cost over a fixed held-out battery for the best generaliser seen
+  // (0 = none yet; lower is better). Track-independent, so it persists.
+  generalScore: number;
+  generalNet: Network | null;
   // Generations since the last record, for the immigrant diversity rescue.
   stall: number;
   // Best fitness of each completed generation.
@@ -86,10 +94,47 @@ export function createWorld(
     bestEver: 0,
     bestTicks: 0,
     bestNet: null,
+    generalScore: 0,
+    generalNet: null,
     stall: 0,
     history: [],
     timeHistory: [],
   };
+}
+
+// A fixed, seeded set of held-out tracks the population never trains on — a
+// validation set for measuring how well a brain generalises.
+const BATTERY_SEEDS = [9001, 9002, 9003, 9004, 9005];
+let batteryCache: { key: string; tracks: Track[] } | null = null;
+
+function validationBattery(width: number, height: number): Track[] {
+  const key = `${width}x${height}`;
+  if (!batteryCache || batteryCache.key !== key) {
+    batteryCache = {
+      key,
+      tracks: BATTERY_SEEDS.map((s) => buildTrack({ width, height }, mulberry32(s))),
+    };
+  }
+  return batteryCache.tracks;
+}
+
+// Worst-case cost of a brain over the battery (lower = more general): its
+// slowest finish, or a heavy penalty plus distance shortfall for any track it
+// fails to finish. Worst-case selection favours "never crashes on the unknown".
+export function evaluateGenerality(net: Network, battery: Track[]): number {
+  let worst = 0;
+  for (const track of battery) {
+    const car = createCar(net, track);
+    for (let i = 0; i < FINISH_TIME_BUDGET && car.alive && !car.done; i++) {
+      stepCar(car, track);
+    }
+    const target = LAPS_TO_FINISH * track.gates.length;
+    const cost = car.done
+      ? car.finishTicks
+      : FINISH_TIME_BUDGET + (target - car.gatesPassed);
+    if (cost > worst) worst = cost;
+  }
+  return worst;
 }
 
 // A car still driving: alive and not yet finished.
@@ -182,6 +227,18 @@ function endGeneration(
   if (world.bestTicks > 0) world.stall = improved ? 0 : world.stall + 1;
 
   const nets = evolve(scored, config, rand);
+
+  // Generalist champion (separate from the track record): score this
+  // generation's best on the held-out battery and keep whichever brain
+  // generalises best. Track-independent, so it survives track changes.
+  const score = evaluateGenerality(
+    nets[0],
+    validationBattery(world.track.width, world.track.height),
+  );
+  if (world.generalScore === 0 || score < world.generalScore) {
+    world.generalScore = score;
+    world.generalNet = cloneNetwork(nets[0]);
+  }
 
   // Domain randomization reshuffles the course each generation; the fastest-run
   // record only means something on a fixed track, so reset it when varying.

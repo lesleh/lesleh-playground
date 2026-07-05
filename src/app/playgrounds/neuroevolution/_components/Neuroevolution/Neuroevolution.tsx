@@ -4,7 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { mulberry32 } from "../../_lib/geometry";
 import type { Network } from "../../_lib/nn";
 import { clearWorld, loadWorld, saveWorld } from "../../_lib/persistence";
-import { LAPS_TO_FINISH, createCar, stepCar, type Car } from "../../_lib/car";
+import {
+  FINISH_TIME_BUDGET,
+  LAPS_TO_FINISH,
+  createCar,
+  stepCar,
+  type Car,
+} from "../../_lib/car";
 import { buildTrack } from "../../_lib/track";
 import { drawWorld } from "../../_lib/render";
 import { idealRunTicks } from "../../_lib/optimum";
@@ -32,6 +38,8 @@ const HUD_EVERY = 6;
 const TICKS_PER_SEC = 60;
 
 type Mode = "evolve" | "solo";
+// Which champion the spotlight (solo / export / breed) acts on.
+type Champion = "track" | "general";
 
 interface Stats {
   mode: Mode;
@@ -41,6 +49,9 @@ interface Stats {
   genTicks: number;
   bestTicks: number;
   idealTicks: number;
+  // Generalist champion's worst-case time over the held-out battery (0 until it
+  // finishes all of them).
+  generalTicks: number;
   runTimes: number[];
   leaderNet: Network | null;
   // Solo-mode fields.
@@ -57,12 +68,19 @@ const EMPTY_STATS: Stats = {
   genTicks: 0,
   bestTicks: 0,
   idealTicks: 0,
+  generalTicks: 0,
   runTimes: [],
   leaderNet: null,
   soloLaps: 0,
   soloRunTicks: 0,
   soloBestTicks: 0,
 };
+
+// The generalist "finishes all N" worst-case time, or 0 if it can't yet clear
+// every battery track.
+function generalistTicks(score: number): number {
+  return score > 0 && score < FINISH_TIME_BUDGET ? score : 0;
+}
 
 // Seconds string for a tick count ("—" when there's nothing yet).
 function secs(ticks: number): string {
@@ -84,6 +102,7 @@ export function Neuroevolution() {
   // Solo mode: race one champion brain on a loop, no evolution.
   const modeRef = useRef<Mode>("evolve");
   const championRef = useRef<Network | null>(null);
+  const championKindRef = useRef<Champion>("track");
   const soloCarRef = useRef<Car | null>(null);
   const soloBestRef = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +114,7 @@ export function Neuroevolution() {
   const [mutationRate, setMutationRate] = useState(DEFAULT_CONFIG.mutationRate);
   const [varyTrack, setVaryTrack] = useState(DEFAULT_CONFIG.varyTrack);
   const [mode, setMode] = useState<Mode>("evolve");
+  const [championKind, setChampionKind] = useState<Champion>("track");
   const [ioMsg, setIoMsg] = useState("");
 
   const flush = useCallback(() => {
@@ -107,6 +127,7 @@ export function Neuroevolution() {
         ...prev,
         mode: "solo",
         idealTicks: idealRunTicks(w.track),
+        generalTicks: generalistTicks(w.generalScore),
         leaderNet: championRef.current,
         soloLaps: car ? Math.min(LAPS_TO_FINISH, Math.floor(car.gatesPassed / gateCount)) : 0,
         soloRunTicks: car ? car.ticks : 0,
@@ -129,6 +150,7 @@ export function Neuroevolution() {
       genTicks,
       bestTicks,
       idealTicks: idealRunTicks(w.track),
+      generalTicks: generalistTicks(w.generalScore),
       runTimes: w.timeHistory.map((t) => t / 60),
       leaderNet: lead ? lead.net : null,
     }));
@@ -141,6 +163,9 @@ export function Neuroevolution() {
     if (championRef.current && modeRef.current === "solo") return championRef.current;
     const w = worldRef.current;
     if (!w) return null;
+    if (championKindRef.current === "general") {
+      return w.generalNet ?? w.bestNet ?? leader(w)?.net ?? null;
+    }
     return w.bestNet ?? leader(w)?.net ?? w.cars[0]?.net ?? null;
   }, []);
 
@@ -163,6 +188,10 @@ export function Neuroevolution() {
           bestEver: 0,
           bestTicks: 0,
           bestNet: null,
+          // Track record is track-specific and resets; the generalist carries
+          // over (it's track-independent).
+          generalScore: prev.generalScore,
+          generalNet: prev.generalNet,
           stall: 0,
           history: [],
           timeHistory: [],
@@ -200,6 +229,8 @@ export function Neuroevolution() {
         bestEver: saved.bestEver,
         bestTicks: saved.bestTicks,
         bestNet: saved.bestNet ?? null,
+        generalScore: saved.generalScore ?? 0,
+        generalNet: saved.generalNet ?? null,
         stall: 0,
         history: saved.history,
         timeHistory: saved.timeHistory ?? [],
@@ -296,6 +327,18 @@ export function Neuroevolution() {
     [flush, spotlightNet],
   );
 
+  // Choose which champion the spotlight (solo / export / breed) targets. If
+  // already racing solo, re-race the newly chosen champion.
+  const pickChampion = (kind: Champion) => {
+    championKindRef.current = kind;
+    setChampionKind(kind);
+    if (modeRef.current === "solo") {
+      const w = worldRef.current;
+      const net = kind === "general" ? w?.generalNet : w?.bestNet;
+      if (net) enterSolo(net);
+    }
+  };
+
   const toggleSolo = () => {
     if (modeRef.current === "solo") {
       modeRef.current = "evolve";
@@ -360,6 +403,8 @@ export function Neuroevolution() {
       bestEver: 0,
       bestTicks: 0,
       bestNet: null,
+      generalScore: 0,
+      generalNet: null,
       stall: 0,
       history: [],
       timeHistory: [],
@@ -529,6 +574,25 @@ export function Neuroevolution() {
                   {deltaS !== null && <DeltaChip delta={deltaS} />}
                 </div>
               </div>
+              {/* Generalist: best across the held-out battery (all tracks). */}
+              <div className="flex items-center justify-between border-t border-[var(--line)] px-3 py-2.5">
+                <span
+                  className="font-readout text-[9px] uppercase tracking-[0.25em] text-[var(--muted)]"
+                  title="Best worst-case time across 5 held-out tracks the population never trains on — turn on Vary track to grow this"
+                >
+                  Generalist · worst of 5
+                </span>
+                <span className="font-telemetry text-lg font-semibold tabular-nums text-[var(--cyan)]">
+                  {stats.generalTicks > 0 ? (
+                    <>
+                      {(stats.generalTicks / TICKS_PER_SEC).toFixed(1)}
+                      <span className="ml-0.5 text-[10px] text-[var(--muted)]">s</span>
+                    </>
+                  ) : (
+                    <span className="text-[var(--muted)]">—</span>
+                  )}
+                </span>
+              </div>
             </Panel>
 
             <Panel
@@ -669,10 +733,38 @@ export function Neuroevolution() {
           style={{ animationDelay: "380ms" }}
         >
           <div className="flex flex-wrap items-center gap-2">
+            <FieldLabel>Spotlight</FieldLabel>
+            <div className="flex overflow-hidden rounded-sm border border-[var(--line-2)]">
+              {(
+                [
+                  ["track", "Track"],
+                  ["general", "All-tracks"],
+                ] as const
+              ).map(([kind, label]) => (
+                <button
+                  key={kind}
+                  type="button"
+                  onClick={() => pickChampion(kind)}
+                  title={
+                    kind === "track"
+                      ? "The fastest brain on the current track (a specialist)"
+                      : "The brain that generalises best across held-out tracks"
+                  }
+                  className={`px-2.5 py-1.5 font-readout text-[10px] uppercase tracking-[0.18em] transition-colors ${
+                    championKind === kind
+                      ? "bg-[var(--cyan)]/20 text-[var(--cyan)]"
+                      : "text-[var(--muted)] hover:text-[var(--text)]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="mx-1 h-5 w-px bg-[var(--line)]" />
             <DeckButton
               onClick={toggleSolo}
               tone={solo ? "amber" : "line"}
-              title="Race just the best brain, on its own, looping"
+              title="Race the spotlighted champion on its own, looping"
             >
               {solo ? "Back to evolving" : "Race solo"}
             </DeckButton>

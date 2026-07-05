@@ -17,8 +17,10 @@ interface Saved {
   generation: number;
   bestEver: number;
   bestTicks: number;
-  // Record-holder brain; optional so pre-existing saves still load.
+  // Champions; optional so pre-existing saves still load.
   bestNet?: Network | null;
+  generalScore?: number;
+  generalNet?: Network | null;
   history: number[];
   timeHistory: number[];
 }
@@ -33,6 +35,8 @@ export function saveWorld(world: World): void {
       bestEver: world.bestEver,
       bestTicks: world.bestTicks,
       bestNet: world.bestNet,
+      generalScore: world.generalScore,
+      generalNet: world.generalNet,
       history: world.history,
       timeHistory: world.timeHistory,
     };
