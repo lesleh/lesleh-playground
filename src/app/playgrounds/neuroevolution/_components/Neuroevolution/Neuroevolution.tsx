@@ -11,7 +11,7 @@ import {
   stepCar,
   type Car,
 } from "../../_lib/car";
-import { buildTrack } from "../../_lib/track";
+import { buildTrack, type Track } from "../../_lib/track";
 import { drawWorld } from "../../_lib/render";
 import { idealRunTicks } from "../../_lib/optimum";
 import { populationFrom } from "../../_lib/genetic";
@@ -116,6 +116,8 @@ export function Neuroevolution() {
   const soloCarRef = useRef<Car | null>(null);
   const soloBestRef = useRef(0);
   const soloLastRef = useRef({ ticks: 0, done: false });
+  // When racing an imported specialist, its own bundled track (else world.track).
+  const soloTrackRef = useRef<Track | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
@@ -126,6 +128,7 @@ export function Neuroevolution() {
   const [varyTrack, setVaryTrack] = useState(DEFAULT_CONFIG.varyTrack);
   const [mode, setMode] = useState<Mode>("evolve");
   const [championKind, setChampionKind] = useState<Champion>("track");
+  const [includeTrack, setIncludeTrack] = useState(true);
   const [ioMsg, setIoMsg] = useState("");
 
   const flush = useCallback(() => {
@@ -133,11 +136,12 @@ export function Neuroevolution() {
     if (!w) return;
     if (modeRef.current === "solo") {
       const car = soloCarRef.current;
-      const gateCount = w.track.gates.length;
+      const track = soloTrackRef.current ?? w.track;
+      const gateCount = track.gates.length;
       setStats((prev) => ({
         ...prev,
         mode: "solo",
-        idealTicks: idealRunTicks(w.track),
+        idealTicks: idealRunTicks(track),
         generalTicks: generalistTicks(w.generalScore),
         leaderNet: championRef.current,
         soloLaps: car ? Math.min(LAPS_TO_FINISH, Math.floor(car.gatesPassed / gateCount)) : 0,
@@ -218,6 +222,7 @@ export function Neuroevolution() {
       soloCarRef.current = null;
       soloBestRef.current = 0;
       soloLastRef.current = { ticks: 0, done: false };
+      soloTrackRef.current = null;
       saveWorld(world);
       flush();
     },
@@ -262,8 +267,9 @@ export function Neuroevolution() {
       const w = worldRef.current;
       if (w && modeRef.current === "solo") {
         const brain = championRef.current;
+        const track = soloTrackRef.current ?? w.track;
         if (brain) {
-          if (!soloCarRef.current) soloCarRef.current = createCar(brain, w.track);
+          if (!soloCarRef.current) soloCarRef.current = createCar(brain, track);
           if (!pausedRef.current) {
             const sp = speedRef.current;
             const maxMode = sp === "max";
@@ -272,7 +278,7 @@ export function Neuroevolution() {
             for (let s = 0; s < cap; s++) {
               const car = soloCarRef.current;
               if (!car) break;
-              stepCar(car, w.track);
+              stepCar(car, track);
               if (!car.alive || car.done) {
                 soloLastRef.current = { ticks: car.ticks, done: car.done };
                 if (
@@ -281,13 +287,13 @@ export function Neuroevolution() {
                 ) {
                   soloBestRef.current = car.finishTicks;
                 }
-                soloCarRef.current = createCar(brain, w.track); // loop the run
+                soloCarRef.current = createCar(brain, track); // loop the run
               }
               if (maxMode && performance.now() >= end) break;
             }
           }
           const solo = soloCarRef.current;
-          drawWorld(ctx, { ...w, cars: solo ? [solo] : [] }, sensorsRef.current);
+          drawWorld(ctx, { ...w, track, cars: solo ? [solo] : [] }, sensorsRef.current);
         }
         if (frame % HUD_EVERY === 0) flush();
       } else if (w) {
@@ -339,10 +345,11 @@ export function Neuroevolution() {
   };
 
   const enterSolo = useCallback(
-    (net: Network | null) => {
+    (net: Network | null, track?: Track | null) => {
       const brain = net ?? spotlightNet();
       if (!brain) return;
       championRef.current = brain;
+      soloTrackRef.current = track ?? null;
       soloCarRef.current = null;
       soloBestRef.current = 0;
       soloLastRef.current = { ticks: 0, done: false };
@@ -381,17 +388,26 @@ export function Neuroevolution() {
     const w = worldRef.current;
     if (!net) return;
     const runTicks = modeRef.current === "solo" ? soloBestRef.current : w?.bestTicks ?? 0;
-    const text = serializeBrain(net, {
-      generation: w?.generation,
-      runSeconds: runTicks ? runTicks / TICKS_PER_SEC : undefined,
-    });
+    // A specialist can bundle its home track (opt-in); a generalist never does.
+    const bundleTrack =
+      championKind === "track" && includeTrack
+        ? soloTrackRef.current ?? w?.track ?? null
+        : null;
+    const text = serializeBrain(
+      net,
+      {
+        generation: w?.generation,
+        runSeconds: runTicks ? runTicks / TICKS_PER_SEC : undefined,
+      },
+      bundleTrack,
+    );
     const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `neuro-brain-gen${w?.generation ?? 0}.json`;
+    a.download = `neuro-brain-${championKind}-gen${w?.generation ?? 0}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setIoMsg("Brain exported");
+    setIoMsg(bundleTrack ? "Brain + track exported" : "Brain exported");
   };
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -400,8 +416,9 @@ export function Neuroevolution() {
     if (!file) return;
     file.text().then((text) => {
       try {
-        enterSolo(parseBrain(text));
-        setIoMsg("Brain loaded — racing solo");
+        const { net, track } = parseBrain(text);
+        enterSolo(net, track); // race on its bundled track if it has one
+        setIoMsg(track ? "Brain + track loaded — racing solo" : "Brain loaded — racing solo");
       } catch (err) {
         setIoMsg(err instanceof Error ? err.message : "Could not load brain");
       }
@@ -845,9 +862,20 @@ export function Neuroevolution() {
               ))}
             </div>
             <div className="mx-1 h-5 w-px bg-[var(--line)]" />
-            <DeckButton onClick={downloadBrain} title="Save the best brain to a file">
+            <DeckButton
+              onClick={downloadBrain}
+              title="Save the best brain to a file (a specialist can bundle its track)"
+            >
               ↓ Export
             </DeckButton>
+            {championKind === "track" && (
+              <Switch
+                on={includeTrack}
+                onClick={() => setIncludeTrack((v) => !v)}
+                label="with track"
+                title="Bundle this specialist's exact track in the export, so it stays reproducible"
+              />
+            )}
             <DeckButton
               onClick={() => fileInputRef.current?.click()}
               title="Load a brain from a file and race it solo"

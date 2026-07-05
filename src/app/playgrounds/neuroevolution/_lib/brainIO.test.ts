@@ -3,14 +3,23 @@ import { join } from "path";
 import { BRAIN_SHAPE } from "./car";
 import { mulberry32 } from "./geometry";
 import { createNetwork } from "./nn";
+import { buildTrack } from "./track";
 import { parseBrain, serializeBrain } from "./brainIO";
 
 const net = createNetwork(BRAIN_SHAPE, mulberry32(1));
 
 describe("brain round-trip", () => {
-  it("parses back a serialized brain identically", () => {
+  it("parses back a serialized brain identically (no track)", () => {
     const parsed = parseBrain(serializeBrain(net, { generation: 5 }));
-    expect(parsed).toEqual(net);
+    expect(parsed.net).toEqual(net);
+    expect(parsed.track).toBeNull();
+  });
+
+  it("round-trips a bundled specialist track", () => {
+    const track = buildTrack({ width: 900, height: 600 }, mulberry32(9));
+    const parsed = parseBrain(serializeBrain(net, {}, track));
+    expect(parsed.net).toEqual(net);
+    expect(parsed.track).toEqual(track);
   });
 });
 
@@ -38,7 +47,7 @@ describe("parseBrain validation", () => {
 describe("bundled generalist", () => {
   it("loads and matches the current network shape", () => {
     const text = readFileSync(join(__dirname, "../_brains/generalist.json"), "utf8");
-    const net = parseBrain(text); // throws if shape drifts from BRAIN_SHAPE
+    const { net } = parseBrain(text); // throws if shape drifts from BRAIN_SHAPE
     const shape = [net.layers[0].inSize, ...net.layers.map((l) => l.outSize)];
     expect(shape).toEqual(BRAIN_SHAPE);
   });
