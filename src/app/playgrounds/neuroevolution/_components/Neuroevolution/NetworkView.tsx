@@ -33,20 +33,20 @@ export function NetworkView({ net }: { net: Network | null }) {
           y1={e.y1}
           x2={e.x2}
           y2={e.y2}
-          stroke={e.positive ? "#38bdf8" : "#ef3d2f"}
+          stroke={e.positive ? "#45c8d8" : "#ff5140"}
           strokeWidth={e.width}
           strokeOpacity={e.opacity}
         />
       ))}
       {layout.nodes.map((n, i) => (
         <g key={i}>
-          <circle cx={n.x} cy={n.y} r={5} fill="#0d0d0d" stroke="#fffef5" strokeWidth={1.5} />
+          <circle cx={n.x} cy={n.y} r={4.5} fill="#0d1016" stroke="rgba(233,239,243,0.55)" strokeWidth={1.25} />
           {n.label && (
             <text
               x={n.labelRight ? n.x + 9 : n.x - 9}
               y={n.y + 3}
               textAnchor={n.labelRight ? "start" : "end"}
-              className="fill-white/45 font-mono"
+              className="fill-white/45 font-readout"
               fontSize={7}
             >
               {n.label}

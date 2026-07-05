@@ -10,6 +10,7 @@ import { drawWorld } from "../../_lib/render";
 import { idealRunTicks } from "../../_lib/optimum";
 import { populationFrom } from "../../_lib/genetic";
 import { parseBrain, serializeBrain } from "../../_lib/brainIO";
+import { display, mono } from "../../_lib/fonts";
 import {
   DEFAULT_CONFIG,
   activeCount,
@@ -63,9 +64,9 @@ const EMPTY_STATS: Stats = {
   soloBestTicks: 0,
 };
 
-function formatTime(ticks: number): string {
-  if (ticks <= 0) return "—";
-  return `${(ticks / TICKS_PER_SEC).toFixed(1)}s`;
+// Seconds string for a tick count ("—" when there's nothing yet).
+function secs(ticks: number): string {
+  return ticks > 0 ? (ticks / TICKS_PER_SEC).toFixed(1) : "—";
 }
 
 export function Neuroevolution() {
@@ -316,7 +317,7 @@ export function Neuroevolution() {
     a.download = `neuro-brain-gen${w?.generation ?? 0}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setIoMsg("Brain downloaded");
+    setIoMsg("Brain exported");
   };
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,91 +367,191 @@ export function Neuroevolution() {
     setIoMsg("Seeded a fresh population from the champion");
   };
 
-  return (
-    <div className="min-h-full bg-[#0d0d0d] text-[#fffef5]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
-        {/* Header */}
-        <header className="mb-6">
-          <div className="mb-4 h-1 bg-[#f7c948]" />
-          <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.3em] text-white/40">
-            genetic algorithm · no training data
-          </p>
-          <h1 className="font-roboto-slab text-[clamp(2.5rem,8vw,4.5rem)] font-black leading-[0.85] tracking-tight">
-            Neuroevolution
-          </h1>
-          <p className="mt-3 max-w-2xl font-mono text-sm leading-relaxed text-white/50">
-            Every car is steered by its own little neural network, racing to
-            finish {LAPS_TO_FINISH} laps as fast as it can. The quickest breed
-            the next generation, with mutations. Nobody tells them how to drive;
-            the track does. Watch the lap times keep dropping.
-          </p>
-        </header>
+  const solo = mode === "solo";
+  const shownBest = solo ? stats.soloBestTicks : stats.bestTicks;
+  const deltaS =
+    shownBest > 0 && stats.idealTicks > 0
+      ? (shownBest - stats.idealTicks) / TICKS_PER_SEC
+      : null;
 
-        <div className="grid gap-4 lg:grid-cols-[1.9fr_1fr]">
-          {/* Canvas */}
-          <div className="overflow-hidden rounded-lg border-[3px] border-white/15">
-            <canvas
-              ref={canvasRef}
-              width={VIEWPORT.width}
-              height={VIEWPORT.height}
-              className="block h-auto w-full"
+  return (
+    <div
+      className={`${display.variable} ${mono.variable} neuro-console h-full overflow-y-auto`}
+      style={{
+        backgroundColor: "var(--ink)",
+        color: "var(--text)",
+        backgroundImage:
+          "linear-gradient(rgba(150,180,205,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(150,180,205,0.045) 1px, transparent 1px), radial-gradient(130% 90% at 50% -10%, rgba(69,200,216,0.07), transparent 55%)",
+        backgroundSize: "46px 46px, 46px 46px, 100% 100%",
+      }}
+    >
+      <div className="relative mx-auto max-w-6xl px-4 py-6 sm:py-8">
+        {/* One-time boot scanline sweep */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <div
+            className="h-24 w-full"
+            style={{
+              background:
+                "linear-gradient(to bottom, transparent, rgba(69,200,216,0.10), transparent)",
+              animation: "neuro-sweep 1.1s ease-out 0.1s both",
+            }}
+          />
+        </div>
+
+        {/* Header */}
+        <header
+          className="neuro-boot relative z-10 mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-[var(--line)] pb-3"
+          style={{ animationDelay: "0ms" }}
+        >
+          <div>
+            <div className="mb-2 flex items-center gap-2 font-readout text-[10px] uppercase tracking-[0.35em] text-[var(--muted)]">
+              <LED on={!paused} color="var(--mint)" />
+              Genetic drive model
+              <span className="text-[var(--line-2)]">·</span>
+              <span className="text-[var(--muted)]">no training data</span>
+            </div>
+            <h1 className="font-telemetry text-[clamp(2rem,6vw,3.4rem)] font-bold uppercase leading-[0.85] tracking-tight">
+              Neuro<span className="text-[var(--cyan)]">evolution</span>
+            </h1>
+          </div>
+          <div className="flex items-stretch gap-4">
+            <HeaderStat label="Gen" value={solo ? "—" : String(stats.generation)} />
+            <div className="w-px bg-[var(--line)]" />
+            <HeaderStat
+              label="Mode"
+              value={solo ? "Solo" : "Evolve"}
+              accent={solo ? "var(--amber)" : "var(--cyan)"}
             />
           </div>
+        </header>
 
-          {/* Side panel */}
+        <p className="neuro-boot relative z-10 mb-5 max-w-2xl font-readout text-[11px] leading-relaxed text-[var(--muted)]" style={{ animationDelay: "40ms" }}>
+          Each car drives with its own neural network, racing to finish{" "}
+          {LAPS_TO_FINISH} laps flat out. The fastest breed the next generation,
+          with mutations. Nobody teaches them the line — the track does.
+        </p>
+
+        <div className="relative z-10 grid gap-4 lg:grid-cols-[1.9fr_1fr]">
+          {/* Track viewport */}
+          <Panel
+            index="01"
+            title={solo ? "Solo run" : "Track"}
+            right={<Tag on>Live</Tag>}
+            bodyClass="p-0"
+            className="neuro-boot"
+            style={{ animationDelay: "80ms" }}
+          >
+            <div className="relative">
+              <canvas
+                ref={canvasRef}
+                width={VIEWPORT.width}
+                height={VIEWPORT.height}
+                className="block h-auto w-full"
+              />
+              {/* CRT scanlines */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-40 mix-blend-overlay"
+                aria-hidden
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 3px)",
+                }}
+              />
+            </div>
+          </Panel>
+
+          {/* Side stack */}
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/15 bg-white/15">
-              {stats.mode === "solo" ? (
-                <>
-                  <Stat label="Mode" value="Solo" />
-                  <Stat label="Laps" value={`${stats.soloLaps} / ${LAPS_TO_FINISH}`} />
-                  <Stat label="This run" value={formatTime(stats.soloRunTicks)} />
-                  <Stat
-                    label="Best run"
-                    value={formatTime(stats.soloBestTicks)}
-                    sub={`${LAPS_TO_FINISH} laps`}
-                  />
-                </>
-              ) : (
-                <>
-                  <Stat label="Generation" value={String(stats.generation)} />
-                  <Stat label="Driving" value={`${stats.active} / ${stats.pop}`} />
-                  <Stat label="This gen" value={formatTime(stats.genTicks)} />
-                  <Stat
-                    label="Fastest run"
-                    value={formatTime(stats.bestTicks)}
-                    sub={`${LAPS_TO_FINISH} laps`}
-                  />
-                </>
-              )}
-            </div>
+            <Panel
+              index="02"
+              title="Telemetry"
+              className="neuro-boot"
+              bodyClass="p-0"
+              style={{ animationDelay: "140ms" }}
+            >
+              <div className="grid grid-cols-2">
+                {solo ? (
+                  <>
+                    <Readout label="Mode" value="Solo" accent="var(--amber)" />
+                    <Readout
+                      label="Laps"
+                      value={`${stats.soloLaps}/${LAPS_TO_FINISH}`}
+                    />
+                    <Readout
+                      label="This run"
+                      value={secs(stats.soloRunTicks)}
+                      unit={stats.soloRunTicks > 0 ? "s" : ""}
+                    />
+                    <Readout
+                      label="Best run"
+                      value={secs(stats.soloBestTicks)}
+                      unit={stats.soloBestTicks > 0 ? "s" : ""}
+                      accent="var(--amber)"
+                      live={stats.soloBestTicks > 0}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Readout label="Generation" value={String(stats.generation)} />
+                    <Readout label="Driving" value={`${stats.active}/${stats.pop}`} />
+                    <Readout
+                      label="This gen"
+                      value={secs(stats.genTicks)}
+                      unit={stats.genTicks > 0 ? "s" : ""}
+                    />
+                    <Readout
+                      label="Fastest"
+                      value={secs(stats.bestTicks)}
+                      unit={stats.bestTicks > 0 ? "s" : ""}
+                      accent="var(--amber)"
+                      live={stats.bestTicks > 0}
+                    />
+                  </>
+                )}
+              </div>
+              {/* Target + delta */}
+              <div className="flex items-center justify-between border-t border-[var(--line)] px-3 py-2.5">
+                <span className="font-readout text-[9px] uppercase tracking-[0.25em] text-[var(--muted)]">
+                  Track optimum
+                </span>
+                <div className="flex items-baseline gap-3">
+                  <span className="font-telemetry text-lg font-semibold tabular-nums text-[var(--mint)]">
+                    ≈ {secs(stats.idealTicks)}
+                    <span className="ml-0.5 text-[10px] text-[var(--muted)]">s</span>
+                  </span>
+                  {deltaS !== null && <DeltaChip delta={deltaS} />}
+                </div>
+              </div>
+            </Panel>
 
-            {/* Physics-limit target for this exact track. */}
-            <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/[0.03] px-3 py-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-                Track optimum
-              </span>
-              <span
-                className="font-roboto-slab text-lg font-black tabular-nums text-[#34d399]"
-                title="Estimated fastest possible run at the car's physical limits on this track"
-              >
-                ≈ {formatTime(stats.idealTicks)}
-              </span>
-            </div>
-
-            <Panel title="Best run time / generation (green = optimum)">
+            <Panel
+              index="03"
+              title="Lap time / generation"
+              right={
+                <span className="font-readout text-[9px] uppercase tracking-[0.2em] text-[var(--mint)]">
+                  — optimum
+                </span>
+              }
+              className="neuro-boot"
+              style={{ animationDelay: "200ms" }}
+            >
               <Sparkline data={stats.runTimes} optimum={stats.idealTicks / 60} />
             </Panel>
 
-            <Panel title="Leader's brain">
+            <Panel
+              index="04"
+              title="Leader schematic"
+              className="neuro-boot"
+              style={{ animationDelay: "260ms" }}
+            >
               <NetworkView net={stats.leaderNet} />
-              <div className="mt-2 flex items-center justify-center gap-4 font-mono text-[9px] uppercase tracking-widest text-white/40">
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-3" style={{ background: "#38bdf8" }} />
+              <div className="mt-2 flex items-center justify-center gap-4 font-readout text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-2 w-3 rounded-[1px] bg-[var(--cyan)]" />
                   excite
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="inline-block h-2 w-3" style={{ background: "#ef3d2f" }} />
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-2 w-3 rounded-[1px] bg-[var(--red)]" />
                   inhibit
                 </span>
               </div>
@@ -458,192 +559,383 @@ export function Neuroevolution() {
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-white/15 bg-white/[0.03] p-3">
-          <button
-            type="button"
-            onClick={togglePause}
-            className="rounded-md border-[3px] border-[#f7c948] bg-[#f7c948] px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-black transition-transform hover:-translate-y-0.5"
-          >
-            {paused ? "Play" : "Pause"}
-          </button>
+        {/* Control deck */}
+        <Panel
+          index="05"
+          title="Control deck"
+          className="neuro-boot relative z-10 mt-4"
+          style={{ animationDelay: "320ms" }}
+        >
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            {/* Transport */}
+            <button
+              type="button"
+              onClick={togglePause}
+              aria-label={paused ? "Play" : "Pause"}
+              className="flex h-10 w-10 items-center justify-center rounded-sm border border-[var(--amber)] bg-[var(--amber)] text-black transition hover:brightness-110"
+            >
+              {paused ? <PlayIcon /> : <PauseIcon />}
+            </button>
 
-          <div className="flex overflow-hidden rounded-md border border-white/20">
-            {SPEEDS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => pickSpeed(s)}
-                className={`px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
-                  speed === s ? "bg-white/90 text-black" : "text-white/70 hover:bg-white/10"
-                }`}
-              >
-                {s}×
-              </button>
-            ))}
-          </div>
+            {/* Speed */}
+            <div className="flex items-center gap-2">
+              <FieldLabel>Speed</FieldLabel>
+              <div className="flex overflow-hidden rounded-sm border border-[var(--line-2)]">
+                {SPEEDS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => pickSpeed(s)}
+                    className={`px-2.5 py-1.5 font-readout text-[11px] tabular-nums transition-colors ${
+                      speed === s
+                        ? "bg-[var(--cyan)]/20 text-[var(--cyan)]"
+                        : "text-[var(--muted)] hover:text-[var(--text)]"
+                    }`}
+                  >
+                    {s}×
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          <label className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-widest text-white/60">
-            Mutation
-            <input
-              type="range"
-              min={0}
-              max={0.5}
-              step={0.01}
-              value={mutationRate}
-              onChange={(e) => changeMutation(Number(e.target.value))}
-              className="w-28 accent-[#f7c948]"
+            {/* Mutation */}
+            <div className="flex items-center gap-2">
+              <FieldLabel>Mutation</FieldLabel>
+              <input
+                type="range"
+                min={0}
+                max={0.5}
+                step={0.01}
+                value={mutationRate}
+                onChange={(e) => changeMutation(Number(e.target.value))}
+                className="neuro-range w-28"
+                style={{ ["--pct" as string]: `${(mutationRate / 0.5) * 100}%` }}
+              />
+              <span className="w-9 font-readout text-[11px] tabular-nums text-[var(--text)]">
+                {mutationRate.toFixed(2)}
+              </span>
+            </div>
+
+            <Switch on={sensors} onClick={toggleSensors} label="Sensors" />
+            <Switch
+              on={varyTrack}
+              onClick={toggleVary}
+              label="Vary track"
+              title="Fresh track every generation, so cars learn to drive in general instead of memorising one track"
             />
-            <span className="w-8 tabular-nums text-white/80">
-              {mutationRate.toFixed(2)}
-            </span>
-          </label>
 
-          <button
-            type="button"
-            onClick={toggleSensors}
-            aria-pressed={sensors}
-            className={`rounded-md border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
-              sensors
-                ? "border-white/40 bg-white/10 text-white"
-                : "border-white/20 text-white/50 hover:bg-white/5"
-            }`}
-          >
-            Sensors
-          </button>
-
-          <button
-            type="button"
-            onClick={toggleVary}
-            aria-pressed={varyTrack}
-            title="Generate a fresh track every generation, so cars learn to drive in general instead of memorising one track"
-            className={`rounded-md border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
-              varyTrack
-                ? "border-white/40 bg-white/10 text-white"
-                : "border-white/20 text-white/50 hover:bg-white/5"
-            }`}
-          >
-            Vary track
-          </button>
-
-          <div className="ml-auto flex gap-2">
-            <button
-              type="button"
-              onClick={() => startWorld(true)}
-              title="Keep the current brains, drop them on a brand-new track"
-              className="rounded-md border border-white/20 px-4 py-2 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:bg-white hover:text-black"
-            >
-              New track
-            </button>
-            <button
-              type="button"
-              onClick={() => startWorld(false)}
-              title="New track and a fresh population of random brains"
-              className="rounded-md border border-[#ef3d2f]/60 px-4 py-2 font-mono text-xs uppercase tracking-widest text-[#ef3d2f] transition-colors hover:bg-[#ef3d2f] hover:text-black"
-            >
-              Fresh start
-            </button>
+            <div className="ml-auto flex gap-2">
+              <DeckButton
+                onClick={() => startWorld(true)}
+                title="Keep the current brains, drop them on a brand-new track"
+              >
+                New track
+              </DeckButton>
+              <DeckButton
+                onClick={() => startWorld(false)}
+                title="New track and a fresh population of random brains"
+                tone="danger"
+              >
+                Fresh start
+              </DeckButton>
+            </div>
           </div>
-        </div>
 
-        <p className="mt-2 font-mono text-[10px] uppercase tracking-widest text-white/30">
-          auto-saves · refresh resumes · new track keeps the brains · fresh start wipes them
-          {varyTrack ? " · varying track each generation" : ""}
-        </p>
+          <p className="mt-3 border-t border-[var(--line)] pt-2.5 font-readout text-[9px] uppercase tracking-[0.2em] text-[var(--muted)]">
+            auto-saves · refresh resumes · new track keeps the brains · fresh start wipes them
+            {varyTrack ? " · varying track each generation" : ""}
+          </p>
+        </Panel>
 
-        {/* Champion: spotlight, save/load, or breed from the best brain */}
-        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-white/15 bg-white/[0.03] p-3">
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-            Champion
-          </span>
-          <button
-            type="button"
-            onClick={toggleSolo}
-            aria-pressed={mode === "solo"}
-            title="Race just the best brain, on its own, looping"
-            className={`rounded-md border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
-              mode === "solo"
-                ? "border-[#f7c948] bg-[#f7c948] text-black"
-                : "border-white/20 text-white/70 hover:bg-white/10"
-            }`}
-          >
-            {mode === "solo" ? "Back to evolving" : "Race solo"}
-          </button>
-          <button
-            type="button"
-            onClick={downloadBrain}
-            title="Save the best brain to a file"
-            className="rounded-md border border-white/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:bg-white hover:text-black"
-          >
-            Download
-          </button>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            title="Load a brain from a file and race it solo"
-            className="rounded-md border border-white/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:bg-white hover:text-black"
-          >
-            Upload
-          </button>
-          <button
-            type="button"
-            onClick={breedFromChampion}
-            title="Start a fresh population evolved from this brain"
-            className="rounded-md border border-white/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:bg-white hover:text-black"
-          >
-            Breed from it
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            onChange={onFile}
-            className="hidden"
-          />
-          {ioMsg && (
-            <span className="ml-auto font-mono text-[10px] tracking-widest text-[#34d399]">
-              {ioMsg}
-            </span>
-          )}
-        </div>
+        {/* Garage / champion */}
+        <Panel
+          index="06"
+          title="Garage · champion"
+          right={
+            ioMsg ? (
+              <span className="font-readout text-[9px] uppercase tracking-[0.2em] text-[var(--mint)]">
+                {ioMsg}
+              </span>
+            ) : undefined
+          }
+          className="neuro-boot relative z-10 mt-4"
+          style={{ animationDelay: "380ms" }}
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <DeckButton
+              onClick={toggleSolo}
+              tone={solo ? "amber" : "line"}
+              title="Race just the best brain, on its own, looping"
+            >
+              {solo ? "Back to evolving" : "Race solo"}
+            </DeckButton>
+            <div className="mx-1 h-5 w-px bg-[var(--line)]" />
+            <DeckButton onClick={downloadBrain} title="Save the best brain to a file">
+              ↓ Export
+            </DeckButton>
+            <DeckButton
+              onClick={() => fileInputRef.current?.click()}
+              title="Load a brain from a file and race it solo"
+            >
+              ↑ Import
+            </DeckButton>
+            <DeckButton
+              onClick={breedFromChampion}
+              title="Start a fresh population evolved from this brain"
+            >
+              ⤳ Breed from it
+            </DeckButton>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={onFile}
+              className="hidden"
+            />
+          </div>
+        </Panel>
       </div>
     </div>
   );
 }
 
-function Stat({
+/* ---------- instrument sub-components ---------- */
+
+function Corners() {
+  const base = "pointer-events-none absolute h-1.5 w-1.5 border-[var(--line-2)]";
+  return (
+    <>
+      <span className={`${base} left-0 top-0 border-l border-t`} />
+      <span className={`${base} right-0 top-0 border-r border-t`} />
+      <span className={`${base} bottom-0 left-0 border-b border-l`} />
+      <span className={`${base} bottom-0 right-0 border-b border-r`} />
+    </>
+  );
+}
+
+function Panel({
+  index,
+  title,
+  right,
+  children,
+  className = "",
+  bodyClass = "p-3",
+  style,
+}: {
+  index?: string;
+  title?: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  bodyClass?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <section
+      className={`relative rounded-sm border border-[var(--line)] bg-[var(--panel)] ${className}`}
+      style={style}
+    >
+      <Corners />
+      {(title || right) && (
+        <div className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3 py-2">
+          <div className="flex items-center gap-2 font-readout text-[10px] uppercase tracking-[0.28em] text-[var(--muted)]">
+            {index && <span className="text-[var(--cyan)]/70">{index}</span>}
+            {title}
+          </div>
+          {right}
+        </div>
+      )}
+      <div className={bodyClass}>{children}</div>
+    </section>
+  );
+}
+
+function Readout({
   label,
   value,
-  sub,
+  unit,
+  accent = "var(--text)",
+  live = false,
 }: {
   label: string;
   value: string;
-  sub?: string;
+  unit?: string;
+  accent?: string;
+  live?: boolean;
 }) {
   return (
-    <div className="bg-[#0d0d0d] px-3 py-3">
-      <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+    <div className="border-b border-r border-[var(--line)] px-3 py-3 [&:nth-child(2n)]:border-r-0 [&:nth-last-child(-n+2)]:border-b-0">
+      <div className="mb-1.5 flex items-center gap-1.5 font-readout text-[9px] uppercase tracking-[0.22em] text-[var(--muted)]">
+        {live && (
+          <span
+            className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--red)] text-[var(--red)]"
+            style={{ animation: "neuro-pulse 1.5s ease-in-out infinite" }}
+          />
+        )}
         {label}
       </div>
-      <div className="font-roboto-slab text-2xl font-black leading-tight tabular-nums">
-        {value}
+      <div className="flex items-baseline gap-1">
+        <span
+          className="font-telemetry text-[1.7rem] font-bold leading-none tabular-nums"
+          style={{ color: accent }}
+        >
+          {value}
+        </span>
+        {unit && (
+          <span className="font-readout text-[11px] text-[var(--muted)]">{unit}</span>
+        )}
       </div>
-      {sub && (
-        <div className="font-mono text-[10px] uppercase tracking-widest text-[#f7c948]/80">
-          {sub}
-        </div>
-      )}
     </div>
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function DeltaChip({ delta }: { delta: number }) {
+  const tone =
+    delta <= 0.5 ? "var(--mint)" : delta <= 1.5 ? "var(--amber)" : "var(--muted)";
+  const sign = delta >= 0 ? "+" : "−";
   return (
-    <div className="rounded-lg border border-white/15 bg-white/[0.03] p-3">
-      <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-        {title}
+    <span
+      className="rounded-sm border px-1.5 py-0.5 font-readout text-[10px] tabular-nums"
+      style={{ borderColor: tone, color: tone }}
+    >
+      Δ {sign}
+      {Math.abs(delta).toFixed(1)}s
+    </span>
+  );
+}
+
+function HeaderStat({
+  label,
+  value,
+  accent = "var(--text)",
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
+  return (
+    <div className="text-right">
+      <div className="font-readout text-[9px] uppercase tracking-[0.3em] text-[var(--muted)]">
+        {label}
       </div>
-      {children}
+      <div
+        className="font-telemetry text-xl font-semibold uppercase leading-tight tabular-nums"
+        style={{ color: accent }}
+      >
+        {value}
+      </div>
     </div>
+  );
+}
+
+function LED({ on, color = "var(--mint)" }: { on: boolean; color?: string }) {
+  return (
+    <span
+      className="inline-block h-2 w-2 rounded-full"
+      style={{
+        background: on ? color : "var(--muted)",
+        color,
+        animation: on ? "neuro-pulse 1.8s ease-in-out infinite" : "none",
+      }}
+    />
+  );
+}
+
+function Tag({ children, on }: { children: React.ReactNode; on?: boolean }) {
+  return (
+    <span className="flex items-center gap-1.5 font-readout text-[9px] uppercase tracking-[0.25em] text-[var(--muted)]">
+      {on && <LED on color="var(--red)" />}
+      {children}
+    </span>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-readout text-[9px] uppercase tracking-[0.22em] text-[var(--muted)]">
+      {children}
+    </span>
+  );
+}
+
+function Switch({
+  on,
+  onClick,
+  label,
+  title,
+}: {
+  on: boolean;
+  onClick: () => void;
+  label: string;
+  title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      title={title}
+      className="flex items-center gap-2 font-readout text-[10px] uppercase tracking-[0.2em]"
+    >
+      <span
+        className={`relative h-4 w-7 rounded-sm border transition-colors ${
+          on ? "border-[var(--cyan)] bg-[var(--cyan)]/20" : "border-[var(--line-2)]"
+        }`}
+      >
+        <span
+          className={`absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-[1px] transition-all ${
+            on
+              ? "left-[calc(100%-0.8rem)] bg-[var(--cyan)]"
+              : "left-0.5 bg-[var(--muted)]"
+          }`}
+        />
+      </span>
+      <span className={on ? "text-[var(--text)]" : "text-[var(--muted)]"}>{label}</span>
+    </button>
+  );
+}
+
+function DeckButton({
+  onClick,
+  title,
+  children,
+  tone = "line",
+}: {
+  onClick: () => void;
+  title?: string;
+  children: React.ReactNode;
+  tone?: "line" | "danger" | "amber";
+}) {
+  const tones: Record<string, string> = {
+    line: "border-[var(--line-2)] text-[var(--muted)] hover:border-[var(--cyan)] hover:text-[var(--text)]",
+    danger: "border-[var(--red)]/50 text-[var(--red)] hover:bg-[var(--red)] hover:text-black",
+    amber: "border-[var(--amber)] bg-[var(--amber)] text-black hover:brightness-110",
+  };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className={`rounded-sm border px-3 py-2 font-readout text-[10px] uppercase tracking-[0.2em] transition-colors ${tones[tone]}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden>
+      <path d="M2 1.5v9l8-4.5z" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden>
+      <rect x="2" y="1.5" width="3" height="9" />
+      <rect x="7" y="1.5" width="3" height="9" />
+    </svg>
   );
 }
