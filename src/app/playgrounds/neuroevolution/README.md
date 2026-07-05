@@ -13,12 +13,12 @@ A population of cars, each steered by its own small neural network, learns to dr
 The playground tracks two separate best brains, because "fastest here" and "best everywhere" are different things:
 
 - **Track champion** is the fastest brain on the current track. A specialist. It tends to beat the estimated track optimum by cutting a tight, track-specific racing line, and it often crashes when dropped on a track it has never seen.
-- **Generalist** is the brain with the best worst-case time across a fixed held-out battery of five tracks the population never trains on (a validation set). It drives a safe, robust line that works anywhere, a little slower than a specialist but far less likely to crash. Turn on **Vary track** to grow one.
+- **Generalist** is the brain with the best score across a fixed held-out battery of twenty tracks the population never trains on (a validation set). Brains are ranked lexicographically: finishing the most tracks wins first, then fastest average time breaks the tie. It drives a robust line that works anywhere while still pushing for pace. Turn on **Vary track** to grow one.
 
 The **Spotlight** selector chooses which champion the solo / export / breed controls act on.
 
 ## Bundled generalist
 
-`_brains/generalist.json` is a pre-trained generalist (generation 443). Dropped cold onto fresh, never-seen tracks it finishes **48 of 50** (mean 16.5s, worst 22.2s). It is tuned for robustness: the priority is finishing without crashing, not the fastest possible lap.
+`_brains/generalist.json` is a pre-trained generalist (generation 355). Dropped cold onto fresh, never-seen tracks it finishes **50 of 50** (mean 15.9s, worst 19.3s), averaging within ~2% of the estimated optimum lap time. It is both robust and quick: it clears tracks it has never seen without crashing, close to the fastest line a specialist would take.
 
 To try it: open the playground, click **Import** in the Garage row, and choose this file (download the raw file from the repo first). It loads straight into a solo race so you can watch it handle new tracks.
