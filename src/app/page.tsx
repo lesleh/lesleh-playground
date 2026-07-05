@@ -24,6 +24,7 @@ import { MemoryPreview } from "./playgrounds/memory/Preview";
 import { SimonPreview } from "./playgrounds/simon/Preview";
 import { ChickenCrossingPreview } from "./playgrounds/chicken-crossing/Preview";
 import { WhackAMolePreview } from "./playgrounds/whack-a-mole/Preview";
+import { NeuroevolutionPreview } from "./playgrounds/neuroevolution/Preview";
 
 type Category =
   | "Games"
@@ -183,6 +184,15 @@ const playgrounds = [
     description: "Play Connect 4 against an AlphaZero-style AI trained via self-play.",
     href: "/playgrounds/connect-four",
     preview: ConnectFourPreview,
+    category: "AI",
+  },
+  {
+    id: "neuroevolution",
+    title: "Neuroevolution",
+    description:
+      "A population of cars grow neural-net brains via a genetic algorithm, learning to drive a track live. No training data, just survival of the fittest.",
+    href: "/playgrounds/neuroevolution",
+    preview: NeuroevolutionPreview,
     category: "AI",
   },
   {

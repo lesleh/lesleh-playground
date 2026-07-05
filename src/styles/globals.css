@@ -62,6 +62,119 @@
   100% { transform: scale(1) rotate(-3deg); }
 }
 
+/* --- Neuroevolution: telemetry console --- */
+
+.neuro-console {
+  --ink: #07090c;
+  --panel: #0d1016;
+  --line: rgba(150, 180, 205, 0.14);
+  --line-2: rgba(150, 180, 205, 0.28);
+  --text: #e9eff3;
+  --muted: rgba(233, 239, 243, 0.44);
+  --amber: #f7c948;
+  --cyan: #45c8d8;
+  --red: #ff5140;
+  --mint: #35d6a0;
+}
+
+@utility font-telemetry {
+  font-family: var(--font-neuro-display), "Chakra Petch", ui-sans-serif, system-ui,
+    sans-serif;
+}
+
+@utility font-readout {
+  font-family: var(--font-neuro-mono), ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* Panels boot in on load, staggered via inline animation-delay. */
+@keyframes neuro-boot {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.neuro-boot {
+  opacity: 0;
+  animation: neuro-boot 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* A steady instrument blink for status LEDs. */
+@keyframes neuro-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+/* A soft glow pulse for "recording"/live markers. */
+@keyframes neuro-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 currentColor;
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 7px 1px currentColor;
+  }
+}
+
+/* One-time scanline sweep across the console on load. */
+@keyframes neuro-sweep {
+  0% {
+    transform: translateY(-10%);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(2200%);
+    opacity: 0;
+  }
+}
+
+/* Custom instrument slider. Fill driven by --pct set inline. */
+.neuro-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--amber) var(--pct, 0%),
+    rgba(150, 180, 205, 0.18) var(--pct, 0%)
+  );
+  cursor: pointer;
+}
+
+.neuro-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 16px;
+  background: var(--amber);
+  border: 1px solid #000;
+  clip-path: polygon(50% 0, 100% 30%, 100% 100%, 0 100%, 0 30%);
+}
+
+.neuro-range::-moz-range-thumb {
+  width: 10px;
+  height: 16px;
+  border: 1px solid #000;
+  background: var(--amber);
+  clip-path: polygon(50% 0, 100% 30%, 100% 100%, 0 100%, 0 30%);
+}
+
 /* --- Lottery: "The Midnight Draw" --- */
 
 @utility font-marquee {
