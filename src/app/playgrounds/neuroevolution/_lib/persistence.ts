@@ -8,7 +8,7 @@ import type { World } from "./world";
 const KEY = "neuroevolution-world";
 // Bump when the saved shape (track/network layout/scoring/physics) changes, to
 // drop stale saves.
-const VERSION = 6;
+const VERSION = 8;
 
 interface Saved {
   version: number;
@@ -20,6 +20,8 @@ interface Saved {
   // Champions; optional so pre-existing saves still load.
   bestNet?: Network | null;
   generalScore?: number;
+  generalFinishes?: number;
+  generalMeanTicks?: number;
   generalNet?: Network | null;
   history: number[];
   timeHistory: number[];
@@ -36,6 +38,8 @@ export function saveWorld(world: World): void {
       bestTicks: world.bestTicks,
       bestNet: world.bestNet,
       generalScore: world.generalScore,
+      generalFinishes: world.generalFinishes,
+      generalMeanTicks: world.generalMeanTicks,
       generalNet: world.generalNet,
       history: world.history,
       timeHistory: world.timeHistory,
