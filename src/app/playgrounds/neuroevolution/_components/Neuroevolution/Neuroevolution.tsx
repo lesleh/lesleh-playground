@@ -163,6 +163,7 @@ export function Neuroevolution() {
           bestEver: 0,
           bestTicks: 0,
           bestNet: null,
+          stall: 0,
           history: [],
           timeHistory: [],
         };
@@ -199,6 +200,7 @@ export function Neuroevolution() {
         bestEver: saved.bestEver,
         bestTicks: saved.bestTicks,
         bestNet: saved.bestNet ?? null,
+        stall: 0,
         history: saved.history,
         timeHistory: saved.timeHistory ?? [],
       };
@@ -358,6 +360,7 @@ export function Neuroevolution() {
       bestEver: 0,
       bestTicks: 0,
       bestNet: null,
+      stall: 0,
       history: [],
       timeHistory: [],
     };

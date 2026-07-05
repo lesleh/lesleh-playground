@@ -58,6 +58,37 @@ describe("stepWorld", () => {
     expect(w.bestNet).not.toBe(recordNet); // ...as a clone
   });
 
+  describe("immigrant diversity rescue", () => {
+    // A world with a record in place and everyone else crashed, so each step
+    // ends the generation with no new record (progress is stalled).
+    const stalledWorld = (seed: number) => {
+      const w = createWorld(
+        { ...config, stallRounds: 3, immigrants: 4 },
+        viewport,
+        mulberry32(seed),
+      );
+      w.bestTicks = 500; // pretend a record already exists to beat
+      w.cars.forEach((c) => (c.alive = false));
+      return w;
+    };
+    const stalledConfig = { ...config, stallRounds: 3, immigrants: 4 };
+
+    it("counts stalled generations while nothing beats the record", () => {
+      const w = stalledWorld(20);
+      stepWorld(w, stalledConfig, mulberry32(21));
+      expect(w.stall).toBe(1);
+    });
+
+    it("injects immigrants and resets the counter once stalled long enough", () => {
+      const w = stalledWorld(22);
+      w.stall = stalledConfig.stallRounds - 1; // one step from the threshold
+      stepWorld(w, stalledConfig, mulberry32(23));
+      // Reset to 0 here only happens when the immigrant burst fires (no record
+      // was set), so this confirms the injection triggered.
+      expect(w.stall).toBe(0);
+    });
+  });
+
   it("ends the generation early once every car has crashed", () => {
     const w = createWorld(config, viewport, mulberry32(6));
     const rand = mulberry32(7);

@@ -25,6 +25,11 @@ export interface SimConfig extends EvolveConfig {
   // generation, so the population is selected for driving in general rather
   // than for one specific layout.
   varyTrack: boolean;
+  // Diversity rescue: after this many generations with no new record, replace
+  // the weakest `immigrants` bred slots with fresh random brains to re-open
+  // exploration (0 rounds disables it).
+  stallRounds: number;
+  immigrants: number;
 }
 
 export const DEFAULT_CONFIG: SimConfig = {
@@ -35,6 +40,8 @@ export const DEFAULT_CONFIG: SimConfig = {
   mutationStrength: 0.4,
   maxSteps: FINISH_TIME_BUDGET,
   varyTrack: false,
+  stallRounds: 12,
+  immigrants: 6,
 };
 
 export interface Viewport {
@@ -52,6 +59,8 @@ export interface World {
   bestTicks: number;
   // The brain that set bestTicks — the record-holder, raced in solo / exported.
   bestNet: Network | null;
+  // Generations since the last record, for the immigrant diversity rescue.
+  stall: number;
   // Best fitness of each completed generation.
   history: number[];
   // Best finish time (ticks) of each generation, 0 if none finished. Drives the
@@ -77,6 +86,7 @@ export function createWorld(
     bestEver: 0,
     bestTicks: 0,
     bestNet: null,
+    stall: 0,
     history: [],
     timeHistory: [],
   };
@@ -161,12 +171,18 @@ function endGeneration(
   }
   const genTicks = recordCar ? recordCar.finishTicks : 0;
   world.timeHistory.push(genTicks);
+  let improved = false;
   if (recordCar && (world.bestTicks === 0 || genTicks < world.bestTicks)) {
     world.bestTicks = genTicks;
     world.bestNet = cloneNetwork(recordCar.net);
+    improved = true;
   }
 
+  // Track how long lap-time progress has stalled, once there's a record to beat.
+  if (world.bestTicks > 0) world.stall = improved ? 0 : world.stall + 1;
+
   const nets = evolve(scored, config, rand);
+
   // Domain randomization reshuffles the course each generation; the fastest-run
   // record only means something on a fixed track, so reset it when varying.
   if (config.varyTrack) {
@@ -176,7 +192,19 @@ function endGeneration(
     );
     world.bestTicks = 0;
     world.bestNet = null;
+    world.stall = 0;
   }
+
+  // Diversity rescue: after a long stall, replace the weakest bred slots (never
+  // the elites) with fresh random brains, then reset so bursts stay spaced out.
+  if (config.immigrants > 0 && world.stall >= config.stallRounds) {
+    const start = Math.max(config.eliteCount, nets.length - config.immigrants);
+    for (let i = start; i < nets.length; i++) {
+      nets[i] = createNetwork(BRAIN_SHAPE, rand);
+    }
+    world.stall = 0;
+  }
+
   world.cars = nets.map((net) => createCar(net, world.track));
   world.generation += 1;
   world.step = 0;
