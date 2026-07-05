@@ -1,6 +1,12 @@
 import { mulberry32 } from "./geometry";
 import { createNetwork, type Network } from "./nn";
-import { computeStats, evolve, tournament, type Scored } from "./genetic";
+import {
+  computeStats,
+  evolve,
+  populationFrom,
+  tournament,
+  type Scored,
+} from "./genetic";
 
 function population(fitnesses: number[]): Scored[] {
   return fitnesses.map((fitness, i) => ({
@@ -54,6 +60,17 @@ describe("tournament", () => {
     let i = 0;
     const rand = () => seq[i++];
     expect(tournament(pop, 3, rand)).toBe(pop[4].net);
+  });
+});
+
+describe("populationFrom", () => {
+  it("keeps one exact clone of the seed and fills the rest", () => {
+    const seed = createNetwork([2, 2], mulberry32(1));
+    const pop = populationFrom(seed, 6, 0.5, 0.3, mulberry32(2));
+    expect(pop).toHaveLength(6);
+    expect(pop[0]).toEqual(seed); // first is an untouched clone
+    expect(pop[0]).not.toBe(seed); // but a copy, not the same reference
+    expect(pop[1]).not.toEqual(seed); // the rest are mutated
   });
 });
 

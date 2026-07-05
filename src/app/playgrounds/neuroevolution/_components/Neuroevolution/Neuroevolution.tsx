@@ -4,11 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { mulberry32 } from "../../_lib/geometry";
 import type { Network } from "../../_lib/nn";
 import { clearWorld, loadWorld, saveWorld } from "../../_lib/persistence";
-import { createCar } from "../../_lib/car";
+import { LAPS_TO_FINISH, createCar, stepCar, type Car } from "../../_lib/car";
 import { buildTrack } from "../../_lib/track";
 import { drawWorld } from "../../_lib/render";
-import { LAPS_TO_FINISH } from "../../_lib/car";
 import { idealRunTicks } from "../../_lib/optimum";
+import { populationFrom } from "../../_lib/genetic";
+import { parseBrain, serializeBrain } from "../../_lib/brainIO";
 import {
   DEFAULT_CONFIG,
   activeCount,
@@ -29,7 +30,10 @@ const HUD_EVERY = 6;
 // Nominal ticks per second, for turning finish-tick counts into a time.
 const TICKS_PER_SEC = 60;
 
+type Mode = "evolve" | "solo";
+
 interface Stats {
+  mode: Mode;
   generation: number;
   active: number;
   pop: number;
@@ -38,9 +42,14 @@ interface Stats {
   idealTicks: number;
   runTimes: number[];
   leaderNet: Network | null;
+  // Solo-mode fields.
+  soloLaps: number;
+  soloRunTicks: number;
+  soloBestTicks: number;
 }
 
 const EMPTY_STATS: Stats = {
+  mode: "evolve",
   generation: 1,
   active: 0,
   pop: DEFAULT_CONFIG.populationSize,
@@ -49,6 +58,9 @@ const EMPTY_STATS: Stats = {
   idealTicks: 0,
   runTimes: [],
   leaderNet: null,
+  soloLaps: 0,
+  soloRunTicks: 0,
+  soloBestTicks: 0,
 };
 
 function formatTime(ticks: number): string {
@@ -68,23 +80,48 @@ export function Neuroevolution() {
   const sensorsRef = useRef(true);
   const savedGenRef = useRef(0);
 
+  // Solo mode: race one champion brain on a loop, no evolution.
+  const modeRef = useRef<Mode>("evolve");
+  const championRef = useRef<Network | null>(null);
+  const soloCarRef = useRef<Car | null>(null);
+  const soloBestRef = useRef(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState(2);
   const [sensors, setSensors] = useState(true);
   const [mutationRate, setMutationRate] = useState(DEFAULT_CONFIG.mutationRate);
   const [varyTrack, setVaryTrack] = useState(DEFAULT_CONFIG.varyTrack);
+  const [mode, setMode] = useState<Mode>("evolve");
+  const [ioMsg, setIoMsg] = useState("");
 
   const flush = useCallback(() => {
     const w = worldRef.current;
     if (!w) return;
+    if (modeRef.current === "solo") {
+      const car = soloCarRef.current;
+      const gateCount = w.track.gates.length;
+      setStats((prev) => ({
+        ...prev,
+        mode: "solo",
+        idealTicks: idealRunTicks(w.track),
+        leaderNet: championRef.current,
+        soloLaps: car ? Math.min(LAPS_TO_FINISH, Math.floor(car.gatesPassed / gateCount)) : 0,
+        soloRunTicks: car ? car.ticks : 0,
+        soloBestTicks: soloBestRef.current,
+      }));
+      return;
+    }
     const lead = leader(w);
     const genTicks = bestFinishTicks(w);
     const bestTicks =
       genTicks > 0 && (w.bestTicks === 0 || genTicks < w.bestTicks)
         ? genTicks
         : w.bestTicks;
-    setStats({
+    setStats((prev) => ({
+      ...prev,
+      mode: "evolve",
       generation: w.generation,
       active: activeCount(w),
       pop: w.cars.length,
@@ -93,7 +130,16 @@ export function Neuroevolution() {
       idealTicks: idealRunTicks(w.track),
       runTimes: w.timeHistory.map((t) => t / 60),
       leaderNet: lead ? lead.net : null,
-    });
+    }));
+  }, []);
+
+  // The brain currently in the spotlight: the champion in solo, else the
+  // fittest of the population.
+  const spotlightNet = useCallback((): Network | null => {
+    if (championRef.current && modeRef.current === "solo") return championRef.current;
+    const w = worldRef.current;
+    if (!w) return null;
+    return leader(w)?.net ?? w.cars[0]?.net ?? null;
   }, []);
 
   // Start a new track. keepBrains carries the current population over (watch
@@ -122,6 +168,9 @@ export function Neuroevolution() {
       }
       worldRef.current = world;
       savedGenRef.current = world.generation;
+      // A new track invalidates the solo run (times are track-specific).
+      soloCarRef.current = null;
+      soloBestRef.current = 0;
       saveWorld(world);
       flush();
     },
@@ -160,7 +209,31 @@ export function Neuroevolution() {
 
     const loop = () => {
       const w = worldRef.current;
-      if (w) {
+      if (w && modeRef.current === "solo") {
+        const brain = championRef.current;
+        if (brain) {
+          if (!soloCarRef.current) soloCarRef.current = createCar(brain, w.track);
+          if (!pausedRef.current) {
+            for (let s = 0; s < speedRef.current; s++) {
+              const car = soloCarRef.current;
+              stepCar(car, w.track);
+              if (!car.alive || car.done) {
+                if (
+                  car.done &&
+                  (soloBestRef.current === 0 || car.finishTicks < soloBestRef.current)
+                ) {
+                  soloBestRef.current = car.finishTicks;
+                }
+                soloCarRef.current = createCar(brain, w.track); // loop the run
+                break;
+              }
+            }
+          }
+          const solo = soloCarRef.current;
+          drawWorld(ctx, { ...w, cars: solo ? [solo] : [] }, sensorsRef.current);
+        }
+        if (frame % HUD_EVERY === 0) flush();
+      } else if (w) {
         if (!pausedRef.current) {
           for (let s = 0; s < speedRef.current; s++) {
             stepWorld(w, configRef.current, randRef.current);
@@ -203,6 +276,96 @@ export function Neuroevolution() {
     setVaryTrack(next);
   };
 
+  const enterSolo = useCallback(
+    (net: Network | null) => {
+      const brain = net ?? spotlightNet();
+      if (!brain) return;
+      championRef.current = brain;
+      soloCarRef.current = null;
+      soloBestRef.current = 0;
+      modeRef.current = "solo";
+      setMode("solo");
+      flush();
+    },
+    [flush, spotlightNet],
+  );
+
+  const toggleSolo = () => {
+    if (modeRef.current === "solo") {
+      modeRef.current = "evolve";
+      setMode("evolve");
+      soloCarRef.current = null;
+      flush();
+    } else {
+      enterSolo(null);
+    }
+  };
+
+  const downloadBrain = () => {
+    const net = spotlightNet();
+    const w = worldRef.current;
+    if (!net) return;
+    const runTicks = modeRef.current === "solo" ? soloBestRef.current : w?.bestTicks ?? 0;
+    const text = serializeBrain(net, {
+      generation: w?.generation,
+      runSeconds: runTicks ? runTicks / TICKS_PER_SEC : undefined,
+    });
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `neuro-brain-gen${w?.generation ?? 0}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setIoMsg("Brain downloaded");
+  };
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-uploading the same file later
+    if (!file) return;
+    file.text().then((text) => {
+      try {
+        enterSolo(parseBrain(text));
+        setIoMsg("Brain loaded — racing solo");
+      } catch (err) {
+        setIoMsg(err instanceof Error ? err.message : "Could not load brain");
+      }
+    });
+  };
+
+  const breedFromChampion = () => {
+    const w = worldRef.current;
+    const net = spotlightNet();
+    if (!w || !net) return;
+    clearWorld();
+    const cfg = configRef.current;
+    const cars = populationFrom(
+      net,
+      cfg.populationSize,
+      cfg.mutationRate,
+      cfg.mutationStrength,
+      randRef.current,
+    ).map((n) => createCar(n, w.track));
+    const world: World = {
+      track: w.track,
+      cars,
+      generation: 1,
+      step: 0,
+      bestEver: 0,
+      bestTicks: 0,
+      history: [],
+      timeHistory: [],
+    };
+    worldRef.current = world;
+    savedGenRef.current = 1;
+    soloCarRef.current = null;
+    modeRef.current = "evolve";
+    setMode("evolve");
+    saveWorld(world);
+    flush();
+    setIoMsg("Seeded a fresh population from the champion");
+  };
+
   return (
     <div className="min-h-full bg-[#0d0d0d] text-[#fffef5]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
@@ -237,14 +400,29 @@ export function Neuroevolution() {
           {/* Side panel */}
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-white/15 bg-white/15">
-              <Stat label="Generation" value={String(stats.generation)} />
-              <Stat label="Driving" value={`${stats.active} / ${stats.pop}`} />
-              <Stat label="This gen" value={formatTime(stats.genTicks)} />
-              <Stat
-                label="Fastest run"
-                value={formatTime(stats.bestTicks)}
-                sub={`${LAPS_TO_FINISH} laps`}
-              />
+              {stats.mode === "solo" ? (
+                <>
+                  <Stat label="Mode" value="Solo" />
+                  <Stat label="Laps" value={`${stats.soloLaps} / ${LAPS_TO_FINISH}`} />
+                  <Stat label="This run" value={formatTime(stats.soloRunTicks)} />
+                  <Stat
+                    label="Best run"
+                    value={formatTime(stats.soloBestTicks)}
+                    sub={`${LAPS_TO_FINISH} laps`}
+                  />
+                </>
+              ) : (
+                <>
+                  <Stat label="Generation" value={String(stats.generation)} />
+                  <Stat label="Driving" value={`${stats.active} / ${stats.pop}`} />
+                  <Stat label="This gen" value={formatTime(stats.genTicks)} />
+                  <Stat
+                    label="Fastest run"
+                    value={formatTime(stats.bestTicks)}
+                    sub={`${LAPS_TO_FINISH} laps`}
+                  />
+                </>
+              )}
             </div>
 
             {/* Physics-limit target for this exact track. */}
@@ -372,6 +550,62 @@ export function Neuroevolution() {
           auto-saves · refresh resumes · new track keeps the brains · fresh start wipes them
           {varyTrack ? " · varying track each generation" : ""}
         </p>
+
+        {/* Champion: spotlight, save/load, or breed from the best brain */}
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-white/15 bg-white/[0.03] p-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+            Champion
+          </span>
+          <button
+            type="button"
+            onClick={toggleSolo}
+            aria-pressed={mode === "solo"}
+            title="Race just the best brain, on its own, looping"
+            className={`rounded-md border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors ${
+              mode === "solo"
+                ? "border-[#f7c948] bg-[#f7c948] text-black"
+                : "border-white/20 text-white/70 hover:bg-white/10"
+            }`}
+          >
+            {mode === "solo" ? "Back to evolving" : "Race solo"}
+          </button>
+          <button
+            type="button"
+            onClick={downloadBrain}
+            title="Save the best brain to a file"
+            className="rounded-md border border-white/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:bg-white hover:text-black"
+          >
+            Download
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            title="Load a brain from a file and race it solo"
+            className="rounded-md border border-white/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:bg-white hover:text-black"
+          >
+            Upload
+          </button>
+          <button
+            type="button"
+            onClick={breedFromChampion}
+            title="Start a fresh population evolved from this brain"
+            className="rounded-md border border-white/20 px-3 py-2 font-mono text-xs uppercase tracking-widest text-white/70 transition-colors hover:bg-white hover:text-black"
+          >
+            Breed from it
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={onFile}
+            className="hidden"
+          />
+          {ioMsg && (
+            <span className="ml-auto font-mono text-[10px] tracking-widest text-[#34d399]">
+              {ioMsg}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

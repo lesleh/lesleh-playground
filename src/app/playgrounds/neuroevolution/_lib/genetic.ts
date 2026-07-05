@@ -3,6 +3,22 @@
 
 import { cloneNetwork, crossover, mutate, type Network } from "./nn";
 
+// Build a population seeded from a single brain: one exact clone plus mutated
+// copies. Used to start (or resume) evolution from a saved/uploaded champion.
+export function populationFrom(
+  net: Network,
+  size: number,
+  mutationRate: number,
+  mutationStrength: number,
+  rand: () => number,
+): Network[] {
+  const out: Network[] = [cloneNetwork(net)];
+  while (out.length < size) {
+    out.push(mutate(net, mutationRate, mutationStrength, rand));
+  }
+  return out;
+}
+
 export interface Scored {
   net: Network;
   fitness: number;
