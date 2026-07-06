@@ -25,6 +25,7 @@ import { SimonPreview } from "./playgrounds/simon/Preview";
 import { ChickenCrossingPreview } from "./playgrounds/chicken-crossing/Preview";
 import { WhackAMolePreview } from "./playgrounds/whack-a-mole/Preview";
 import { NeuroevolutionPreview } from "./playgrounds/neuroevolution/Preview";
+import { EvolvingWalkersPreview } from "./playgrounds/evolving-walkers/Preview";
 
 type Category =
   | "Games"
@@ -193,6 +194,15 @@ const playgrounds = [
       "A population of cars grow neural-net brains via a genetic algorithm, learning to drive a track live. No training data, just survival of the fittest.",
     href: "/playgrounds/neuroevolution",
     preview: NeuroevolutionPreview,
+    category: "AI",
+  },
+  {
+    id: "evolving-walkers",
+    title: "Evolving Walkers",
+    description:
+      "A population of jointed creatures evolve neural-net brains via a genetic algorithm, learning to walk across the ground live. No training data, just survival of the fittest.",
+    href: "/playgrounds/evolving-walkers",
+    preview: EvolvingWalkersPreview,
     category: "AI",
   },
   {
