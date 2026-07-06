@@ -101,3 +101,37 @@ export function crossover(a: Network, b: Network, rand: () => number): Network {
 export function genomeLength(net: Network): number {
   return net.layers.reduce((n, l) => n + l.w.length + l.b.length, 0);
 }
+
+// Number of weights a network of the given shape holds.
+export function weightCount(shape: Shape): number {
+  let n = 0;
+  for (let i = 0; i < shape.length - 1; i++) n += shape[i] * shape[i + 1] + shape[i + 1];
+  return n;
+}
+
+// Flatten every weight and bias into one vector (row-major, layer by layer),
+// and the inverse: rebuild a network of `shape` from such a vector. Lets an
+// optimiser treat the controller as a plain point in weight space.
+export function flattenWeights(net: Network): number[] {
+  const out: number[] = [];
+  for (const l of net.layers) {
+    for (const w of l.w) out.push(w);
+    for (const b of l.b) out.push(b);
+  }
+  return out;
+}
+
+export function netFromWeights(shape: Shape, weights: number[]): Network {
+  const layers: Layer[] = [];
+  let i = 0;
+  for (let li = 0; li < shape.length - 1; li++) {
+    const inSize = shape[li];
+    const outSize = shape[li + 1];
+    const w = new Array(inSize * outSize);
+    const b = new Array(outSize);
+    for (let k = 0; k < w.length; k++) w[k] = weights[i++];
+    for (let k = 0; k < b.length; k++) b[k] = weights[i++];
+    layers.push({ inSize, outSize, w, b });
+  }
+  return { layers };
+}
