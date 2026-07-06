@@ -5,6 +5,7 @@ import {
   createWalker,
   genomeFromWeights,
   randomGenome,
+  referenceControl,
   stepWalker,
 } from "./creature";
 import { mulberry32 } from "./geometry";
@@ -53,6 +54,22 @@ describe("stepWalker", () => {
     expect(w.fitness).toBeGreaterThanOrEqual(0);
     expect(Number.isFinite(w.fitness)).toBe(true);
     expect(Number.isFinite(w.torso.getPosition().x)).toBe(true);
+  });
+
+  // The invariant the whole playground rests on: the hand-authored stride,
+  // tracked directly (no network), must actually walk this body.
+  it("walks forward upright when driven by the reference stride", () => {
+    const w = createWalker(randomGenome(mulberry32(1)), 0);
+    w.control = referenceControl;
+    for (let t = 0; t < 600 && w.alive; t++) stepWalker(w);
+    expect(w.alive).toBe(true);
+    expect(w.torso.getPosition().x - w.startX).toBeGreaterThan(4); // metres
+    expect(w.torso.getPosition().y).toBeGreaterThan(0.8); // still on its feet
+    const legs = w.limbs.filter((l) => l.isLeg);
+    const lc = w.contact[legs[0].index] / w.ticks;
+    const rc = w.contact[legs[1].index] / w.ticks;
+    expect(lc).toBeGreaterThan(0.3); // both legs share the load
+    expect(rc).toBeGreaterThan(0.3);
   });
 
   it("is deterministic: a cloned genome yields an identical trajectory", () => {

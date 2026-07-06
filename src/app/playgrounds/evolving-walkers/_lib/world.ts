@@ -1,9 +1,9 @@
 // Ties it together: a population of robots and the learning loop. The optimiser
 // is a CSA evolution strategy (the step-size-adapting core of CMA-ES): it keeps
 // a mean controller and a step size, samples a generation of candidates around
-// the mean, and moves toward the ones that walked furthest. Far better than a
-// plain GA at coordinating continuous controller weights, so the gait actually
-// sharpens into a walk/run instead of a lurch. Kept free of React/canvas so it
+// the mean, and moves toward the ones that scored best (stride imitation
+// scaled by forward distance - see creature.ts). Far better than a plain GA at
+// coordinating continuous controller weights. Kept free of React/canvas so it
 // runs headless and is unit tested.
 
 import {
@@ -49,9 +49,10 @@ export interface World {
   path: number[]; // CSA evolution path
   generation: number;
   tick: number;
-  bestDistance: number;
+  bestFitness: number; // champion gate (imitation x distance score)
+  bestDistance: number; // the champion's raw forward distance, metres
   bestGenome: Genome | null;
-  history: number[];
+  history: number[]; // per-generation champion distance, metres
 }
 
 function gaussianVec(rand: () => number): number[] {
@@ -60,17 +61,21 @@ function gaussianVec(rand: () => number): number[] {
   return v;
 }
 
-export function createWorld(config: SimConfig, rand: () => number): World {
-  // Seed the mean from a small random controller.
-  const seed = flattenWeights(randomGenome(rand).net).map((w) => w * 0.5);
+// Start a fresh run. With `seedWeights` (e.g. the bundled pre-trained
+// champion) the ES mean starts there with a small step size, so the crowd
+// walks immediately and keeps fine-tuning; otherwise it starts from a small
+// random controller and has to learn the stride from scratch.
+export function createWorld(config: SimConfig, rand: () => number, seedWeights?: number[]): World {
+  const seed = seedWeights ? seedWeights.slice() : flattenWeights(randomGenome(rand).net).map((w) => w * 0.5);
   const world: World = {
     walkers: [],
     zs: [],
     mean: seed,
-    sigma: 0.5,
+    sigma: seedWeights ? 0.08 : 0.5,
     path: new Array(DIM).fill(0),
     generation: 1,
     tick: 0,
+    bestFitness: 0,
     bestDistance: 0,
     bestGenome: null,
     history: [],
@@ -106,10 +111,11 @@ export function leader(world: World): Walker | null {
   return best;
 }
 
+// Distance (metres) of the current generation's fittest walker.
 export function bestDistanceThisGen(world: World): number {
-  let best = 0;
-  for (const w of world.walkers) if (w.fitness > best) best = w.fitness;
-  return best;
+  let best: Walker | null = null;
+  for (const w of world.walkers) if (!best || w.fitness > best.fitness) best = w;
+  return best ? best.dist : 0;
 }
 
 export function stepWorld(world: World, config: SimConfig, rand: () => number): void {
@@ -128,10 +134,11 @@ function endGeneration(world: World, config: SimConfig, rand: () => number): voi
     (a, b) => world.walkers[b].fitness - world.walkers[a].fitness,
   );
 
-  world.history.push(world.walkers[order[0]].fitness);
   const champ = world.walkers[order[0]];
-  if (champ.fitness > world.bestDistance) {
-    world.bestDistance = champ.fitness;
+  world.history.push(champ.dist);
+  if (champ.fitness > world.bestFitness) {
+    world.bestFitness = champ.fitness;
+    world.bestDistance = champ.dist;
     world.bestGenome = cloneGenome(champ.genome);
   }
 
