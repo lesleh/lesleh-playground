@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CHAMPION_WEIGHTS } from "../../_lib/champion";
 import { mulberry32 } from "../../_lib/geometry";
 import { drawWorld } from "../../_lib/render";
 import { display, mono } from "../../_lib/fonts";
@@ -76,12 +77,15 @@ export function EvolvingWalkers() {
     });
   }, []);
 
-  const startWorld = useCallback(() => {
-    seedRef.current += 1;
-    randRef.current = mulberry32(seedRef.current);
-    worldRef.current = createWorld(configRef.current, randRef.current);
-    flush();
-  }, [flush]);
+  const startWorld = useCallback(
+    (seedWeights?: number[]) => {
+      seedRef.current += 1;
+      randRef.current = mulberry32(seedRef.current);
+      worldRef.current = createWorld(configRef.current, randRef.current, seedWeights);
+      flush();
+    },
+    [flush],
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -156,9 +160,9 @@ export function EvolvingWalkers() {
           <div>
             <div className="mb-2 flex items-center gap-2 font-readout text-[10px] uppercase tracking-[0.35em] text-[var(--muted)]">
               <LED on={!paused} />
-              Genetic locomotion model
+              Evolved locomotion model
               <span className="text-[var(--line-2)]">·</span>
-              <span>no training data</span>
+              <span>stride imitation</span>
             </div>
             <h1 className="font-telemetry text-[clamp(2rem,6vw,3.4rem)] font-bold uppercase leading-[0.85] tracking-tight">
               Evolving <span className="text-[var(--cyan)]">walkers</span>
@@ -172,10 +176,11 @@ export function EvolvingWalkers() {
         </header>
 
         <p className="relative z-10 mb-5 max-w-2xl font-readout text-[11px] leading-relaxed text-[var(--muted)]">
-          Each creature is a little jointed frame driven by its own neural
-          network, trying to travel as far right as it can. The furthest movers
-          breed the next generation, with mutations. Nobody teaches them to
-          walk — the ground does.
+          Each robot is a rigid-body frame driven by its own neural network.
+          They score by matching a choreographed walking stride while actually
+          covering ground, and an evolution strategy breeds the closest matches
+          into the next generation. Watch the flailing tighten into a walk —
+          the best learn to run.
         </p>
 
         <div className="relative z-10 grid gap-4 lg:grid-cols-[1.9fr_1fr]">
@@ -280,7 +285,13 @@ export function EvolvingWalkers() {
             </div>
 
             <div className="ml-auto flex gap-2">
-              <DeckButton onClick={startWorld} tone="danger" title="New random population from scratch">
+              <DeckButton
+                onClick={() => startWorld(CHAMPION_WEIGHTS)}
+                title="Seed the population with a pre-trained champion that already runs"
+              >
+                Load trained brain
+              </DeckButton>
+              <DeckButton onClick={() => startWorld()} tone="danger" title="New random population from scratch">
                 Fresh start
               </DeckButton>
             </div>

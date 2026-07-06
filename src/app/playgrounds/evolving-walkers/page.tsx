@@ -4,11 +4,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Evolving Walkers | Playground",
   description:
-    "A population of jointed creatures evolve neural-net brains via a genetic algorithm, learning to walk across the ground live. No training data, just survival of the fittest.",
+    "A population of rigid-body robots evolve neural-net controllers live in the browser, learning to track a reference stride until they walk - and then run.",
   openGraph: {
     title: "Evolving Walkers",
     description:
-      "A population of jointed creatures evolve neural-net brains via a genetic algorithm, learning to walk across the ground live. No training data, just survival of the fittest.",
+      "A population of rigid-body robots evolve neural-net controllers live in the browser, learning to track a reference stride until they walk - and then run.",
   },
 };
 
