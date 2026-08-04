@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { Link } from "../../../components/Link";
 import { Fragment } from "react";
 
+const NON_LINKABLE_PATHS = ["/playgrounds"];
+
 export function Breadcrumbs() {
   const pathname = usePathname();
   const pathArray = pathname.split("/").filter((path) => path);
@@ -30,7 +32,7 @@ export function Breadcrumbs() {
             <Fragment key={path}>
               <span className="inline-block px-2">/</span>
               <li className="inline-block">
-                {isLast ? (
+                {isLast || NON_LINKABLE_PATHS.includes(href) ? (
                   <span>{label}</span>
                 ) : (
                   <Link href={href}>{label}</Link>
