@@ -27,6 +27,7 @@ import { WhackAMolePreview } from "./playgrounds/whack-a-mole/Preview";
 import { NeuroevolutionPreview } from "./playgrounds/neuroevolution/Preview";
 import { EvolvingWalkersPreview } from "./playgrounds/evolving-walkers/Preview";
 import { GrokkingPreview } from "./playgrounds/grokking/Preview";
+import { GrokkingDigitsPreview } from "./playgrounds/grokking-digits/Preview";
 
 type Category =
   | "Games"
@@ -213,6 +214,15 @@ const playgrounds = [
       "A neural network memorises modular addition, sits at chance on unseen sums for thousands of steps, then suddenly generalises.",
     href: "/playgrounds/grokking",
     preview: GrokkingPreview,
+    category: "AI",
+  },
+  {
+    id: "grokking-digits",
+    title: "Grokking Digits",
+    description:
+      "A neural network memorises 1,000 handwritten digits, stalls on unseen ones, then weight decay tips it into reading digits it has never seen.",
+    href: "/playgrounds/grokking-digits",
+    preview: GrokkingDigitsPreview,
     category: "AI",
   },
   {
