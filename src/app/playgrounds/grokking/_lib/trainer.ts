@@ -5,6 +5,7 @@ import {
   computeGradients,
   createModel,
   evaluate,
+  probabilities,
   weightNorm,
   type Model,
   type Predictions,
@@ -85,9 +86,11 @@ export interface Snapshot {
   predictions: Predictions;
   isTrain: Uint8Array;
   fourier: FourierView;
+  // Probability of every answer for the pair the query box is showing.
+  probe: { pair: number; probs: Float32Array };
 }
 
-export function takeSnapshot(t: Trainer, sinceIndex: number): Snapshot {
+export function takeSnapshot(t: Trainer, sinceIndex: number, probePair = 0): Snapshot {
   const { p } = t.cfg;
   const all = new Int32Array(p * p);
   for (let i = 0; i < all.length; i++) all[i] = i;
@@ -99,6 +102,7 @@ export function takeSnapshot(t: Trainer, sinceIndex: number): Snapshot {
     predictions,
     isTrain: t.data.isTrain,
     fourier: fourierView(t.model),
+    probe: { pair: probePair, probs: probabilities(t.model, probePair) },
   };
 }
 

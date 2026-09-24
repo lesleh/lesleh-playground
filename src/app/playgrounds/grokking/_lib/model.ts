@@ -250,6 +250,14 @@ export function evaluate(model: Model, pairs: Int32Array, out?: Predictions): Ev
   return { loss: loss / pairs.length, acc: correct / pairs.length };
 }
 
+// Softmax over every possible answer for one pair.
+export function probabilities(model: Model, pair: number): Float32Array {
+  const s = scratch(model);
+  forward(model, pair, s);
+  softmaxInPlace(s.logits);
+  return s.logits.slice();
+}
+
 // L2 norm of every parameter. Weight decay drives this down after memorising.
 export function weightNorm(model: Model): number {
   let sum = 0;

@@ -6,6 +6,7 @@ export type WorkerRequest =
   | { type: "play" }
   | { type: "pause" }
   | { type: "step"; count: number }
-  | { type: "setWeightDecay"; value: number };
+  | { type: "setWeightDecay"; value: number }
+  | { type: "probe"; pair: number };
 
 export type WorkerResponse = { type: "snapshot"; snapshot: Snapshot; running: boolean };

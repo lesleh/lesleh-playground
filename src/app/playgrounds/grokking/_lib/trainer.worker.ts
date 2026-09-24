@@ -10,11 +10,12 @@ let running = false;
 // Auto-pause once per run; pressing play afterwards keeps training.
 let autoPaused = false;
 let sent = 0;
+let probePair = 0;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
 function post(): void {
   if (!trainer) return;
-  const snapshot = takeSnapshot(trainer, sent);
+  const snapshot = takeSnapshot(trainer, sent, probePair);
   sent = trainer.history.length;
   const msg: WorkerResponse = { type: "snapshot", snapshot, running };
   self.postMessage(msg);
@@ -61,6 +62,11 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
       if (!trainer) break;
       for (let i = 0; i < msg.count; i++) trainStep(trainer);
       post();
+      break;
+    case "probe":
+      probePair = msg.pair;
+      // While running, the next slice picks it up; when paused, answer now.
+      if (!running) post();
       break;
     case "setWeightDecay":
       if (trainer) trainer.opt.weightDecay = msg.value;
