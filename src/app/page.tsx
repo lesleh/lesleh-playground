@@ -26,6 +26,7 @@ import { ChickenCrossingPreview } from "./playgrounds/chicken-crossing/Preview";
 import { WhackAMolePreview } from "./playgrounds/whack-a-mole/Preview";
 import { NeuroevolutionPreview } from "./playgrounds/neuroevolution/Preview";
 import { EvolvingWalkersPreview } from "./playgrounds/evolving-walkers/Preview";
+import { GrokkingPreview } from "./playgrounds/grokking/Preview";
 
 type Category =
   | "Games"
@@ -203,6 +204,15 @@ const playgrounds = [
       "A population of rigid-body robots evolve neural-net controllers live in the browser, learning to track a reference stride until they walk - and then run.",
     href: "/playgrounds/evolving-walkers",
     preview: EvolvingWalkersPreview,
+    category: "AI",
+  },
+  {
+    id: "grokking",
+    title: "Grokking",
+    description:
+      "A neural network memorises modular addition, sits at chance on unseen sums for thousands of steps, then suddenly generalises.",
+    href: "/playgrounds/grokking",
+    preview: GrokkingPreview,
     category: "AI",
   },
   {
