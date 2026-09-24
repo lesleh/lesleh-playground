@@ -97,6 +97,10 @@ export function Grokking() {
     return () => worker.terminate();
   }, []);
 
+  useEffect(() => {
+    send({ type: "probe", pair: query.a * DEFAULT_RUN.p + query.b });
+  }, [query]);
+
   const restart = useCallback(
     (nextSeed: number) => {
       const cfg: RunConfig = { p: DEFAULT_RUN.p, trainFraction, weightDecay, seed: nextSeed };
@@ -241,8 +245,9 @@ export function Grokking() {
                 onChange={(a, b) => setQuery({ a, b })}
                 predictions={snapshot?.predictions}
                 isTrain={snapshot?.isTrain}
+                probs={snapshot?.probe.pair === query.a * p + query.b ? snapshot.probe.probs : undefined}
               />
-              <Caption>Pick two numbers, or click a cell in the grid. Try an unseen sum before and after grokking.</Caption>
+              <Caption>Pick two numbers, or click a cell in the grid. The bars use a log scale, so each gridline is 100,000 times less likely than the one above. Before grokking the unlikely answers are noise. After, they rise and fall in waves that peak at the right answer.</Caption>
             </Panel>
           </div>
         </div>

@@ -50,7 +50,11 @@ describe("trainer", () => {
       expect(c).toBeLessThanOrEqual(1);
     }
     trainStep(t);
-    expect(takeSnapshot(t, 3).history.map((h) => h.step)).toEqual([4]);
+    const next = takeSnapshot(t, 3, 10);
+    expect(next.history.map((h) => h.step)).toEqual([4]);
+    expect(next.probe.pair).toBe(10);
+    expect(next.probe.probs.length).toBe(7);
+    expect(next.probe.probs.reduce((sum, v) => sum + v, 0)).toBeCloseTo(1, 5);
   });
 });
 

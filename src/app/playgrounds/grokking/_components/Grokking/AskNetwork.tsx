@@ -2,6 +2,7 @@
 
 import { label } from "../../_lib/dataset";
 import type { Predictions } from "../../_lib/model";
+import { ProbabilityBars, topAnswers } from "./ProbabilityBars";
 
 // Pick a and b and see what the network answers right now, how sure it is,
 // and whether it ever trained on that sum.
@@ -12,6 +13,7 @@ export function AskNetwork({
   onChange,
   predictions,
   isTrain,
+  probs,
 }: {
   p: number;
   a: number;
@@ -19,6 +21,8 @@ export function AskNetwork({
   onChange: (a: number, b: number) => void;
   predictions: Predictions | undefined;
   isTrain: Uint8Array | undefined;
+  // Every answer's probability for this pair, once the worker has sent it.
+  probs: Float32Array | undefined;
 }) {
   const pair = a * p + b;
   const truth = label(pair, p);
@@ -65,6 +69,27 @@ export function AskNetwork({
           </dd>
         </div>
       </dl>
+
+      {/* Fixed height so the panel does not jump while a new pair loads. */}
+      <div className="mt-4 min-h-[140px]">
+        {probs && (
+          <>
+            <ProbabilityBars probs={probs} truth={truth} />
+            <div className="mt-1 flex flex-wrap gap-x-4 font-readout text-[10px] text-[var(--muted)]">
+              <span className="uppercase tracking-[0.18em]">Top guesses</span>
+              {topAnswers(probs).map(({ answer: guess, p: prob }) => (
+                <span
+                  key={guess}
+                  className="tabular-nums"
+                  style={{ color: guess === truth ? "var(--mint)" : undefined }}
+                >
+                  {guess}: {formatProb(prob)}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -94,4 +119,9 @@ function NumberBox({
       className="w-16 rounded-sm border border-[var(--line-2)] bg-transparent px-2 py-1 text-center text-[var(--text)] focus:border-[var(--mint)] focus:outline-none"
     />
   );
+}
+
+// Small guesses in scientific notation, so the runner-up never reads "0.0%".
+function formatProb(p: number): string {
+  return p >= 0.001 ? `${(p * 100).toFixed(1)}%` : `${(p * 100).toPrecision(1)}%`;
 }
