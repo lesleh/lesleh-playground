@@ -2,14 +2,14 @@ import type { Digits } from "./data";
 import {
   adamwStep,
   computeGradients,
-  createMlp,
+  createCnn,
   evaluate,
   forward,
   softmax,
   weightNorm,
-  type Mlp,
+  type Cnn,
   type OptimConfig,
-} from "./mlp";
+} from "./cnn";
 import { mulberry32 } from "./rng";
 
 export interface RunConfig {
@@ -20,21 +20,21 @@ export interface RunConfig {
 }
 
 // Tuned in Node on this data: with 16x starting weights the network memorises
-// by step 1,000 at about 72% on unseen digits, then climbs past 90% by about
-// step 5,600. With 1x weights it generalises straight away, with no grokking.
+// by about step 2,000 at about 78% on unseen digits, then passes 90% by about
+// step 3,750. With 1x weights it generalises straight away, with no grokking.
 export const DEFAULT_RUN: RunConfig = {
   initScale: 16,
-  weightDecay: 0.3,
+  weightDecay: 0.6,
   labelSmoothing: 0,
   seed: 1,
 };
 
-const HIDDEN = 128;
-const BATCH = 200;
+const NET = { c1: 8, c2: 16, hidden: 64 };
+const BATCH = 100;
 const OPTIM: Omit<OptimConfig, "weightDecay"> = { lr: 1e-3, beta1: 0.9, beta2: 0.99, eps: 1e-8 };
 
 // Training pauses here. Test accuracy has flattened well before this.
-export const MAX_STEPS = 10_000;
+export const MAX_STEPS = 8_000;
 
 // Test digits shown in the strip, and so re-evaluated on every snapshot.
 export const STRIP_SIZE = 120;
@@ -51,7 +51,7 @@ export interface HistoryPoint {
 export interface Trainer {
   cfg: RunConfig;
   data: Digits;
-  net: Mlp;
+  net: Cnn;
   opt: OptimConfig;
   labelSmoothing: number;
   rand: () => number;
@@ -60,7 +60,7 @@ export interface Trainer {
 
 export function createTrainer(cfg: RunConfig, data: Digits): Trainer {
   const rand = mulberry32(cfg.seed);
-  const net = createMlp({ inputs: 196, hidden: HIDDEN, classes: 10, initScale: cfg.initScale }, rand);
+  const net = createCnn({ ...NET, initScale: cfg.initScale }, rand);
   return {
     cfg,
     data,

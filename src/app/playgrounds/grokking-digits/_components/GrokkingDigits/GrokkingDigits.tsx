@@ -198,10 +198,11 @@ export function GrokkingDigits() {
         </header>
 
         <p className="mb-5 max-w-3xl font-readout text-[11px] leading-relaxed text-[var(--muted)]">
-          A small neural network learns to read handwritten digits from just 1,000 examples. It starts with deliberately
-          oversized weights, so it memorises its training images within about 1,000 steps while reading only about 70%
-          of unseen digits correctly. Then it sits there. Weight decay slowly shrinks the weights until the memorised
-          lookup table no longer fits, and the network switches to features that work on digits it has never seen.
+          A small convolutional network learns to read handwritten digits from just 1,000 examples. It starts with
+          deliberately oversized weights, so it memorises its training images within about 2,000 steps while reading
+          only about 78% of unseen digits correctly. Then it stalls. Weight decay keeps shrinking the weights until the
+          memorised lookup table no longer fits, and the network switches to features that work on digits it has never
+          seen.
         </p>
 
         {loadError && (
@@ -292,7 +293,10 @@ export function GrokkingDigits() {
               <div className="mt-4">
                 <DigitBars probs={probe.pixels ? (snapshot?.probe ?? null) : null} truth={truth} />
               </div>
-              <Caption>Draw a digit, or click one in the strip below. The bars update live as it trains.</Caption>
+              <Caption>
+                Draw a digit, or click one in the strip below. The bars update live as it trains. It learned from only
+                1,000 examples, so unusual styles trip it up: draw 4s open at the top, as most MNIST 4s are.
+              </Caption>
             </Panel>
           </div>
         </div>
@@ -394,7 +398,7 @@ export function GrokkingDigits() {
           <p className="mt-3 font-readout text-[10px] leading-relaxed text-[var(--muted)]">
             {initScale !== runInitScale
               ? `Restart to use ${initScale}x starting weights.`
-              : `Mini-batches of 200, AdamW. Training pauses at step ${MAX_STEPS.toLocaleString("en-GB")}. Try 1x starting weights and restart: it learns unseen digits straight away, with no plateau. The oversized start is what makes it memorise first.`}
+              : `Mini-batches of 100, AdamW. Training pauses at step ${MAX_STEPS.toLocaleString("en-GB")}. Try 1x starting weights and restart: it learns unseen digits straight away, with no plateau. The oversized start is what makes it memorise first.`}
           </p>
         </Panel>
 
@@ -408,8 +412,8 @@ export function GrokkingDigits() {
           >
             CC BY-SA 3.0
           </a>
-          . Shrunk to 14x14 pixels. The setup follows Liu and others, &apos;Omnigrok: grokking beyond algorithmic
-          data&apos;, 2022.
+          . Shrunk to 14x14 pixels. The oversized starting weights follow Liu and others, &apos;Omnigrok: grokking
+          beyond algorithmic data&apos;, 2022.
         </p>
       </div>
     </div>
