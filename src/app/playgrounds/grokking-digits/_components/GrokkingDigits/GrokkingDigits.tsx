@@ -338,13 +338,6 @@ export function GrokkingDigits() {
             >
               {running ? <PauseIcon /> : <PlayIcon />}
             </button>
-            <DeckButton
-              onClick={() => send({ type: "step", count: 100 })}
-              disabled={running}
-              title="Train 100 steps while paused"
-            >
-              +100 steps
-            </DeckButton>
             <Slider
               label="Weight decay"
               min={0}
@@ -567,13 +560,11 @@ function DeckButton({
   title,
   children,
   tone = "line",
-  disabled = false,
 }: {
   onClick: () => void;
   title?: string;
   children: React.ReactNode;
   tone?: "line" | "danger";
-  disabled?: boolean;
 }) {
   const tones: Record<string, string> = {
     line: "border-[var(--line-2)] text-[var(--muted)] hover:border-[var(--mint)] hover:text-[var(--text)]",
@@ -584,8 +575,7 @@ function DeckButton({
       type="button"
       onClick={onClick}
       title={title}
-      disabled={disabled}
-      className={`rounded-sm border px-3 py-2 font-readout text-[10px] uppercase tracking-[0.2em] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${tones[tone]}`}
+      className={`rounded-sm border px-3 py-2 font-readout text-[10px] uppercase tracking-[0.2em] transition-colors ${tones[tone]}`}
     >
       {children}
     </button>

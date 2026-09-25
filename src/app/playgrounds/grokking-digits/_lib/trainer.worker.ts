@@ -66,11 +66,6 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
       running = false;
       post();
       break;
-    case "step":
-      if (!trainer) break;
-      for (let i = 0; i < msg.count; i++) trainStep(trainer);
-      post();
-      break;
     case "setWeightDecay":
       if (trainer) trainer.opt.weightDecay = msg.value;
       break;

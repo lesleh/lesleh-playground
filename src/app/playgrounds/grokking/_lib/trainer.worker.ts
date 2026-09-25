@@ -58,11 +58,6 @@ self.onmessage = (e: MessageEvent<WorkerRequest>) => {
       running = false;
       post();
       break;
-    case "step":
-      if (!trainer) break;
-      for (let i = 0; i < msg.count; i++) trainStep(trainer);
-      post();
-      break;
     case "probe":
       probePair = msg.pair;
       // While running, the next slice picks it up; when paused, answer now.
