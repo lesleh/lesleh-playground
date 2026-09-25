@@ -102,8 +102,9 @@ export function LineChart({
         </g>
       ))}
 
-      {markers.map((m) => {
-        // Flip the label to the left of its line near the right edge.
+      {markers.map((m, i) => {
+        // Flip the label to the left of its line near the right edge, and
+        // stack labels so markers close together do not overlap.
         const flip = x(m.step) > PAD.l + (W - PAD.l - PAD.r) * 0.75;
         return (
           <g key={m.label}>
@@ -118,7 +119,7 @@ export function LineChart({
             />
             <text
               x={x(m.step) + (flip ? -4 : 4)}
-              y={PAD.t + 9}
+              y={PAD.t + 9 + i * 12}
               textAnchor={flip ? "end" : "start"}
               className="font-readout text-[9px]"
               fill={m.colour}
