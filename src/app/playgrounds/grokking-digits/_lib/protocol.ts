@@ -6,7 +6,6 @@ export type WorkerRequest =
   | { type: "reset"; cfg: RunConfig }
   | { type: "play" }
   | { type: "pause" }
-  | { type: "step"; count: number }
   | { type: "setWeightDecay"; value: number }
   | { type: "setLabelSmoothing"; value: number }
   | { type: "probe"; pixels: Float32Array | null };
