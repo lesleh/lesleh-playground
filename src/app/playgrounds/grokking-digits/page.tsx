@@ -2,12 +2,12 @@ import { GrokkingDigits } from "./_components/GrokkingDigits";
 import type { Metadata } from "next";
 
 const description =
-  "A neural network memorises 1,000 handwritten digits, stalls on unseen ones, then weight decay tips it into reading digits it has never seen.";
+  "A neural network memorises 1,000 handwritten digits, stalls, then slowly improves on ones it has never seen. Draw your own and watch how sure it is.";
 
 export const metadata: Metadata = {
-  title: "Grokking Digits | Playground",
+  title: "Learning Digits | Playground",
   description,
-  openGraph: { title: "Grokking Digits", description },
+  openGraph: { title: "Learning Digits", description },
 };
 
 export default function GrokkingDigitsPage() {
