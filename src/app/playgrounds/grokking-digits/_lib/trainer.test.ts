@@ -20,11 +20,11 @@ const pt = (step: number, trainAcc: number, testAcc: number): HistoryPoint => ({
 });
 
 describe("phaseOf", () => {
-  it("measures grokking against test accuracy at the moment it memorised", () => {
+  it("measures improvement against test accuracy at the moment it memorised", () => {
     expect(phaseOf([])).toBe("memorising");
     expect(phaseOf([pt(1, 0.5, 0.4)])).toBe("memorising");
     expect(phaseOf([pt(1000, 1, 0.72), pt(2000, 1, 0.73)])).toBe("memorised");
-    expect(phaseOf([pt(1000, 1, 0.72), pt(4000, 1, 0.8)])).toBe("grokking");
+    expect(phaseOf([pt(1000, 1, 0.72), pt(4000, 1, 0.8)])).toBe("improving");
     expect(phaseOf([pt(1000, 1, 0.72), pt(6000, 1, 0.91)])).toBe("generalised");
   });
 });

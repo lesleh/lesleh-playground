@@ -218,9 +218,9 @@ const playgrounds = [
   },
   {
     id: "grokking-digits",
-    title: "Grokking Digits",
+    title: "Learning Digits",
     description:
-      "A neural network memorises 1,000 handwritten digits, stalls on unseen ones, then weight decay tips it into reading digits it has never seen.",
+      "A neural network memorises 1,000 handwritten digits, stalls, then slowly improves on ones it has never seen. Draw your own and watch how sure it is.",
     href: "/playgrounds/grokking-digits",
     preview: GrokkingDigitsPreview,
     category: "AI",

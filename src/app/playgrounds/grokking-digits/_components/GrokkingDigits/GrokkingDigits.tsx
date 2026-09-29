@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DIGITS_FILE_LAYOUT, parseDigits, type Digits } from "../../_lib/data";
 import { display, mono } from "../../_lib/fonts";
@@ -38,10 +39,10 @@ const PHASES: Record<Phase, { label: string; colour: string; blurb: string }> = 
     colour: "var(--red)",
     blurb: "Perfect on its training digits, stuck on the rest. Keep watching.",
   },
-  grokking: {
-    label: "Grokking",
+  improving: {
+    label: "Catching up",
     colour: "var(--cyan)",
-    blurb: "Weight decay is squeezing out the lookup table, and unseen digits start to click.",
+    blurb: "Weight decay is squeezing out the memorised detail, and unseen digits start to click.",
   },
   generalised: { label: "Generalised", colour: "var(--mint)", blurb: "Reads most digits it has never seen." },
 };
@@ -187,7 +188,7 @@ export function GrokkingDigits() {
               <span>1,000 training images</span>
             </div>
             <h1 className="font-telemetry text-[clamp(2rem,6vw,3.4rem)] font-bold uppercase leading-[0.85] tracking-tight">
-              Grokking <span className="text-[var(--amber)]">digits</span>
+              Learning <span className="text-[var(--amber)]">digits</span>
             </h1>
           </div>
           <div className="flex items-end gap-4">
@@ -199,10 +200,18 @@ export function GrokkingDigits() {
 
         <p className="mb-5 max-w-3xl font-readout text-[11px] leading-relaxed text-[var(--muted)]">
           A small convolutional network learns to read handwritten digits from just 1,000 examples. It starts with
-          deliberately oversized weights, so it memorises its training images within about 2,000 steps while reading
-          only about 78% of unseen digits correctly. Then it stalls. Weight decay keeps shrinking the weights until the
-          memorised lookup table no longer fits, and the network switches to features that work on digits it has never
-          seen.
+          deliberately oversized weights, so it memorises its training images within about 2,000 steps, by which point
+          it reads about 78% of unseen digits. Then it stalls, until weight decay shrinks the weights enough to lift it
+          to about 95%.
+        </p>
+        <p className="mb-5 max-w-3xl font-readout text-[11px] leading-relaxed text-[var(--muted)]">
+          This is only a weak cousin of grokking. Most of what it learns about unseen digits arrives while it memorises,
+          and only the last stretch comes late. For the real thing, where unseen accuracy stays near zero long after
+          training hits 100% and then suddenly jumps, see the{" "}
+          <Link href="/playgrounds/grokking" className="text-[var(--mint)] underline hover:text-[var(--text)]">
+            grokking playground
+          </Link>
+          .
         </p>
 
         {loadError && (
@@ -256,7 +265,7 @@ export function GrokkingDigits() {
                   value={pct(last?.testAcc)}
                   unit="%"
                   accent="var(--mint)"
-                  live={phase === "grokking"}
+                  live={phase === "improving"}
                 />
                 <Readout label="Weight norm" value={last ? last.norm.toFixed(0) : "-"} />
                 <Readout label="At memorising" value={memorisedAt ? pct(memorisedAt.testAcc) : "-"} unit="% unseen" />

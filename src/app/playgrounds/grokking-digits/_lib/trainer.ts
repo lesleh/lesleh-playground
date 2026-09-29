@@ -21,7 +21,7 @@ export interface RunConfig {
 
 // Tuned in Node on this data: with 16x starting weights the network memorises
 // by about step 2,000 at about 78% on unseen digits, then passes 90% by about
-// step 3,750. With 1x weights it generalises straight away, with no grokking.
+// step 3,750. With 1x weights it generalises straight away, with no plateau.
 export const DEFAULT_RUN: RunConfig = {
   initScale: 16,
   weightDecay: 0.6,
@@ -128,7 +128,7 @@ export function takeSnapshot(t: Trainer, sinceIndex: number, probe: Float32Array
   };
 }
 
-export type Phase = "memorising" | "memorised" | "grokking" | "generalised";
+export type Phase = "memorising" | "memorised" | "improving" | "generalised";
 
 // Phase from the history. Unlike modular addition, test accuracy never sits
 // at chance: memorising pictures generalises a little on its own. So the
@@ -138,6 +138,6 @@ export function phaseOf(history: HistoryPoint[]): Phase {
   const last = history[history.length - 1];
   if (!memo || !last) return "memorising";
   if (last.testAcc >= 0.9) return "generalised";
-  if (last.testAcc >= memo.testAcc + 0.03) return "grokking";
+  if (last.testAcc >= memo.testAcc + 0.03) return "improving";
   return "memorised";
 }
