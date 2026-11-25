@@ -1,9 +1,12 @@
-import * as ort from "onnxruntime-web";
+import type * as Ort from "onnxruntime-web/wasm";
 
-let session: ort.InferenceSession | null = null;
+// Imported on first load: the WASM build resolves URLs at import time, which fails during SSR.
+let ort: typeof Ort | null = null;
+let session: Ort.InferenceSession | null = null;
 
 export async function loadModel(): Promise<void> {
   if (session) return;
+  ort ??= await import("onnxruntime-web/wasm");
   session = await ort.InferenceSession.create("/tetris-model.onnx", {
     executionProviders: ["wasm"],
   });
@@ -12,7 +15,7 @@ export async function loadModel(): Promise<void> {
 export async function scorePlacements(
   features: number[][]
 ): Promise<number[]> {
-  if (!session) throw new Error("Model not loaded");
+  if (!session || !ort) throw new Error("Model not loaded");
 
   const numFeatures = features[0].length;
   const flat = new Float32Array(features.length * numFeatures);
