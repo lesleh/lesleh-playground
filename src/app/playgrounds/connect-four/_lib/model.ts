@@ -1,18 +1,21 @@
-import * as ort from "onnxruntime-web";
+import type * as Ort from "onnxruntime-web/wasm";
 
-let session: ort.InferenceSession | null = null;
+// Imported on first load: the WASM build resolves URLs at import time, which fails during SSR.
+let ort: typeof Ort | null = null;
+let session: Ort.InferenceSession | null = null;
 
 export async function loadModel(): Promise<void> {
   if (session) return;
+  ort ??= await import("onnxruntime-web/wasm");
   session = await ort.InferenceSession.create("/connect-four-model.onnx", {
-    executionProviders: ["webgpu", "wasm"],
+    executionProviders: ["wasm"],
   });
 }
 
 export async function predict(
   encoded: Float32Array
 ): Promise<{ policy: Float32Array; value: number }> {
-  if (!session) throw new Error("Model not loaded");
+  if (!session || !ort) throw new Error("Model not loaded");
 
   const input = new ort.Tensor("float32", encoded, [1, 2, 6, 7]);
   const results = await session.run({ board: input });
